@@ -1,0 +1,26 @@
+name: movie-recommender
+channels:
+  - conda-forge
+  - pytorch
+  - nvidia
+dependencies:
+  - python=3.10
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - pytorch
+  - pytorch-cuda=12.1
+  - cudatoolkit
+  - faiss-gpu
+  - fastapi
+  - uvicorn
+  - pyyaml
+  - tqdm
+  - pip
+  - pip:
+      - loguru
+      - pytest
+      - black
+      - isort
+      - mypy

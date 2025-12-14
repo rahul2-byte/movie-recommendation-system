@@ -1,0 +1,15 @@
+# Ensure consistent line endings
+* text=auto
+
+# Large files handled cleanly
+*.parquet binary
+*.h5 binary
+*.pt binary
+*.pth binary
+
+# Jupyter notebooks
+*.ipynb linguist-language=Python
+
+# Ignore generated files in diffs
+data/** linguist-generated
+models/** linguist-generated

@@ -1,0 +1,75 @@
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.so
+
+# =========================
+# Virtual Environments
+# =========================
+.venv/
+venv/
+env/
+ENV/
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# =========================
+# Data (NEVER COMMIT)
+# =========================
+data/raw/
+data/processed/
+data/interim/
+*.csv
+*.parquet
+*.feather
+*.h5
+*.npy
+
+# =========================
+# Model Artifacts
+# =========================
+models/
+checkpoints/
+*.pt
+*.pth
+*.onnx
+*.joblib
+*.pkl
+
+# =========================
+# Logs & Outputs
+# =========================
+logs/
+outputs/
+wandb/
+mlruns/
+
+# =========================
+# OS / IDE
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# =========================
+# Build / Cache
+# =========================
+.build/
+dist/
+*.egg-info/
+.cache/
+.pytest_cache/
+
+# =========================
+# Secrets
+# =========================
+.env
+.env.*
