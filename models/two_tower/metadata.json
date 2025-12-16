@@ -1,0 +1,6 @@
+{
+  "num_items": 51231,
+  "embedding_dim": 128,
+  "model": "two_tower",
+  "normalized": true
+}

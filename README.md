@@ -1,4 +1,4 @@
-# 🎬 Movie Recommendation System (Production-Grade)
+# 🎬 Movie Recommendation System
 
 A scalable, production-ready movie recommendation system built using modern ML techniques.
 Designed to demonstrate **senior-level ML engineering** skills: data pipelines, retrieval & ranking models,
