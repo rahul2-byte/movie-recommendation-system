@@ -1,0 +1,7 @@
+{
+  "model": "two_tower",
+  "embedding_dim": 128,
+  "num_items": 59047,
+  "num_users": 162541,
+  "normalized": true
+}

@@ -1,0 +1,16 @@
+{
+  "model": "content_based_tfidf_svd",
+  "num_items": 62423,
+  "embedding_dim": 128,
+  "normalized": true,
+  "dtype": "float32",
+  "svd_dim": 128,
+  "tfidf": {
+    "max_features": 100000,
+    "min_df": 5,
+    "ngram_range": [
+      1,
+      2
+    ]
+  }
+}

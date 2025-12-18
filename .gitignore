@@ -35,7 +35,7 @@ data/interim/
 # =========================
 # Model Artifacts
 # =========================
-models/
+artifacts/
 checkpoints/
 *.pt
 *.pth

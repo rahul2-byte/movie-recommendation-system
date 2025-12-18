@@ -1,0 +1,11 @@
+{
+  "model": "als",
+  "num_items": 59047,
+  "num_users": 162541,
+  "embedding_dim": 128,
+  "dtype": "float32",
+  "normalized": false,
+  "alpha": 40.0,
+  "factors": 128,
+  "regularization": 0.05
+}
