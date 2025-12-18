@@ -12,5 +12,6 @@ data/** linguist-generated
 models/** linguist-generated
 *.index filter=lfs diff=lfs merge=lfs -text
 indices filter=lfs diff=lfs merge=lfs -text
+indices/**/*.index filter=lfs diff=lfs merge=lfs -text
 indices/* filter=lfs diff=lfs merge=lfs -text
 indices/** filter=lfs diff=lfs merge=lfs -text
