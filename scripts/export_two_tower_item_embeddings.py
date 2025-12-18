@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Export item embeddings from a trained Two-Tower model.
+Export item and user embeddings from a trained Two-Tower model.
 
-Responsibilities :
+Responsibilities:
 - Load trained checkpoint
 - Reconstruct model
 - Compute item embeddings in batches
+- Compute user embeddings in batches
 - Persist embeddings + id map + metadata
 """
 
@@ -33,7 +34,7 @@ LOGGER = logging.getLogger("export_two_tower_embeddings")
 
 
 # ---------------------------------------------------------
-# Core export logic
+# Item embedding export
 # ---------------------------------------------------------
 @torch.no_grad()
 def export_item_embeddings(
@@ -61,11 +62,7 @@ def export_item_embeddings(
 
     embeddings = np.ascontiguousarray(embeddings)
 
-    # -----------------------------------------------------
-    # Persist artifacts (STRICT CONTRACT)
-    # -----------------------------------------------------
     out_dir.mkdir(parents=True, exist_ok=True)
-
     np.save(out_dir / "item_embeddings.npy", embeddings)
 
     with open(out_dir / "item_id_map.json", "w") as f:
@@ -74,17 +71,42 @@ def export_item_embeddings(
             f,
         )
 
-    metadata = {
-        "num_items": int(num_items),
-        "embedding_dim": int(emb_dim),
-        "model": "two_tower",
-        "normalized": True,
-    }
+    LOGGER.info("Item embeddings exported")
 
-    with open(out_dir / "metadata.json", "w") as f:
-        json.dump(metadata, f, indent=2)
 
-    LOGGER.info("Item embeddings exported to %s", out_dir)
+# ---------------------------------------------------------
+# User embedding export  ✅ NEW
+# ---------------------------------------------------------
+@torch.no_grad()
+def export_user_embeddings(
+    model: TwoTower,
+    device: str,
+    out_dir: Path,
+    user_id_map: list[int],
+    batch_size: int,
+) -> None:
+    model.eval()
+    model.to(device)
+
+    num_users = len(user_id_map)
+    emb_dim = model.user_tower.id_emb.embedding_dim
+
+    LOGGER.info("Exporting %d user embeddings (dim=%d)", num_users, emb_dim)
+
+    embeddings = np.zeros((num_users, emb_dim), dtype=np.float32)
+
+    for start in tqdm(range(0, num_users, batch_size), desc="export_users"):
+        end = min(start + batch_size, num_users)
+        user_indices = torch.arange(start, end, device=device)
+        emb = model.encode_users(user_indices)
+        embeddings[start:end] = emb.cpu().numpy()
+
+    embeddings = np.ascontiguousarray(embeddings)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    np.save(out_dir / "user_embeddings.npy", embeddings)
+
+    LOGGER.info("User embeddings exported")
 
 
 # ---------------------------------------------------------
@@ -109,24 +131,58 @@ def main(args: argparse.Namespace) -> None:
     )
 
     model.load_state_dict(ckpt["model_state_dict"])
+    id_maps = json.load(open(args.id_maps, "r"))
 
+    out_dir = Path(args.out_dir)
+
+    # -----------------------------
+    # Export item embeddings
+    # -----------------------------
     export_item_embeddings(
         model=model,
         device=device,
-        out_dir=Path(args.out_dir),
-        item_id_map=meta["item_id_map"],
+        out_dir=out_dir,
+        item_id_map=id_maps["item_id_map"],
         batch_size=args.batch_size,
     )
+
+    # -----------------------------
+    # Export user embeddings
+    # -----------------------------
+    export_user_embeddings(
+        model=model,
+        device=device,
+        out_dir=out_dir,
+        user_id_map=id_maps["user_id_map"],
+        batch_size=args.batch_size,
+    )
+
+    # -----------------------------
+    # Metadata (single source)
+    # -----------------------------
+    metadata = {
+        "model": "two_tower",
+        "embedding_dim": int(meta["emb_dim"]),
+        "num_items": int(meta["num_items"]),
+        "num_users": int(meta["num_users"]),
+        "normalized": True,
+    }
+
+    with open(out_dir / "metadata.json", "w") as f:
+        json.dump(metadata, f, indent=2)
+
+    LOGGER.info("Two-Tower embedding export completed")
 
 
 # ---------------------------------------------------------
 # CLI
 # ---------------------------------------------------------
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser("Export Two-Tower Item Embeddings")
+    parser = argparse.ArgumentParser("Export Two-Tower Embeddings")
 
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--meta", required=True)
+    parser.add_argument("--id_maps", required=True)
 
     parser.add_argument("--out_dir", default="models/two_tower")
     parser.add_argument("--batch_size", type=int, default=4096)

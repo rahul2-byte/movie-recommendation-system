@@ -96,6 +96,7 @@ class ALSModelTrainer:
         self,
         output_dir: Path,
         item_id_map: List[int],
+        user_id_map: List[int],
     ) -> None:
         if self.model is None:
             raise RuntimeError("Model must be trained before saving")
@@ -111,12 +112,26 @@ class ALSModelTrainer:
         np.save(output_dir / "item_embeddings.npy", item_embeddings)
 
         # -------------------------------------------------
-        # Item ID map (CRITICAL)
-        # index -> original movieId
+        # User embeddings (FAISS query vectors)
+        # -------------------------------------------------
+        user_embeddings = self.model.user_factors.astype(np.float32)
+        user_embeddings = np.ascontiguousarray(user_embeddings)
+
+        np.save(output_dir / "user_embeddings.npy", user_embeddings)
+
+        # -------------------------------------------------
+        # ID maps (CRITICAL)
+        # index -> original id
         # -------------------------------------------------
         with open(output_dir / "item_id_map.json", "w") as f:
             json.dump(
                 {int(item_id): idx for idx, item_id in enumerate(item_id_map)},
+                f,
+            )
+
+        with open(output_dir / "user_id_map.json", "w") as f:
+            json.dump(
+                {int(user_id): idx for idx, user_id in enumerate(user_id_map)},
                 f,
             )
 
@@ -126,6 +141,7 @@ class ALSModelTrainer:
         metadata = {
             "model": "als",
             "num_items": int(item_embeddings.shape[0]),
+            "num_users": int(user_embeddings.shape[0]),
             "embedding_dim": int(item_embeddings.shape[1]),
             "dtype": "float32",
             "normalized": False,  # ALS uses dot-product
