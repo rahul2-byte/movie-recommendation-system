@@ -6,10 +6,10 @@ export default function HomePage() {
     <main>
       <HeroSearch />
 
-      <div className="px-10">
+      <section className="px-10 py-12 space-y-12">
         <MovieRow title="Trending Now" movies={[]} />
         <MovieRow title="New Releases" movies={[]} />
-      </div>
+      </section>
     </main>
   )
 }
