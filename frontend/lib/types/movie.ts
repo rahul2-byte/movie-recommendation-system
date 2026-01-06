@@ -1,9 +1,9 @@
 export interface Movie {
     movieId: number
+    tmdbId: number | null
     title: string
-    year: number
+    year: number | null
     genres: string[]
-    rating?: number
-    posterUrl?: string
-    overview?: string
-}  
+    rating: number | null
+    posterUrl: string | null
+}
