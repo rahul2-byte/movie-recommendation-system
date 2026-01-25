@@ -1,0 +1,9 @@
+dataset: movielens_tags
+version: v1
+frozen: true
+
+columns:
+  userId: int64
+  movieId: int64
+  tag: string
+  timestamp: int64

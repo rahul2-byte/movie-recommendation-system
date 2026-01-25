@@ -122,11 +122,11 @@ class RecallOrchestrator:
                 quota=quota,
             )
 
-            LOGGER.info(
-                "Retriever=%s produced %d candidates",
-                name,
-                len(candidates),
-            )
+            # LOGGER.info(
+            #     "Retriever=%s produced %d candidates",
+            #     name,
+            #     len(candidates),
+            # )
 
             all_candidates.extend(candidates)
 

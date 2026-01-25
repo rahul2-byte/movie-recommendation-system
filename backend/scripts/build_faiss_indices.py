@@ -30,8 +30,8 @@ LOGGER = logging.getLogger("faiss_index_builder")
 # ---------------------------------------------------------
 # Paths
 # ---------------------------------------------------------
-MODELS_DIR = Path("models")
-INDICES_DIR = Path("src/indices")
+MODELS_DIR = Path("./backend/models")
+INDICES_DIR = Path("./backend/indices")
 
 # ---------------------------------------------------------
 # Embedding inspection

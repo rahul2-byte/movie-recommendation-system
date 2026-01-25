@@ -1,0 +1,8 @@
+dataset: movielens_links
+version: v1
+frozen: true
+
+columns:
+  movieId: int64
+  imdbId: int64
+  tmdbId: int64

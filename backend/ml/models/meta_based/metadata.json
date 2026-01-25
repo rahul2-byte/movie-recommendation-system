@@ -1,0 +1,7 @@
+{
+  "model": "metadata_item_retriever",
+  "num_items": 34644,
+  "embedding_dim": 384,
+  "normalized": true,
+  "dtype": "float32"
+}

@@ -1,29 +1,30 @@
-import logging
-from pathlib import Path
-from typing import Dict, List, Set, Tuple, Iterator
+from dotenv import load_dotenv
+load_dotenv("./backend/.env")
 
-import pandas as pd
+import sys
+from pathlib import Path
+from typing import Dict, Iterator
+
+import logging
+
 import numpy as np
+import pandas as pd
 
 from orchestrator.orchestrator import RecallOrchestrator
 from orchestrator.registry import RetrieverRegistry
 from orchestrator.contracts import Candidate
-
 from orchestrator.retrievers.two_tower import TwoTowerRetriever
 from orchestrator.retrievers.content import ContentBasedRetriever
-from orchestrator.retrievers.als import ALSRetriever
+from orchestrator.retrievers.meta_based import MetaBasedRetriever
 from orchestrator.retrievers.item_cf import ItemCFRetriever
+from src.features.feature_builder import build_candidate_features
+from src.features.feature_logger import FeatureLogger
 
-from features.feature_builder import build_candidate_features
-from features.feature_logger import FeatureLogger
-
+from configs.settings import INTERACTIONS_PATH, OUTPUT_PATH, ITEM_META_PATH
 
 # -------------------------------------------------
 # CONFIG
 # -------------------------------------------------
-INTERACTIONS_PATH = "data/raw/ratings.csv"
-OUTPUT_PATH = "data/processed/ranking_features.parquet"
-
 MIN_USER_INTERACTIONS = 5
 RECENT_K = 5
 
@@ -32,162 +33,114 @@ LOGGER = logging.getLogger(__name__)
 
 
 # -------------------------------------------------
-# TEMPORAL SPLIT + USER CONTEXT
+# LOAD METADATA (ONCE)
 # -------------------------------------------------
-def build_feature_logging_inputs(
-    interactions: pd.DataFrame,
-) -> Tuple[
-    Dict[int, Set[int]],
-    Dict[int, List[int]],
-]:
-    """
-    Returns:
-    - eval_users: user_id -> {held_out_item}
-    - user_recent_items: user_id -> [recent train-only items]
-    """
-    interactions = interactions.sort_values("timestamp")
+# Load all metadata
+item_meta = pd.read_parquet(ITEM_META_PATH)
 
-    eval_users: Dict[int, Set[int]] = {}
-    user_recent_items: Dict[int, List[int]] = {}
+# Build a separate item_genres dictionary
+item_genres = (
+    item_meta.explode("genres")
+    .groupby("movie_id")["genres"]
+    .apply(set)
+    .to_dict()
+)
+
+# Build item_stats DataFrame (extract relevant columns for stats)
+item_stats = item_meta.set_index("movie_id")[
+    ["vote_average", "vote_count", "release_year"]
+]
+
+
+# -------------------------------------------------
+# PREP USER CONTEXT
+# -------------------------------------------------
+def build_user_context(
+    interactions: pd.DataFrame,
+) -> Dict[int, Dict]:
+    interactions = interactions.sort_values("timestamp")
+    ctx = {}
 
     for user_id, df_u in interactions.groupby("userId"):
         if len(df_u) < MIN_USER_INTERACTIONS:
             continue
 
-        train_df = df_u.iloc[:-1]
-        heldout_item = int(df_u.iloc[-1]["movieId"])
-
-        eval_users[int(user_id)] = {heldout_item}
-
-        user_recent_items[int(user_id)] = (
-            train_df["movieId"]
-            .astype(int)
-            .tail(RECENT_K)
-            .tolist()
-        )
-
-    LOGGER.info(
-        "Prepared feature logging inputs | users=%d",
-        len(eval_users),
-    )
-    return eval_users, user_recent_items
-
-
-# -------------------------------------------------------------------
-# LOAD EMBEDDINGS
-# -------------------------------------------------------------------
-two_tower_user_embeddings = np.load(
-    "models/two_tower/user_embeddings.npy"
-)
-als_user_embeddings = np.load(
-    "models/als/user_embeddings.npy"
-)
-als_item_embeddings = np.load(
-    "models/als/item_embeddings.npy"
-)
-
-
-# -------------------------------------------------------------------
-# INSTANTIATE RETRIEVERS
-# -------------------------------------------------------------------
-retriever_objects = [
-    TwoTowerRetriever(
-        model_dir=Path("models/two_tower"),
-        user_embeddings=two_tower_user_embeddings,
-        index_path=Path("src/indices/two_tower"),
-    ),
-    ALSRetriever(
-        model_dir=Path("models/als"),
-        user_embeddings=als_user_embeddings,
-        index_path=Path("src/indices/als"),
-    ),
-    ItemCFRetriever(
-        model_dir=Path("models/als"),
-        item_embeddings=als_item_embeddings,
-        index_path=Path("src/indices/als"),
-    ),
-    ContentBasedRetriever(
-        model_dir=Path("models/content_based"),
-        index_path=Path("src/indices/content_based"),
-    ),
-]
-
-# -------------------------------------------------------------------
-# CANDIDATE QUOTAS
-# -------------------------------------------------------------------
-quotas = {
-    "two_tower": 80,
-    "als": 60,
-    "item_cf": 40,
-    "content": 40,
-}
-
-registry = RetrieverRegistry(
-    retrievers=retriever_objects,
-    quotas=quotas,
-)
-
-orchestrator = RecallOrchestrator(registry)
-
-
-# -------------------------------------------------
-# STREAMING ROW GENERATOR (CRITICAL)
-# -------------------------------------------------
-def row_generator(
-    eval_users: Dict[int, Set[int]],
-    user_recent_items: Dict[int, List[int]],
-) -> Iterator[dict]:
-    """
-    Lazily yields ranking feature rows (NO accumulation).
-    """
-    for user_id, clicked_items in eval_users.items():
-        recent_items = user_recent_items.get(user_id, [])
-
-        candidates: List[Candidate] = orchestrator.recall(
-            user_id=user_id,
-            seen_item_ids=recent_items,
-        )
-
-        if not candidates:
-            continue
-
-        labels: Dict[int, int] = {
-            item_id: 1 for item_id in clicked_items
+        ctx[int(user_id)] = {
+            "recent_items": (
+                df_u["movieId"]
+                .astype(int)
+                .tail(RECENT_K)
+                .tolist()
+            ),
+            "num_interactions": len(df_u),
+            "heldout": set(df_u.iloc[5:]["movieId"].astype(int)),
         }
 
-        for row in build_candidate_features(
-            user_id=user_id,
-            candidates=candidates,
-            labels=labels,
-        ):
-            yield row
+    return ctx
 
 
 # -------------------------------------------------
 # MAIN
 # -------------------------------------------------
 if __name__ == "__main__":
-    LOGGER.info("Loading interaction data")
+    LOGGER.info("Loading interactions")
+    interactions = pd.read_parquet(INTERACTIONS_PATH)
 
-    interactions = pd.read_csv(
-        INTERACTIONS_PATH,
-        usecols=["userId", "movieId", "timestamp"],
-    )
+    user_ctx = build_user_context(interactions)
 
-    eval_users, user_recent_items = build_feature_logging_inputs(
-        interactions
-    )
+    two_tower_user_emb = np.load("./backend/ml/models/two_tower/user_embeddings.npy")
+    als_item_emb = np.load("./backend/ml/models/als/item_embeddings.npy")
 
-    feature_logger = FeatureLogger(
-        output_path=OUTPUT_PATH,
-        chunk_size=500_000,  # safe default
-    )
+    retrievers = [
+        TwoTowerRetriever(
+            model_dir=Path("./backend/ml/models/two_tower"),
+            user_embeddings=two_tower_user_emb,
+            index_path=Path("./backend/indices/two_tower"),
+        ),
+        MetaBasedRetriever(
+            model_dir=Path("./backend/ml/models/meta_based"),
+            index_path=Path("./backend/indices/meta_based"),
+        ),
+        ItemCFRetriever(
+            model_dir=Path("./backend/ml/models/als"),
+            item_embeddings=als_item_emb,
+            index_path=Path("./backend/indices/als"),
+        ),
+        ContentBasedRetriever(
+            model_dir=Path("./backend/ml/models/content_based"),
+            index_path=Path("./backend/indices/content_based"),
+        ),
+    ]
+    quotas = {
+        "two_tower": 80,
+        "item_cf": 60,
+        "content": 60,
+        "meta": 70,
+    }
+    retriever_registry = RetrieverRegistry(retrievers=retrievers, quotas=quotas)
+    orchestrator = RecallOrchestrator(retriever_registry)
 
-    feature_logger.write_stream(
-        row_generator(eval_users, user_recent_items)
-    )
+    feature_logger = FeatureLogger(OUTPUT_PATH)
 
-    LOGGER.info(
-        "Feature logging completed | path=%s",
-        OUTPUT_PATH,
-    )
+    def row_generator() -> Iterator[dict]:
+        for user_id, ctx in user_ctx.items():
+            candidates = orchestrator.recall(
+                user_id=user_id,
+                seen_item_ids=ctx["recent_items"],
+            )
+
+            labels = {i: 2 for i in ctx["heldout"]}
+
+            yield from build_candidate_features(
+                user_id=user_id,
+                candidates=candidates,
+                labels=labels,
+                user_recent_items=ctx["recent_items"],
+                user_num_interactions=ctx["num_interactions"],
+                item_genres=item_genres,
+                item_stats=item_stats,
+            )
+
+    feature_logger.write_stream(row_generator())
+
+    LOGGER.info("Feature logging completed")

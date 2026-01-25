@@ -1,0 +1,10 @@
+dataset: movielens_ratings
+version: v1
+frozen: true
+
+columns:
+  userId: int64
+  movieId: int64
+  rating: float64
+  timestamp: int64
+

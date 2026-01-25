@@ -1,0 +1,119 @@
+# Schema version configuration for movie enrichment pipeline
+# When adding new fields, increment the version and document changes
+
+current_version: "1.0.0"
+
+versions:
+  "1.0.0":
+    description: "Initial movie enrichment schema"
+    date: "2025-01-08"
+    fields:
+      - name: "movie_id"
+        type: "int64"
+        nullable: false
+        description: "Original MovieLens movie ID"
+      
+      - name: "tmdb_id"
+        type: "int64"
+        nullable: false
+        description: "TMDB movie identifier"
+      
+      - name: "imdb_id"
+        type: "string"
+        nullable: true
+        description: "IMDb movie identifier (e.g., tt0111161)"
+      
+      - name: "title"
+        type: "string"
+        nullable: true
+        description: "Movie title"
+      
+      - name: "overview"
+        type: "string"
+        nullable: true
+        description: "Movie plot synopsis"
+      
+      - name: "genres"
+        type: "list<string>"
+        nullable: true
+        description: "List of genre names"
+      
+      - name: "keywords"
+        type: "list<string>"
+        nullable: true
+        description: "List of keyword tags"
+      
+      - name: "top_cast"
+        type: "list<string>"
+        nullable: true
+        description: "Top 5 cast members"
+      
+      - name: "director"
+        type: "string"
+        nullable: true
+        description: "Primary director name"
+      
+      - name: "runtime_minutes"
+        type: "int64"
+        nullable: true
+        description: "Movie runtime in minutes"
+      
+      - name: "release_year"
+        type: "int64"
+        nullable: true
+        description: "Year of release (used for partitioning)"
+      
+      - name: "popularity_score"
+        type: "float64"
+        nullable: true
+        description: "TMDB popularity score"
+      
+      - name: "vote_count"
+        type: "int64"
+        nullable: true
+        description: "TMDB vote count"
+      
+      - name: "vote_average"
+        type: "float64"
+        nullable: true
+        description: "TMDB average rating (0-10)"
+      
+      - name: "imdb_rating"
+        type: "float64"
+        nullable: true
+        description: "IMDb user rating (0-10)"
+      
+      - name: "imdb_votes"
+        type: "int64"
+        nullable: true
+        description: "IMDb vote count"
+      
+      - name: "poster_path"
+        type: "string"
+        nullable: true
+        description: "Relative path to poster image on TMDB"
+      
+      - name: "backdrop_path"
+        type: "string"
+        nullable: true
+        description: "Relative path to backdrop image on TMDB"
+      
+      - name: "language"
+        type: "string"
+        nullable: true
+        description: "Primary language"
+      
+      - name: "country"
+        type: "string"
+        nullable: true
+        description: "Production country"
+      
+      - name: "collection_id"
+        type: "int64"
+        nullable: true
+        description: "TMDB collection identifier"
+      
+      - name: "collection_name"
+        type: "string"
+        nullable: true
+        description: "Collection name (e.g., 'Star Wars Collection')"

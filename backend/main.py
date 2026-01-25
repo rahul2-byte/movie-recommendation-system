@@ -1,29 +1,46 @@
 from dotenv import load_dotenv
 load_dotenv()
-from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.services.movie_index import load_movie_index
-from api.recommend.movie_index import load_movies
+from backend.api.v1.catalog import router as catalog_router
+from backend.api.v1.movies import router as movies_router
+from backend.api.v1.recommend import router as recommend_router
 
-from api.v1.catalog import router as catalog_router
-from api.v1.movies import router as movies_router
-from api.v1.recommend import router as recommend_router
+from backend.ml.recommend.pipeline import RecommendationPipeline
+from backend.ml.recommend.recall_service import RecallService
+from backend.ml.recommend.lgbm_ranker import LGBMRanker
+from backend.services.movie_store import MovieStore
+from backend.io.data_loader import load_movielens_movies, load_movielens_links
 
-from api.recommend.model_registry import get_lgbm_model
+from logger.background.tasks import start_background_tasks
 
 app = FastAPI(title="Movie Platform API")
 
 @app.on_event("startup")
 def startup():
-    load_movies(Path("./backend/data/raw/movies.csv"))
-    load_movie_index(
-        Path("./backend/data/raw/movies.csv"),
-        Path("./backend/data/raw/links.csv")
+    start_background_tasks()
+    
+    # Load data
+    movies_df = load_movielens_movies()
+    links_df = load_movielens_links()
+    
+    # Instantiate services
+    movie_store = MovieStore(movies_df, links_df)
+    recall_service = RecallService()
+    ranker = LGBMRanker(model_path="./backend/ml/models/ranker/lgbm_lambdarank.txt")
+    
+    # Instantiate pipeline
+    recommendation_pipeline = RecommendationPipeline(
+        recall_service=recall_service,
+        ranker=ranker,
+        movie_store=movie_store,
     )
-    get_lgbm_model("./backend/models/ranker/lgbm_lambdarank.txt")
+    
+    # Store services in app state
+    app.state.movie_store = movie_store
+    app.state.recommendation_pipeline = recommendation_pipeline
 
 app.add_middleware(
     CORSMiddleware,
