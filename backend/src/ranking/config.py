@@ -3,8 +3,8 @@ from typing import List
 # -------------------------------
 # Data
 # -------------------------------
-DATA_PATH = "data/processed/ranking_features.parquet"
-MODEL_OUTPUT_PATH = "models/ranker/lgbm_lambdarank.txt"
+DATA_PATH = "./backend/data/processed/ranking_features.parquet"
+MODEL_OUTPUT_PATH = "./backend/models/ranker/lgbm_lambdarank.txt"
 
 # -------------------------------
 # Columns

@@ -1,0 +1,8 @@
+dataset: movielens_movies
+version: v1
+frozen: true
+
+columns:
+  movieId: int64
+  title: string
+  genres: string

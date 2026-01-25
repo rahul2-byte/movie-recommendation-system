@@ -2,9 +2,10 @@ import "./globals.css"
 import type { Metadata } from "next"
 import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
+import { RecommendationProvider } from "@/lib/context/RecommendationContext"
 
 export const metadata: Metadata = {
-  title: "CineSeek",
+  title: "Movies99",
   description: "ML-powered movie recommendation system",
 }
 
@@ -14,10 +15,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className="bg-black text-white antialiased">
-      <Header />
-        <main className="pt-16">{children}</main>
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
+        <Header />
+        <RecommendationProvider>
+          {children}
+        </RecommendationProvider>
         <Footer />
       </body>
     </html>

@@ -25,17 +25,19 @@ class FeatureLogger:
             buffer.append(row)
 
             if len(buffer) >= self.chunk_size:
-                self._flush(buffer)
+                self.write_rows(buffer)
                 buffer.clear()
 
         if buffer:
-            self._flush(buffer)
+            self.write_rows(buffer)
+        
+        self.close()
 
-        if self._writer:
-            self._writer.close()
-            logger.info("Feature logging completed: %s", self.output_path)
-
-    def _flush(self, rows: List[dict]) -> None:
+    def write_rows(self, rows: List[dict]) -> None:
+        """Appends a list of rows to the Parquet file."""
+        if not rows:
+            return
+            
         df = pd.DataFrame(rows)
 
         df = df.astype(
@@ -56,7 +58,12 @@ class FeatureLogger:
                 table.schema,
                 compression="snappy",
             )
-
+        
         self._writer.write_table(table)
 
         logger.info("Flushed %d rows", len(rows))
+
+    def close(self):
+        if self._writer:
+            self._writer.close()
+            logger.info("Feature logging completed: %s", self.output_path)

@@ -1,26 +1,29 @@
-name: movie-recommender
+name: torch
 channels:
-  - conda-forge
-  - pytorch
-  - nvidia
+  - defaults
 dependencies:
   - python=3.10
   - numpy
   - pandas
-  - scipy
   - scikit-learn
-  - pytorch
-  - pytorch-cuda=12.1
-  - cudatoolkit
-  - faiss-gpu
-  - fastapi
-  - uvicorn
-  - pyyaml
+  - jupyterlab
+  - notebook
   - tqdm
-  - pip
-  - pip:
-      - loguru
-      - pytest
-      - black
-      - isort
-      - mypy
+  - gensim
+  - lightgbm
+  - parquet-python
+  - pyarrow
+  - implicit
+  - polars
+  - faiss
+  - torchaudio
+  - pytorch-cuda=12.1
+  - pytorch
+  - torchvision
+  - streamlit
+  - requests
+  - uvicorn
+  - fastapi
+  - python-dotenv
+  - aiohttp
+prefix: C:\Users\Rahul singh\miniconda3\envs\torch

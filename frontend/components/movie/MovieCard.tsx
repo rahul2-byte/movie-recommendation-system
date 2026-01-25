@@ -1,38 +1,31 @@
-"use client"
+import Image from "next/image"
 
-import { motion } from "framer-motion"
-import Link from "next/link"
-import { Movie } from "@/lib/types/movie"
-
-interface Props {
-  movie: Movie
-}
-
-export function MovieCard({ movie }: Props) {
+export function MovieCard({ movie }) {
   return (
-    <Link href={`/movie/${movie.movieId}`}>
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        className="relative w-44 shrink-0 cursor-pointer"
-      >
-        <img
-          src={movie.posterUrl}
-          alt={movie.title}
-          className="rounded-lg object-cover"
-        />
-
-        <div className="absolute inset-0 rounded-lg bg-gradient-to-t
-          from-black/80 via-black/20 to-transparent
-          opacity-0 hover:opacity-100 transition"
-        >
-          <div className="absolute bottom-3 left-3 right-3 text-sm">
-            <p className="font-semibold">{movie.title}</p>
-            <p className="text-xs text-gray-300">
-              {movie.year} • ⭐ {movie.rating}
-            </p>
+    <div className="w-[160px] shrink-0 space-y-2">
+      <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-neutral-800">
+        {movie.posterUrl ? (
+          <Image
+            src={movie.posterUrl}
+            alt={movie.title}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-sm text-neutral-400">
+            Poster Unavailable
           </div>
-        </div>
-      </motion.div>
-    </Link>
+        )}
+      </div>
+
+      <div>
+        <p className="font-semibold leading-tight truncate">
+          {movie.title}
+        </p>
+        <p className="text-sm text-neutral-500 font-medium">
+          {movie.year} · ⭐ {movie.rating?.toFixed(1) ?? "—"}
+        </p>
+      </div>
+    </div>
   )
 }

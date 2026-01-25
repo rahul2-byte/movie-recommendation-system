@@ -1,0 +1,10 @@
+{
+  "schema_version": "Initial movie enrichment schema",
+  "total_rows": 34644,
+  "total_columns": 22,
+  "file_size_mb": 12.69,
+  "compression": "snappy",
+  "failed_files": [],
+  "output_file": "C:\\Users\\Rahul singh\\Desktop\\Project 1\\movie-recommender\\backend\\data\\processed\\movies_enriched.parquet",
+  "schema": "movie_id: int64 not null\ntmdb_id: int64 not null\nimdb_id: string\ntitle: string\noverview: string\ngenres: list<item: string>\n  child 0, item: string\nkeywords: list<item: string>\n  child 0, item: string\ntop_cast: list<item: string>\n  child 0, item: string\ndirector: string\nruntime_minutes: int64\nrelease_year: int64\npopularity_score: double\nvote_count: int64\nvote_average: double\nimdb_rating: double\nimdb_votes: int64\nposter_path: string\nbackdrop_path: string\nlanguage: string\ncountry: string\ncollection_id: int64\ncollection_name: string"
+}

@@ -18,8 +18,7 @@ from pathlib import Path
 
 import polars as pl
 
-from retrieval.content_based.config import TfidfConfig
-from retrieval.content_based.encoder import TfidfEncoder
+from src.retrieval.content_based_tfidf_encoder import TfidfConfig, TfidfEncoder
 
 # ---------------------------------------------------------
 # Logging

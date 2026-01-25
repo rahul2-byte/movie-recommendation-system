@@ -1,20 +1,33 @@
 "use client"
 
-import { useRecommendationStore } from "@/lib/store/recommendationStore"
+import { useRecommendationStore } from "@/lib/store/recommendation"
 import { MovieCard } from "@/components/movie/MovieCard"
 
 export default function RecommendationsPage() {
-  const { results } = useRecommendationStore()
+  const { recommendations } = useRecommendationStore()
+
+  if (!recommendations || recommendations.length === 0) {
+    return (
+      <div className="p-6 text-gray-400">
+        No recommendations found.
+      </div>
+    )
+  }
 
   return (
-    <main className="px-10 py-8">
-      <h1 className="mb-6 text-3xl font-bold">Your Recommendations</h1>
+    <div className="px-6 py-8">
+      <h1 className="mb-6 text-2xl font-bold">
+        Recommended for You
+      </h1>
 
-      <div className="grid grid-cols-6 gap-6">
-        {results.map((m) => (
-          <MovieCard key={m.movieId} movie={m} />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {recommendations.map((movie) => (
+          <MovieCard
+            key={movie.movieId}
+            movie={movie}
+          />
         ))}
       </div>
-    </main>
+    </div>
   )
 }

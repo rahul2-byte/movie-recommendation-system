@@ -1,0 +1,14 @@
+import mlflow
+from logger.config.settings import MLFLOW_TRACKING_URI
+
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+
+
+def get_or_create_experiment(experiment_name: str) -> str:
+    exp = mlflow.get_experiment_by_name(experiment_name)
+    if exp:
+        return exp.experiment_id
+
+    return mlflow.create_experiment(
+        name=experiment_name,
+    )

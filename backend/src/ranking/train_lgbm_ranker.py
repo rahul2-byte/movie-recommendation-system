@@ -5,8 +5,9 @@ from typing import Tuple
 import lightgbm as lgb
 import pandas as pd
 import numpy as np
+import pickle
 
-from ranking.config import (
+from src.ranking.config import (
     DATA_PATH,
     MODEL_OUTPUT_PATH,
     LABEL_COL,
@@ -92,7 +93,9 @@ def train_lambdarank(
 
 def save_model(model: lgb.Booster) -> None:
     Path(MODEL_OUTPUT_PATH).parent.mkdir(parents=True, exist_ok=True)
-    model.save_model(MODEL_OUTPUT_PATH)
+    
+    with open(MODEL_OUTPUT_PATH, "wb") as f:
+        pickle.dump(model, f)
     LOGGER.info("Model saved to %s", MODEL_OUTPUT_PATH)
 
 
