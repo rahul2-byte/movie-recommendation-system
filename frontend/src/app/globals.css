@@ -1,0 +1,105 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+  --font-ui: var(--font-rubik);
+
+  --spacing-section: 6rem;
+}
+
+@layer base {
+  :root {
+    /* Sophisticated Muted Palette from Inspiration */
+    --background: 228 24% 12%; /* Deep navy #1a1d29 */
+    --foreground: 0 0% 100%;
+    
+    --card: 228 24% 16%;
+    --card-foreground: 0 0% 100%;
+    
+    --primary: 22 89% 65%; /* Muted Orange/Coral #f9b17a */
+    --primary-foreground: 228 24% 10%;
+    
+    --secondary: 228 15% 45%; /* Blueish Gray #676f9d */
+    --secondary-foreground: 0 0% 100%;
+    
+    --accent: 228 20% 30%; /* Darker Blue Gray #424769 */
+    --accent-foreground: 0 0% 100%;
+    
+    --muted: 228 20% 20%;
+    --muted-foreground: 228 15% 70%;
+    
+    --border: 228 20% 25%;
+    --input: 228 20% 18%;
+    --ring: 22 89% 65%;
+    
+    --radius: 1.25rem;
+    
+    --font-inter: "Inter", sans-serif;
+    --font-playfair: "Playfair Display", serif;
+    --font-rubik: "Rubik", sans-serif;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased leading-relaxed;
+    /* Tint Overlay inspired by Behance shots */
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(228, 24%, 15%, 1) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(22, 89%, 10%, 0.1) 0, transparent 50%),
+      radial-gradient(at 50% 100%, hsla(228, 24% , 8%, 1) 0, transparent 50%);
+    background-attachment: fixed;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    @apply font-bold tracking-tight text-foreground;
+    line-height: 1.1;
+  }
+
+  button, input, select, nav, .ui-element {
+    font-family: var(--font-ui);
+    @apply font-medium;
+  }
+}
+
+@layer utilities {
+  .container {
+    @apply mx-auto max-w-7xl px-6;
+  }
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 shadow-2xl transition-all hover:bg-white/10;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}
