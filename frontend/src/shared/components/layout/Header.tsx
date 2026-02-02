@@ -25,7 +25,7 @@ export function Header() {
               M99
             </span>
           </Link>
-          <nav className="hidden md:flex items-center space-x-8 text-[11px] font-medium uppercase tracking-[0.25em] text-muted-foreground/70">
+          <nav className="hidden md:flex items-center space-x-8 nav-text text-muted-foreground/70">
             {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.href
               return (

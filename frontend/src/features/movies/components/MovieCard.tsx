@@ -19,7 +19,7 @@ export function MovieCard({ movie, index = 0 }: MovieCardProps) {
       whileHover={{ y: -12, transition: { duration: 0.3 } }}
       className="group"
     >
-      <Card className="w-[220px] shrink-0 overflow-hidden border border-white/5 bg-card transition-all group-hover:border-primary/30 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-[1.5rem]">
+      <Card className="w-[220px] shrink-0 overflow-hidden border border-white/5 bg-card transition-all group-hover:border-primary/30 card-shadow-hover rounded-[1.5rem]">
         <div className="relative aspect-[2/3] overflow-hidden bg-muted">
           {movie.posterUrl ? (
             <Image

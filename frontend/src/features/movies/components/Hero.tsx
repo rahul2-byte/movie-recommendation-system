@@ -22,10 +22,10 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-7xl md:text-[10rem] font-bold leading-[0.8] mb-12 text-white text-balance"
+          className="hero-title mb-12 text-white text-balance"
         >
           Cinematic <br /> 
-          <span className="text-primary italic font-light drop-shadow-[0_0_30px_rgba(249,177,122,0.3)]">
+          <span className="text-primary italic font-light drop-shadow-primary-glow">
             Intelligence
           </span>
         </motion.h1>
