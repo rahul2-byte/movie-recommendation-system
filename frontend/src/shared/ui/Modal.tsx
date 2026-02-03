@@ -5,7 +5,7 @@ import type { ComponentProps } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 const modalVariants = cva(
-  "fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-300",
+  "fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-300",
   {
     variants: {},
     defaultVariants: {},
@@ -13,7 +13,7 @@ const modalVariants = cva(
 )
 
 const modalContentVariants = cva(
-  "relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-card border border-white/5 p-12 shadow-2xl animate-in zoom-in-95 duration-300 no-scrollbar",
+  "relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-[2.5rem] bg-card border border-white/5 p-8 shadow-2xl animate-in zoom-in-95 duration-300 no-scrollbar",
   {
     variants: {},
     defaultVariants: {},

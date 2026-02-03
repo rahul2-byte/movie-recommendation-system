@@ -19,6 +19,7 @@ type RecommendationState = {
 
   /* results */
   recommendations: RecommendedMovie[]
+  error: string | null
 
   /* genre actions */
   addGenre: (g: Genre) => void
@@ -30,6 +31,7 @@ type RecommendationState = {
 
   /* recommendation actions */
   setRecommendations: (r: RecommendedMovie[]) => void
+  setError: (e: string | null) => void
 
   /* reset */
   clearAll: () => void
@@ -46,6 +48,7 @@ export const useRecommendationStore = create<RecommendationState>()(
 
       /* results */
       recommendations: [],
+      error: null,
 
       /* genre actions */
       addGenre: (genre) =>
@@ -81,7 +84,9 @@ export const useRecommendationStore = create<RecommendationState>()(
 
       /* recommendation actions */
       setRecommendations: (recommendations) =>
-        set({ recommendations }),
+        set({ recommendations, error: null }),
+      
+      setError: (error) => set({ error }),
 
       /* reset */
       clearAll: () =>
@@ -89,6 +94,7 @@ export const useRecommendationStore = create<RecommendationState>()(
           selectedGenres: [],
           selectedMovies: [],
           recommendations: [],
+          error: null,
         }),
     }),
     {

@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 
 export function Hero() {
   return (
-    <section className="relative w-full h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden bg-background px-6 mb-20">
+    <section className="relative w-full h-[calc(100vh-56px)] flex items-center justify-center overflow-hidden bg-background px-6 mb-20">
       {/* Soft color bleed background */}
       <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_50%_50%,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
       

@@ -18,7 +18,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/40 backdrop-blur-xl transition-all">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-12">
           <Link href="/" className="flex items-center space-x-2 group">
             <span className="text-xl font-black tracking-tighter text-primary uppercase italic transition-transform group-hover:skew-x-[-10deg]">

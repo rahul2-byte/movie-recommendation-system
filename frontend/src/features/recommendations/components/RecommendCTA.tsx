@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion"
 
 export function RecommendCTA({ onDone }: { onDone: () => void }) {
     const { selectedMovies } = useRecommendationStore()
-    const { mutate, isPending, isError } = useRecommendations()
+    const { mutate, isPending, isError, error } = useRecommendations()
 
     const requiredCount = 5
     const selectedCount = selectedMovies.length
@@ -75,9 +75,14 @@ export function RecommendCTA({ onDone }: { onDone: () => void }) {
             </Button>
 
             {isError && (
-                <p className="text-center text-xs text-destructive font-black uppercase tracking-widest italic">
-                    The reel jammed. Please try again.
-                </p>
+                <div className="text-center space-y-2">
+                    <p className="text-xs text-destructive font-black uppercase tracking-widest italic">
+                        {error?.message?.includes("fetch") || error?.message?.includes("connect")
+                             ? "Connection Lost. Is the backend running?"
+                             : "The reel jammed. Please try again."}
+                    </p>
+                    {error?.message && <p className="text-[10px] text-muted-foreground">{error.message}</p>}
+                </div>
             )}
         </div>
     )
