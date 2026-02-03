@@ -20,14 +20,14 @@ export function MovieDetailModal({
 
   return (
     <Modal className="z-[200]">
-      <div className="relative max-w-4xl w-full bg-[#0a0f1d] text-white rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+      <div className="relative max-w-4xl w-full bg-card text-card-foreground rounded-3xl overflow-hidden border border-border/50 shadow-2xl">
         <div className="absolute top-4 right-4 z-50">
             <ModalCloseButton onClick={onClose} />
         </div>
         
         <div className="grid md:grid-cols-[2fr_3fr] h-full max-h-[85vh] overflow-y-auto md:overflow-hidden">
             {/* Image Section */}
-            <div className="relative aspect-[2/3] md:h-full bg-black/50 min-h-[300px]">
+            <div className="relative aspect-[2/3] md:h-full bg-muted min-h-[300px]">
                 {movie.posterUrl ? (
                     <Image
                         src={movie.posterUrl}
@@ -37,20 +37,20 @@ export function MovieDetailModal({
                         sizes="(max-width: 768px) 100vw, 400px"
                     />
                 ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-white/20 font-bold uppercase tracking-widest">
+                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground font-bold uppercase tracking-widest">
                         No Poster
                     </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1d] via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-[#0a0f1d]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-card" />
             </div>
 
             {/* Content Section */}
             <div className="p-8 md:p-12 space-y-8 flex flex-col justify-center h-full overflow-y-auto">
                 <div className="space-y-3">
-                    <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-[0.9] text-white">
+                    <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-[0.9] text-foreground">
                         {movie.title}
                     </h2>
-                    <div className="flex flex-wrap gap-6 text-[11px] font-bold uppercase tracking-[0.2em] text-white/50">
+                    <div className="flex flex-wrap gap-6 text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                         {movie.year && (
                             <span className="flex items-center gap-2">
                                 <Calendar className="w-3 h-3" /> {movie.year}
@@ -66,7 +66,7 @@ export function MovieDetailModal({
 
                 <div className="flex flex-wrap gap-2">
                     {movie.genres.map(genre => (
-                        <span key={genre} className="px-3 py-1 bg-white/5 border border-white/5 rounded-full text-[10px] font-bold uppercase tracking-wider text-white/70">
+                        <span key={genre} className="px-3 py-1 bg-muted/50 border border-border rounded-full text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                             {genre}
                         </span>
                     ))}
@@ -76,7 +76,7 @@ export function MovieDetailModal({
                     <h3 className="text-xs font-bold uppercase tracking-widest text-primary/80 flex items-center gap-2">
                         <Info className="w-3 h-3" /> Synopsis
                     </h3>
-                    <p className="text-sm md:text-base leading-relaxed text-white/70 font-medium">
+                    <p className="text-sm md:text-base leading-relaxed text-muted-foreground font-medium">
                         {movie.overview || "No synopsis available for this title."}
                     </p>
                 </div>

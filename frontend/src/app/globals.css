@@ -39,6 +39,7 @@
   --tracking-nav: var(--nav-tracking);
   --shadow-primary-glow: var(--primary-glow);
   --shadow-card-elevated: var(--card-elevated);
+  --drop-shadow-glow: var(--drop-shadow-glow);
 }
 
 @layer base {
@@ -81,7 +82,8 @@
     
     /* 4. Shadows & Effects */
     --primary-glow: 0 0 30px hsla(22, 89%, 65%, 0.3);
-    --card-elevated: 0 20px 50px rgba(0, 0, 0, 0.5);
+    --card-elevated: 0 20px 50px hsla(228, 24%, 5%, 0.5);
+    --drop-shadow-glow: 0 0 20px hsla(22, 89%, 65%, 0.3);
   }
 }
 

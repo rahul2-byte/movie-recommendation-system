@@ -23,7 +23,7 @@ export function RecommendationModal({
                 <header className="flex items-start justify-between">
                     <div className="space-y-2">
                         <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase italic leading-none">
-                            Define Your <span className="text-primary drop-shadow-[0_0_20px_rgba(249,177,122,0.3)]">Taste</span>
+                            Define Your <span className="text-primary drop-shadow-glow">Taste</span>
                         </h2>
                         
                         <AnimatePresence mode="wait">

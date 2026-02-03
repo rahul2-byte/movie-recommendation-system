@@ -103,7 +103,7 @@ export function MovieAutocomplete() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
                         role="listbox"
-                        className="absolute z-[100] mt-2 w-full max-h-[300px] overflow-y-auto bg-[#0a0f1d] border border-white/10 rounded-2xl shadow-2xl scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10"
+                        className="absolute z-50 mt-2 w-full max-h-[300px] overflow-y-auto bg-card border border-border/50 rounded-2xl shadow-2xl scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border/20"
                         onMouseDown={(e) => e.preventDefault()} // Prevent blur on scroll
                     >
                         {filteredResults.map((movie, index) => (
@@ -115,22 +115,22 @@ export function MovieAutocomplete() {
                                 onClick={() => selectMovie(movie)}
                                 onMouseEnter={() => setActiveIndex(index)}
                                 className={cn(
-                                    "flex w-full items-center justify-between px-5 py-3 text-left transition-colors border-b border-white/5 last:border-0",
-                                    index === activeIndex ? "bg-white/10" : "hover:bg-white/5"
+                                    "flex w-full items-center justify-between px-5 py-3 text-left transition-colors border-b border-border/30 last:border-0",
+                                    index === activeIndex ? "bg-muted/50" : "hover:bg-muted/30"
                                 )}
                             >
                                 <div className="flex flex-col gap-0.5 overflow-hidden">
                                     <span className={cn(
                                         "text-sm font-bold uppercase tracking-wider truncate transition-colors",
-                                        index === activeIndex ? "text-primary" : "text-white/80"
+                                        index === activeIndex ? "text-primary" : "text-muted-foreground"
                                     )}>
                                         {movie.title}
                                     </span>
-                                    <div className="flex items-center gap-2 text-[10px] font-medium text-white/30 uppercase tracking-widest">
+                                    <div className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground/50 uppercase tracking-widest">
                                         {movie.year && <span>{movie.year}</span>}
                                         {movie.genres && movie.genres.length > 0 && (
                                             <>
-                                                <span className="w-0.5 h-0.5 bg-white/20 rounded-full" />
+                                                <span className="w-0.5 h-0.5 bg-border rounded-full" />
                                                 <span className="truncate max-w-[150px]">{movie.genres.slice(0, 2).join(", ")}</span>
                                             </>
                                         )}
