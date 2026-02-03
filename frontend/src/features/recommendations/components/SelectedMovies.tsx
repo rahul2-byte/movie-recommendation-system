@@ -20,7 +20,7 @@ export function SelectedMovies() {
                         exit={{ opacity: 0, scale: 0.8 }}
                         className="flex items-center gap-2 px-4 py-2 bg-accent/30 border border-white/5 rounded-full"
                     >
-                        <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                        <span className="text-xs font-bold uppercase tracking-wider text-foreground truncate max-w-[150px]">
                             {movie.title}
                         </span>
                         <button

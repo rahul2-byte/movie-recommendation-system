@@ -12,6 +12,7 @@ export function useRecommendations() {
   return useMutation({
     mutationFn: fetchRecommendations,
     onSuccess: (data) => {
+      console.log("Recommendation API Response:", data)
       setRecommendations(data.recommendations)
       router.push("/recommendations")
     },

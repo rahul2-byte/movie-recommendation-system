@@ -8,26 +8,28 @@ import { motion } from "framer-motion"
 interface MovieCardProps {
   movie: Movie
   index?: number
+  onClick?: () => void
 }
 
-export function MovieCard({ movie, index = 0 }: MovieCardProps) {
+export function MovieCard({ movie, index = 0, onClick }: MovieCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       whileHover={{ y: -12, transition: { duration: 0.3 } }}
-      className="group"
+      className="group w-full cursor-pointer"
+      onClick={onClick}
     >
-      <Card className="w-[220px] shrink-0 overflow-hidden border border-white/5 bg-card transition-all group-hover:border-primary/30 card-shadow-hover rounded-[1.5rem]">
-        <div className="relative aspect-[2/3] overflow-hidden bg-muted">
+      <Card className="w-full overflow-hidden border border-white/5 bg-card transition-all group-hover:border-primary/30 card-shadow-hover rounded-[1.5rem]">
+        <div className="relative aspect-[2/3] w-full overflow-hidden bg-muted">
           {movie.posterUrl ? (
             <Image
               src={movie.posterUrl}
               alt={movie.title}
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-110"
-              sizes="220px"
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground uppercase font-bold tracking-widest text-center px-4">

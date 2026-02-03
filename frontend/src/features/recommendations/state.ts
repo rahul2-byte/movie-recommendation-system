@@ -10,4 +10,4 @@ export interface RecommendationState {
     }[]
 }
 
-export const MAX_LIKED_MOVIES = 5
+export const MAX_LIKED_MOVIES = 10

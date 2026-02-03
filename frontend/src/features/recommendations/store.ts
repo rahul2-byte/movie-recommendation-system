@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { persist } from "zustand/middleware"
 import { RecommendedMovie } from "@/features/recommendations/types"
 
 /* ---------- TYPES ---------- */
@@ -36,55 +37,62 @@ type RecommendationState = {
 
 /* ---------- STORE ---------- */
 
-export const useRecommendationStore = create<RecommendationState>((set) => ({
-  /* selections */
-  selectedGenres: [],
-  selectedMovies: [],
-
-  /* results */
-  recommendations: [],
-
-  /* genre actions */
-  addGenre: (genre) =>
-    set((state) =>
-      state.selectedGenres.includes(genre)
-        ? state
-        : { selectedGenres: [...state.selectedGenres, genre] }
-    ),
-
-  removeGenre: (genre) =>
-    set((state) => ({
-      selectedGenres: state.selectedGenres.filter((g) => g !== genre),
-    })),
-
-  /* movie actions */
-  addMovie: (movie) =>
-    set((state) => {
-      if (
-        state.selectedMovies.length >= 5 ||
-        state.selectedMovies.some((m) => m.movieId === movie.movieId)
-      ) {
-        return state
-      }
-      return { selectedMovies: [...state.selectedMovies, movie] }
-    }),
-
-  removeMovie: (id) =>
-    set((state) => ({
-      selectedMovies: state.selectedMovies.filter(
-        (m) => m.movieId !== id
-      ),
-    })),
-
-  /* recommendation actions */
-  setRecommendations: (recommendations) =>
-    set({ recommendations }),
-
-  /* reset */
-  clearAll: () =>
-    set({
+export const useRecommendationStore = create<RecommendationState>()(
+  persist(
+    (set) => ({
+      /* selections */
       selectedGenres: [],
       selectedMovies: [],
+
+      /* results */
       recommendations: [],
+
+      /* genre actions */
+      addGenre: (genre) =>
+        set((state) =>
+          state.selectedGenres.includes(genre)
+            ? state
+            : { selectedGenres: [...state.selectedGenres, genre] }
+        ),
+
+      removeGenre: (genre) =>
+        set((state) => ({
+          selectedGenres: state.selectedGenres.filter((g) => g !== genre),
+        })),
+
+      /* movie actions */
+      addMovie: (movie) =>
+        set((state) => {
+          if (
+            state.selectedMovies.length >= 5 ||
+            state.selectedMovies.some((m) => m.movieId === movie.movieId)
+          ) {
+            return state
+          }
+          return { selectedMovies: [...state.selectedMovies, movie] }
+        }),
+
+      removeMovie: (id) =>
+        set((state) => ({
+          selectedMovies: state.selectedMovies.filter(
+            (m) => m.movieId !== id
+          ),
+        })),
+
+      /* recommendation actions */
+      setRecommendations: (recommendations) =>
+        set({ recommendations }),
+
+      /* reset */
+      clearAll: () =>
+        set({
+          selectedGenres: [],
+          selectedMovies: [],
+          recommendations: [],
+        }),
     }),
-}))
+    {
+      name: "recommendation-storage",
+    }
+  )
+)

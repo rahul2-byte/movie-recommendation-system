@@ -21,6 +21,7 @@ export interface RecommendedMovie {
   rating?: number
   genres: string[]
   score: number
+  overview?: string
 }
 
 export interface RecommendResponse {
