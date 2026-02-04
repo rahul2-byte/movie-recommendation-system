@@ -1,24 +1,30 @@
 import { Button } from "@/shared/ui/Button"
 import Link from "next/link"
 import { Bookmark } from "lucide-react"
+import { PageTransition } from "@/shared/ui/motion/PageTransition"
 
 export default function MyListPage() {
   return (
-    <div className="container py-24 flex flex-col items-center justify-center text-center">
-      <div className="w-24 h-24 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center mb-8">
-        <Bookmark className="w-10 h-10 text-zinc-500" />
-      </div>
-      
-      <h1 className="text-5xl font-black tracking-tighter mb-4">Your List is Quiet</h1>
-      <p className="text-xl text-zinc-400 max-w-md mb-12">
-        Save movies you want to watch later and they&apos;ll appear here for your next movie night.
-      </p>
+    <PageTransition>
+      <div className="container py-section flex flex-col items-center justify-center text-center space-y-stack">
+        <div className="h-icon w-icon rounded-pill bg-surface border border-border flex items-center justify-center">
+          <Bookmark className="w-6 h-6 text-muted-foreground" />
+        </div>
 
-      <Link href="/">
-        <Button size="lg" className="rounded-full px-10">
-          Discover Movies
-        </Button>
-      </Link>
-    </div>
+        <div className="space-y-tight">
+          <h1 className="text-h1 font-semibold">Your list is quiet</h1>
+          <p className="text-body text-muted-foreground max-w-narrow">
+            Save films you want to revisit and they will live here for your next
+            movie night.
+          </p>
+        </div>
+
+        <Link href="/">
+          <Button size="lg" variant="outline">
+            Discover movies
+          </Button>
+        </Link>
+      </div>
+    </PageTransition>
   )
 }

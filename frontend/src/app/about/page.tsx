@@ -1,42 +1,48 @@
 import { Button } from "@/shared/ui/Button"
 import Link from "next/link"
+import { PageTransition } from "@/shared/ui/motion/PageTransition"
 
 export default function AboutPage() {
   return (
-    <div className="container py-24 space-y-16">
-      <section className="max-w-3xl">
-        <h1 className="text-6xl font-black tracking-tighter mb-8 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-          Crafting the Future of Cinematic Discovery
-        </h1>
-        <p className="text-xl text-muted-foreground leading-relaxed">
-          Movies99 was born out of a simple frustration: the endless scroll. 
-          In an age of infinite content, finding something truly meaningful has become a chore.
-        </p>
-      </section>
+    <PageTransition>
+      <div className="container py-section space-y-section">
+        <section className="max-w-narrow space-y-stack">
+          <p className="text-overline text-muted-foreground/70">About the project</p>
+          <h1 className="text-display font-semibold">
+            A portfolio piece built to feel like a real product.
+          </h1>
+          <p className="text-body-lg text-muted-foreground">
+            Movies99 is a personal project that blends machine learning with a
+            premium interface. The goal: prove end-to-end product execution with
+            a clean, modern visual system.
+          </p>
+        </section>
 
-      <div className="grid md:grid-cols-2 gap-12">
-        <div className="space-y-4 p-8 rounded-3xl bg-muted/30 border border-border/50">
-          <h2 className="text-2xl font-bold">The Vision</h2>
-          <p className="text-muted-foreground">
-            We use advanced machine learning—specifically Matrix Factorization and Two-Tower architectures—to understand the nuanced relationships between films and your unique taste profile.
-          </p>
+        <div className="grid md:grid-cols-2 gap-grid">
+          <div className="space-y-tight p-card rounded-xl bg-surface border border-border/60">
+            <h2 className="text-h3 font-semibold">The Vision</h2>
+            <p className="text-body text-muted-foreground">
+              Build a recommendation experience that feels cinematic: curated,
+              calm, and confident. Every decision is designed to reduce noise.
+            </p>
+          </div>
+          <div className="space-y-tight p-card rounded-xl bg-surface border border-border/60">
+            <h2 className="text-h3 font-semibold">The Experience</h2>
+            <p className="text-body text-muted-foreground">
+              A bold typographic system, rounded surfaces, and layered lighting
+              create a portfolio-grade look that still loads fast and scales.
+            </p>
+          </div>
         </div>
-        <div className="space-y-4 p-8 rounded-3xl bg-muted/30 border border-border/50">
-          <h2 className="text-2xl font-bold">The Experience</h2>
-          <p className="text-muted-foreground">
-            Our interface is designed to stay out of your way. Minimal, fast, and elegant. 
-            We focus on the metadata that matters: high-fidelity imagery and precise relevancy scores.
-          </p>
-        </div>
+
+        <section>
+          <Link href="/">
+            <Button size="lg" variant="outline">
+              Back to home
+            </Button>
+          </Link>
+        </section>
       </div>
-
-      <section className="pt-12">
-        <Link href="/">
-          <Button size="lg" className="rounded-full">
-            Back to Home
-          </Button>
-        </Link>
-      </section>
-    </div>
+    </PageTransition>
   )
 }

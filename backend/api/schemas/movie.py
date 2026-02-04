@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 import pyarrow as pa
 import yaml
 
-from backend.configs.settings import SCHEMA_VERSIONS_FILE
+from configs.settings import SCHEMA_VERSIONS_FILE
 
 
 class MovieData(BaseModel):

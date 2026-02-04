@@ -3,13 +3,10 @@
 import { forwardRef } from "react"
 import type { ComponentProps } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/shared/lib/utils"
 
 const chipVariants = cva(
-  "flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1",
-  {
-    variants: {},
-    defaultVariants: {},
-  }
+  "flex items-center gap-2 rounded-pill bg-surface-strong px-chip py-tight text-caption text-muted-foreground border border-border"
 )
 
 export interface ChipProps
@@ -19,20 +16,15 @@ export interface ChipProps
 const Chip = forwardRef<HTMLSpanElement, ChipProps>(
   ({ className, ...props }, ref) => {
     return (
-      <span
-        className={chipVariants({ className })}
-        ref={ref}
-        {...props}
-      />
+      <span className={cn(chipVariants(), className)} ref={ref} {...props} />
     )
   }
 )
 Chip.displayName = "Chip"
 
-const chipCloseButtonVariants = cva("text-gray-500 hover:text-black", {
-  variants: {},
-  defaultVariants: {},
-})
+const chipCloseButtonVariants = cva(
+  "text-muted-foreground hover:text-foreground transition-colors"
+)
 
 export interface ChipCloseButtonProps
   extends ComponentProps<"button">,
@@ -42,7 +34,7 @@ const ChipCloseButton = forwardRef<HTMLButtonElement, ChipCloseButtonProps>(
   ({ className, ...props }, ref) => {
     return (
       <button
-        className={chipCloseButtonVariants({ className })}
+        className={cn(chipCloseButtonVariants(), className)}
         ref={ref}
         {...props}
       >

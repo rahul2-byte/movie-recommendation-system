@@ -1,0 +1,6 @@
+ranker_features:
+  - feat_avg_query_rating
+  - feat_genre_overlap
+  - feat_tag_overlap
+  - feat_candidate_avg_rating
+  - feat_candidate_rating_count

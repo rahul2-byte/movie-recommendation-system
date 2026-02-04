@@ -36,9 +36,11 @@ def convert_csv_to_parquet(
 
 
 def main() -> None:
-    base_csv = Path("backend/data/raw")
-    base_parquet = Path("backend/data/processed")
-    schema_dir = Path("backend/configs/schemas")
+    # Define paths relative to the project root to make script executable from anywhere
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+    base_csv = PROJECT_ROOT / "data/raw"
+    base_parquet = PROJECT_ROOT / "data/processed"
+    schema_dir = PROJECT_ROOT / "configs/schemas"
 
     convert_csv_to_parquet(
         csv_path=base_csv / "movies.csv",

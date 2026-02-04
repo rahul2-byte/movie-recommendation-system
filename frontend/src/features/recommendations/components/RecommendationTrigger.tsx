@@ -11,24 +11,24 @@ const RecommendationModal = lazy(() =>
 )
 
 export function RecommendationTrigger() {
-    const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false)
 
-    return (
-        <>
-            <Button 
-                onClick={() => setOpen(true)} 
-                size="lg" 
-                className="rounded-full px-10 py-8 text-2xl font-black transition-all hover:scale-105 active:scale-95 bg-primary text-primary-foreground retro-shadow italic uppercase tracking-tighter"
-            >
-                <Sparkles className="mr-3 h-6 w-6 fill-current" />
-                Start My Reel
-            </Button>
+  return (
+    <>
+      <Button
+        onClick={() => setOpen(true)}
+        size="lg"
+        className="rounded-pill px-control-lg-x text-body-lg font-semibold tracking-wide"
+      >
+        <Sparkles className="h-5 w-5" />
+        Start my reel
+      </Button>
 
-            {open && (
-                <Suspense fallback={null}>
-                    <RecommendationModal onClose={() => setOpen(false)} />
-                </Suspense>
-            )}
-        </>
-    )
+      {open && (
+        <Suspense fallback={null}>
+          <RecommendationModal onClose={() => setOpen(false)} />
+        </Suspense>
+      )}
+    </>
+  )
 }

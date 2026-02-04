@@ -1,0 +1,18 @@
+# backend/configs/ranker.yml
+# Configuration for the LightGBM ranking model hyperparameters.
+
+model_params:
+  objective: lambdarank
+  metric: ndcg
+  n_estimators: 500
+  learning_rate: 0.05
+  feature_fraction: 0.8
+  bagging_fraction: 0.8
+  bagging_freq: 1
+  verbose: -1
+  n_jobs: -1
+  seed: 42
+
+eval_params:
+  eval_at: [10, 20] # Metrics to evaluate at (e.g., NDCG@10, NDCG@20)
+  early_stopping_rounds: 10 # Number of rounds without improvement to stop training

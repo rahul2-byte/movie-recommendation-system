@@ -2,16 +2,18 @@
 
 import { useState } from "react"
 import { useRecommendationStore } from "@/features/recommendations/store"
-import { MovieCard } from "@/features/movies/components/MovieCard"
-import Link from "next/link"
-import { Button } from "@/shared/ui/Button"
 import { MovieDetailModal } from "@/features/movies/components/MovieDetailModal"
-import { RecommendedMovie } from "@/features/recommendations/types"
-import { AlertCircle, RefreshCw } from "lucide-react"
+import type { RecommendedMovie } from "@/features/recommendations/types"
+import { RecommendationsEmpty } from "@/features/recommendations/components/RecommendationsEmpty"
+import { RecommendationsError } from "@/features/recommendations/components/RecommendationsError"
+import { RecommendationsGrid } from "@/features/recommendations/components/RecommendationsGrid"
+import { PageTransition } from "@/shared/ui/motion/PageTransition"
 
 export default function RecommendationsPage() {
   const { recommendations, error } = useRecommendationStore()
-  const [selectedMovie, setSelectedMovie] = useState<RecommendedMovie | null>(null)
+  const [selectedMovie, setSelectedMovie] = useState<RecommendedMovie | null>(
+    null
+  )
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleMovieClick = (movie: RecommendedMovie) => {
@@ -21,69 +23,38 @@ export default function RecommendationsPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center px-4 space-y-6">
-        <div className="p-4 bg-destructive/10 rounded-full mb-4">
-          <AlertCircle className="w-12 h-12 text-destructive" />
-        </div>
-        <h2 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter text-white/90">
-          System <span className="text-destructive">Error</span>
-        </h2>
-        <p className="text-sm font-bold uppercase tracking-widest text-white/40 max-w-md leading-relaxed">
-          {error.includes("fetch") || error.includes("connect") 
-            ? "Unable to connect to the discovery engine. The backend might be offline." 
-            : "An unexpected error occurred while generating your reel."}
-        </p>
-        <div className="flex gap-4 mt-8">
-            <Link href="/">
-                <Button variant="outline" size="lg" className="font-bold uppercase tracking-widest">
-                    Try Again
-                </Button>
-            </Link>
-        </div>
-      </div>
+      <PageTransition>
+        <RecommendationsError message={error} />
+      </PageTransition>
     )
   }
 
   if (!recommendations || recommendations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-150px)] text-center px-4 space-y-6">
-        <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-white/90">
-          No <span className="text-primary">Recommendations</span> Yet
-        </h2>
-        <p className="text-sm font-bold uppercase tracking-widest text-white/40 max-w-md">
-          It looks like we don&apos;t have any movie recommendations for you at
-          the moment.
-        </p>
-        <Link href="/">
-          <Button size="lg" className="mt-4 font-black uppercase tracking-widest">
-            Start Discovery
-          </Button>
-        </Link>
-      </div>
+      <PageTransition>
+        <RecommendationsEmpty />
+      </PageTransition>
     )
   }
 
   return (
-    <div className="px-6 py-8">
-      <h1 className="mb-6 text-2xl font-bold text-foreground">
-        Recommended for You
-      </h1>
+    <PageTransition>
+      <div className="container py-section space-y-stack">
+        <div className="space-y-tight">
+          <p className="text-overline text-muted-foreground/70">
+            Personalized for you
+          </p>
+          <h1 className="text-h1 font-semibold">Recommended for you</h1>
+        </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {recommendations.map((movie, index) => (
-          <MovieCard
-            key={`${movie.movieId}-${index}`}
-            movie={movie}
-            onClick={() => handleMovieClick(movie)}
-          />
-        ))}
+        <RecommendationsGrid movies={recommendations} onSelect={handleMovieClick} />
+
+        <MovieDetailModal
+          movie={selectedMovie}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       </div>
-
-      <MovieDetailModal 
-        movie={selectedMovie}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </div>
+    </PageTransition>
   )
 }

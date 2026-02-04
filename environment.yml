@@ -1,29 +1,48 @@
-name: torch
+name: rsys
 channels:
-  - defaults
+  - pytorch
+  - nvidia
+  - conda-forge
 dependencies:
+  # ---- Core ----
   - python=3.10
   - numpy
   - pandas
+  - scipy
   - scikit-learn
+  - tqdm
+
+  # ---- Notebooks ----
   - jupyterlab
   - notebook
-  - tqdm
+
+  # ---- ML / Reco ----
   - gensim
   - lightgbm
-  - parquet-python
-  - pyarrow
-  - implicit
   - polars
-  - faiss
-  - torchaudio
+
+  # ---- Parquet (modern replacement) ----
+  - pyarrow
+
+  # ---- PyTorch + CUDA (correct way) ----
+  - pytorch=2.5.1
+  - torchvision=0.20.1
+  - torchaudio=2.5.1
   - pytorch-cuda=12.1
-  - pytorch
-  - torchvision
-  - streamlit
-  - requests
-  - uvicorn
+
+  # ---- FAISS ----
+  - faiss-gpu
+
+  # ---- Backend / API ----
   - fastapi
-  - python-dotenv
+  - uvicorn
+  - streamlit
   - aiohttp
-prefix: C:\Users\Rahul singh\miniconda3\envs\torch
+  - requests
+  - python-dotenv
+
+  # ---- Pip-only ----
+  - pip
+  - pip:
+      - implicit
+

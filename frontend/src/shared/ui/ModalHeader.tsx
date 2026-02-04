@@ -3,14 +3,9 @@
 import { forwardRef } from "react"
 import type { ComponentProps } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/shared/lib/utils"
 
-const modalHeaderVariants = cva(
-  "mb-6 flex items-center justify-between",
-  {
-    variants: {},
-    defaultVariants: {},
-  }
-)
+const modalHeaderVariants = cva("mb-stack flex items-center justify-between")
 
 export interface ModalHeaderProps
   extends ComponentProps<"header">,
@@ -20,7 +15,7 @@ const ModalHeader = forwardRef<HTMLElement, ModalHeaderProps>(
   ({ className, ...props }, ref) => {
     return (
       <header
-        className={modalHeaderVariants({ className })}
+        className={cn(modalHeaderVariants(), className)}
         ref={ref}
         {...props}
       />

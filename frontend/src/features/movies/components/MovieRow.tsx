@@ -20,20 +20,16 @@ export function MovieRow({ title, movies }: MovieRowProps) {
   }
 
   return (
-    <section className="space-y-10">
-      <div className="flex items-end justify-between px-2">
-        <h2 className="text-4xl md:text-5xl font-bold tracking-tight">{title}</h2>
-        <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary mb-2 hidden md:block">
+    <section className="space-y-stack">
+      <div className="flex items-end justify-between px-tight">
+        <h2 className="text-h2 font-semibold">{title}</h2>
+        <span className="hidden md:block text-overline text-muted-foreground/70">
           Explore All
         </span>
       </div>
       <Carousel>
         {movies.map((movie, index) => (
-          <MovieCard
-            key={movie.tmdbId}
-            movie={movie}
-            index={index}
-          />
+          <MovieCard key={movie.tmdbId} movie={movie} index={index} />
         ))}
       </Carousel>
     </section>

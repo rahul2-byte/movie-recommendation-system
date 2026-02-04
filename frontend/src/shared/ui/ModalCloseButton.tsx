@@ -4,14 +4,9 @@ import { forwardRef } from "react"
 import type { ComponentProps } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Button } from "./Button"
+import { cn } from "@/shared/lib/utils"
 
-const modalCloseButtonVariants = cva(
-  "text-gray-500",
-  {
-    variants: {},
-    defaultVariants: {},
-  }
-)
+const modalCloseButtonVariants = cva("text-muted-foreground")
 
 export interface ModalCloseButtonProps
   extends ComponentProps<"button">,
@@ -22,7 +17,8 @@ const ModalCloseButton = forwardRef<HTMLButtonElement, ModalCloseButtonProps>(
     return (
       <Button
         variant="ghost"
-        className={modalCloseButtonVariants({ className })}
+        size="icon"
+        className={cn(modalCloseButtonVariants(), className)}
         ref={ref}
         {...props}
       >

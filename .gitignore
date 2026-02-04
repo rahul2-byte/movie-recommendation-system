@@ -31,6 +31,9 @@ data/interim/
 *.feather
 *.h5
 *.npy
+*.train
+*.test
+*.query
 
 # =========================
 # Model Artifacts
@@ -58,7 +61,7 @@ mlruns/
 Thumbs.db
 .vscode/
 .idea/
-
+.nvim/
 # =========================
 # Build / Cache
 # =========================

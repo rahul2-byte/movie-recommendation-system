@@ -13,10 +13,19 @@ faiss-cpu
 fastapi
 uvicorn
 
+# For ranking model
+lightgbm>=4.0.0
+
+# For experiment tracking
+mlflow>=2.8.0
+
 pydantic
 pyyaml
 tqdm
 loguru
+
+# For config management
+dotmap>=1.3.0
 
 pytest
 black

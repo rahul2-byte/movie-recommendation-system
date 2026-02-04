@@ -1,82 +1,105 @@
 import Link from "next/link"
 import { Button } from "@/shared/ui/Button"
+import { PageTransition } from "@/shared/ui/motion/PageTransition"
 
 export default function ProjectPage() {
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10 space-y-8">
-      <h1 className="text-4xl font-bold text-center mb-10">
-        Our Recommendation Engine
-      </h1>
-
-      <section className="bg-card p-8 rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold mb-4">
-          Unveiling the Magic Behind Your Perfect Movie Match
-        </h2>
-        <p className="text-lg text-muted-foreground">
-          At Movies99, we believe finding your next favorite film should be an
-          effortless and delightful experience. Our recommendation engine is
-          crafted with cutting-edge machine learning to understand your unique
-          tastes and deliver personalized suggestions you&apos;ll truly love.
-        </p>
-      </section>
-
-      <section className="grid md:grid-cols-2 gap-8">
-        <div className="bg-card p-8 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-3">
-            Intelligent Multi-Stage Pipeline
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            Our system employs a sophisticated Recall, Rank, and Re-rank
-            pipeline, meticulously designed to surface the most relevant films
-            from a vast cinematic universe.
-          </p>
-          <ul className="list-disc list-inside text-muted-foreground space-y-2">
-            <li>
-              <strong>Recall:</strong> We use advanced ALS (Alternating Least
-              Squares) and Two-Tower models to efficiently identify a broad set
-              of potential movie candidates tailored to your preferences.
-            </li>
-            <li>
-              <strong>Fast Retrieval:</strong> FAISS Approximate Nearest Neighbor
-              (ANN) indices ensure lightning-fast candidate retrieval, so you
-              never wait.
-            </li>
-            <li>
-              <strong>Precision Ranking:</strong> A powerful LightGBM model
-              then precisely ranks these candidates, prioritizing the films
-              most likely to captivate you.
-            </li>
-          </ul>
-        </div>
-
-        <div className="bg-card p-8 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-3">
-            Seamless Integration & Rich Data
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            The frontend seamlessly interacts with our robust backend, consuming
-            ranked MovieLens IDs. This data is then richly enhanced with
-            comprehensive information from The Movie Database (TMDB) to provide
-            you with vibrant posters, detailed synopses, and more.
-          </p>
-          <p className="text-muted-foreground">
-            This elegant architecture ensures that every recommendation is not
-            just accurate, but also presented beautifully, offering you a
-            glimpse into your next cinematic adventure.
+    <PageTransition>
+      <main className="container py-section space-y-section">
+        <div className="text-center space-y-tight">
+          <p className="text-overline text-muted-foreground/70">The System</p>
+          <h1 className="text-display font-semibold">
+            How the recommendation engine works
+          </h1>
+          <p className="text-body text-muted-foreground max-w-narrow mx-auto">
+            A structured pipeline designed to demonstrate ML reasoning,
+            performance tradeoffs, and product alignment.
           </p>
         </div>
-      </section>
 
-      <section className="text-center pt-8">
-        <p className="text-lg text-muted-foreground mb-4">
-          Ready to discover your next favorite movie?
-        </p>
-        <Link href="/">
-          <Button size="lg" className="shadow-lg">
-            Get Personalized Recommendations
-          </Button>
-        </Link>
-      </section>
-    </main>
+        <section className="surface-strong p-card rounded-xl">
+          <h2 className="text-h2 font-semibold mb-tight">
+            From signal to suggestion
+          </h2>
+          <p className="text-body text-muted-foreground">
+            Movies99 blends collaborative filtering with a modern retrieval
+            pipeline to surface a short list of films that closely match your
+            taste. We then refine the list for freshness, variety, and
+            presentation.
+          </p>
+        </section>
+
+        <section className="grid md:grid-cols-2 gap-grid">
+          <div className="surface p-card rounded-xl space-y-tight">
+            <h3 className="text-h3 font-semibold">Multi-stage pipeline</h3>
+            <p className="text-body text-muted-foreground">
+              A recall, rank, and re-rank flow keeps the system fast while still
+              producing high-quality results.
+            </p>
+            <ul className="list-disc list-inside text-body text-muted-foreground space-y-tight">
+              <li>
+                Recall uses ALS and two-tower embeddings to build a candidate
+                set.
+              </li>
+              <li>
+                Fast retrieval with vector indices keeps response times low.
+              </li>
+              <li>
+                Precision ranking selects the most relevant titles for the reel.
+              </li>
+            </ul>
+          </div>
+
+          <div className="surface p-card rounded-xl space-y-tight">
+            <h3 className="text-h3 font-semibold">Rich presentation</h3>
+            <p className="text-body text-muted-foreground">
+              We enhance ranked MovieLens IDs with TMDB metadata so each
+              recommendation includes premium artwork, clear synopsis, and
+              relevant tags.
+            </p>
+            <p className="text-body text-muted-foreground">
+              The result is an interface that feels polished and intentional,
+              with the model doing the heavy lifting behind the scenes.
+            </p>
+          </div>
+        </section>
+
+        <section className="grid gap-grid md:grid-cols-3">
+          <div className="glass rounded-xl p-card">
+            <p className="text-overline text-muted-foreground/70">Latency</p>
+            <p className="text-h2 font-semibold">Sub-second feel</p>
+            <p className="text-body text-muted-foreground">
+              Results are cached and optimized to keep the UI snappy while the
+              model works in the background.
+            </p>
+          </div>
+          <div className="glass rounded-xl p-card">
+            <p className="text-overline text-muted-foreground/70">Quality</p>
+            <p className="text-h2 font-semibold">Taste alignment</p>
+            <p className="text-body text-muted-foreground">
+              Ranking favors relevance, recency, and balance across genres for a
+              refined reel.
+            </p>
+          </div>
+          <div className="glass rounded-xl p-card">
+            <p className="text-overline text-muted-foreground/70">Delivery</p>
+            <p className="text-h2 font-semibold">Portfolio polish</p>
+            <p className="text-body text-muted-foreground">
+              Every surface is tokenized for consistency, with motion cues that
+              reinforce hierarchy.
+            </p>
+          </div>
+        </section>
+
+        <section className="text-center space-y-tight">
+          <p className="text-body text-muted-foreground">
+            Ready to build your next reel?
+          </p>
+          <Link href="/">
+            <Button size="lg">Get recommendations</Button>
+          </Link>
+        </section>
+      </main>
+    </PageTransition>
   )
 }

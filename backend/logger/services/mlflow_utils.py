@@ -1,5 +1,5 @@
 import mlflow
-from logger.config.settings import MLFLOW_TRACKING_URI
+from configs.settings import MLFLOW_TRACKING_URI
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 

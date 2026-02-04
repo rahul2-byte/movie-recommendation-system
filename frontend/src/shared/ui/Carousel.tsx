@@ -2,6 +2,7 @@
 
 import { useRef } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "@/shared/ui/Button"
 
 export function Carousel({ children }: { children: React.ReactNode }) {
   const rowRef = useRef<HTMLDivElement>(null)
@@ -19,26 +20,32 @@ export function Carousel({ children }: { children: React.ReactNode }) {
     <div className="relative">
       <div
         ref={rowRef}
-        className="flex gap-4 overflow-x-scroll no-scrollbar scroll-smooth"
+        className="flex gap-grid overflow-x-scroll no-scrollbar scroll-smooth pb-tight"
       >
         {children}
       </div>
 
-      {/* Left button */}
-      <button
-        onClick={() => scroll("left")}
-        className="absolute left-0 top-1/2 z-10 -translate-y-1/2 bg-black/40 p-2 rounded-full hover:bg-black/70 transition"
-      >
-        <ChevronLeft className="text-white" />
-      </button>
+      <div className="pointer-events-none absolute inset-y-0 left-0 hidden items-center md:flex">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => scroll("left")}
+          className="pointer-events-auto bg-surface-strong/80 backdrop-blur"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+      </div>
 
-      {/* Right button */}
-      <button
-        onClick={() => scroll("right")}
-        className="absolute right-0 top-1/2 z-10 -translate-y-1/2 bg-black/40 p-2 rounded-full hover:bg-black/70 transition"
-      >
-        <ChevronRight className="text-white" />
-      </button>
+      <div className="pointer-events-none absolute inset-y-0 right-0 hidden items-center md:flex">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => scroll("right")}
+          className="pointer-events-auto bg-surface-strong/80 backdrop-blur"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Button>
+      </div>
     </div>
   )
 }

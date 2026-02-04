@@ -5,10 +5,10 @@
   /* --- COLORS --- */
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-surface: hsl(var(--surface));
+  --color-surface-strong: hsl(var(--surface-strong));
+  --color-surface-soft: hsl(var(--surface-soft));
+  --color-glass: hsl(var(--glass));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-secondary: hsl(var(--secondary));
@@ -20,89 +20,182 @@
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
   --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
   /* --- TYPOGRAPHY --- */
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
-  --font-ui: var(--font-rubik);
+  --font-sans: var(--font-space);
+  --font-serif: var(--font-fraunces);
+  --font-ui: var(--font-space);
+  --text-hero: var(--text-hero);
+  --text-display: var(--text-display);
+  --text-h1: var(--text-h1);
+  --text-h2: var(--text-h2);
+  --text-h3: var(--text-h3);
+  --text-body-lg: var(--text-body-lg);
+  --text-body: var(--text-body);
+  --text-caption: var(--text-caption);
+  --text-overline: var(--text-overline);
+  --leading-hero: var(--leading-hero);
+  --leading-display: var(--leading-display);
+  --leading-h1: var(--leading-h1);
+  --leading-h2: var(--leading-h2);
+  --leading-h3: var(--leading-h3);
+  --leading-body: var(--leading-body);
+  --tracking-overline: var(--tracking-overline);
+  --tracking-tight: var(--tracking-tight);
+  --tracking-wide: var(--tracking-wide);
 
-  /* --- SIZES & RADIUS --- */
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
-  
-  /* --- CUSTOM SEMANTIC TOKENS --- */
-  --text-hero-size: var(--hero-size);
-  --text-nav-size: var(--nav-size);
-  --tracking-nav: var(--nav-tracking);
-  --shadow-primary-glow: var(--primary-glow);
-  --shadow-card-elevated: var(--card-elevated);
-  --drop-shadow-glow: var(--drop-shadow-glow);
+  /* --- SPACING --- */
+  --spacing-page: var(--space-page);
+  --spacing-section: var(--space-section);
+  --spacing-hero: var(--space-hero);
+  --spacing-stack: var(--space-stack);
+  --spacing-card: var(--space-card);
+  --spacing-tight: var(--space-tight);
+  --spacing-gutter: var(--space-gutter);
+  --spacing-grid: var(--space-grid);
+  --spacing-chip: var(--space-chip);
+  --spacing-control: var(--size-control);
+  --spacing-control-sm: var(--size-control-sm);
+  --spacing-control-lg: var(--size-control-lg);
+  --spacing-control-x: var(--size-control-x);
+  --spacing-control-sm-x: var(--size-control-sm-x);
+  --spacing-control-lg-x: var(--size-control-lg-x);
+  --spacing-icon: var(--size-icon);
+  --spacing-poster: var(--size-poster);
+  --spacing-poster-lg: var(--size-poster-lg);
+  --spacing-header: var(--size-header);
+
+  /* --- SIZES --- */
+  --max-width-page: var(--max-width-page);
+  --max-width-content: var(--max-width-content);
+  --max-width-narrow: var(--max-width-narrow);
+  --max-width-modal: var(--max-width-modal);
+  --max-height-modal: var(--max-height-modal);
+  --max-height-dropdown: var(--max-height-dropdown);
+
+  /* --- RADIUS --- */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-card: var(--radius-card);
+  --radius-pill: var(--radius-pill);
+
+  /* --- SHADOWS --- */
+  --shadow-soft: var(--shadow-soft);
+  --shadow-card: var(--shadow-card);
+  --shadow-glow: var(--shadow-glow);
+  --shadow-hero: var(--shadow-hero);
 }
 
 @layer base {
   :root {
-    /* CENTRAL THEME CONFIGURATION */
-    
-    /* 1. Fonts */
-    --font-inter: "Inter", sans-serif;
-    --font-playfair: "Playfair Display", serif;
-    --font-rubik: "Rubik", sans-serif;
+    /* Fonts */
+    --font-space: "Space Grotesk", sans-serif;
+    --font-fraunces: "Fraunces", serif;
 
-    /* 2. Colors (HSL) */
-    --background: 228 24% 12%; 
-    --foreground: 0 0% 100%;
-    
-    --card: 228 24% 16%;
-    --card-foreground: 0 0% 100%;
-    
-    --primary: 22 89% 65%; /* Iconic Coral/Orange */
+    /* Colors */
+    --background: 228 30% 9%;
+    --foreground: 0 0% 98%;
+    --surface: 228 26% 14%;
+    --surface-strong: 228 24% 18%;
+    --surface-soft: 228 20% 20%;
+    --glass: 228 20% 16% / 0.6;
+    --primary: 22 86% 62%;
     --primary-foreground: 228 24% 10%;
-    
-    --secondary: 228 15% 45%; 
-    --secondary-foreground: 0 0% 100%;
-    
-    --accent: 228 20% 30%; 
-    --accent-foreground: 0 0% 100%;
-    
-    --muted: 228 20% 20%;
-    --muted-foreground: 228 15% 70%;
-    
-    --border: 228 20% 25%;
-    --input: 228 20% 18%;
-    --ring: 22 89% 65%;
-    
-    /* 3. Sizes & Spacing */
-    --radius: 1.25rem;
-    --hero-size: clamp(4rem, 10vw, 10rem);
-    --nav-size: 11px;
-    --nav-tracking: 0.25em;
-    
-    /* 4. Shadows & Effects */
-    --primary-glow: 0 0 30px hsla(22, 89%, 65%, 0.3);
-    --card-elevated: 0 20px 50px hsla(228, 24%, 5%, 0.5);
-    --drop-shadow-glow: 0 0 20px hsla(22, 89%, 65%, 0.3);
-  }
-}
+    --secondary: 228 18% 28%;
+    --secondary-foreground: 0 0% 98%;
+    --accent: 216 24% 30%;
+    --accent-foreground: 0 0% 98%;
+    --muted: 228 18% 20%;
+    --muted-foreground: 228 14% 68%;
+    --destructive: 2 80% 62%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 228 20% 26%;
+    --ring: 22 86% 62%;
 
-@layer base {
+    /* Sizing */
+    --max-width-page: 80rem;
+    --max-width-content: 72rem;
+    --max-width-narrow: 44rem;
+    --max-width-modal: 42rem;
+    --max-height-modal: 80vh;
+    --max-height-dropdown: 18rem;
+    --size-poster: 11.5rem;
+    --size-poster-lg: 13rem;
+    --size-control: 2.75rem;
+    --size-control-sm: 2.25rem;
+    --size-control-lg: 3.25rem;
+    --size-control-x: 1.5rem;
+    --size-control-sm-x: 1rem;
+    --size-control-lg-x: 2rem;
+    --size-icon: 2.5rem;
+    --size-header: 4rem;
+
+    /* Spacing */
+    --space-page: clamp(1.5rem, 4vw, 3rem);
+    --space-section: clamp(3rem, 7vw, 6rem);
+    --space-hero: clamp(4rem, 12vw, 8rem);
+    --space-stack: clamp(1.5rem, 3vw, 2.5rem);
+    --space-card: 1.25rem;
+    --space-tight: 0.75rem;
+    --space-gutter: clamp(1.25rem, 3vw, 2rem);
+    --space-grid: clamp(1rem, 2.5vw, 2rem);
+    --space-chip: 0.5rem;
+
+    /* Radius */
+    --radius: 1.6rem;
+    --radius-sm: 0.9rem;
+    --radius-md: 1.2rem;
+    --radius-lg: 1.6rem;
+    --radius-xl: 2rem;
+    --radius-card: 1.5rem;
+    --radius-pill: 999px;
+
+    /* Typography */
+    --text-hero: clamp(3.25rem, 7vw, 7rem);
+    --text-display: clamp(2.6rem, 5vw, 4.5rem);
+    --text-h1: clamp(2.2rem, 3.8vw, 3.4rem);
+    --text-h2: clamp(1.7rem, 2.7vw, 2.5rem);
+    --text-h3: 1.35rem;
+    --text-body-lg: 1.2rem;
+    --text-body: 1.05rem;
+    --text-caption: 0.95rem;
+    --text-overline: 0.82rem;
+    --leading-hero: 0.9;
+    --leading-display: 1;
+    --leading-h1: 1.1;
+    --leading-h2: 1.2;
+    --leading-h3: 1.3;
+    --leading-body: 1.6;
+    --tracking-overline: 0.24em;
+    --tracking-tight: -0.03em;
+    --tracking-wide: 0.06em;
+
+    /* Shadows */
+    --shadow-soft: 0 24px 60px hsl(228 30% 5% / 0.35);
+    --shadow-card: 0 16px 50px hsl(228 28% 6% / 0.4);
+    --shadow-glow: 0 0 40px hsl(22 86% 62% / 0.2);
+    --shadow-hero: 0 40px 80px hsl(228 40% 4% / 0.5);
+  }
+
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased leading-relaxed;
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(var(--background), 1) 0, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(var(--primary), 0.05) 0, transparent 50%),
-      radial-gradient(at 50% 100%, hsla(var(--background), 1) 0, transparent 50%);
+    @apply bg-background text-foreground font-sans antialiased leading-body;
+    background-image:
+      radial-gradient(1200px circle at 10% -10%, hsl(var(--surface-strong)) 0%, transparent 55%),
+      radial-gradient(900px circle at 90% 0%, hsl(var(--primary) / 0.12) 0%, transparent 50%),
+      radial-gradient(900px circle at 50% 100%, hsl(var(--surface)) 0%, transparent 55%);
     background-attachment: fixed;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif);
-    @apply font-bold tracking-tight text-foreground;
+    @apply text-foreground tracking-tight;
   }
 
   button, input, select, nav {
@@ -112,28 +205,89 @@
 
 @layer utilities {
   .container {
-    @apply mx-auto max-w-7xl px-6;
+    @apply mx-auto w-full max-w-page px-gutter;
   }
+
+  .surface {
+    @apply bg-surface border border-border shadow-soft;
+  }
+
+  .surface-strong {
+    @apply bg-surface-strong border border-border shadow-card;
+  }
+
   .glass {
-    @apply bg-background/60 backdrop-blur-xl border border-white/5;
+    @apply bg-glass backdrop-blur-xl border border-border/60;
   }
-  .hero-title {
-    font-size: var(--text-hero-size);
-    line-height: 0.85;
-    @apply font-bold tracking-tighter;
+
+  .rounded-card {
+    border-radius: var(--radius-card);
   }
-  .primary-glow {
-    box-shadow: var(--shadow-primary-glow);
+
+  .rounded-pill {
+    border-radius: var(--radius-pill);
   }
-  .nav-text {
-    font-size: var(--text-nav-size);
-    letter-spacing: var(--tracking-nav);
-    @apply font-medium uppercase;
+
+  .max-w-page {
+    max-width: var(--max-width-page);
   }
-  .card-shadow-hover {
-    @apply transition-all duration-300;
+
+  .max-w-content {
+    max-width: var(--max-width-content);
   }
-  .card-shadow-hover:hover {
-    box-shadow: var(--shadow-card-elevated);
+
+  .max-w-narrow {
+    max-width: var(--max-width-narrow);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-hero {
+    box-shadow: var(--shadow-hero);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .text-overline {
+    font-size: var(--text-overline);
+    letter-spacing: var(--tracking-overline);
+    @apply uppercase font-semibold;
+  }
+
+  .text-hero {
+    font-size: var(--text-hero);
+    line-height: var(--leading-hero);
+    @apply tracking-tight;
+  }
+
+  .hero-ambient {
+    background-image:
+      radial-gradient(800px circle at 50% 40%, hsl(var(--primary) / 0.16) 0%, transparent 55%),
+      radial-gradient(700px circle at 20% 20%, hsl(var(--surface-strong)) 0%, transparent 60%);
+  }
+
+  .aspect-poster {
+    aspect-ratio: 2 / 3;
+  }
+
+  .display-font {
+    font-family: var(--font-serif);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
