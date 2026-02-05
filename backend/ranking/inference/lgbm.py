@@ -52,6 +52,9 @@ class LGBMRanker:
 
         # Predict relevance scores
         scores = self.model.predict(X)
+        
+        log.info(f"LGBMRanker: First 5 feature rows:\n{X[:5]}")
+        log.info(f"LGBMRanker: First 5 scores: {scores[:5]}")
 
         # Attach scores to candidates
         # We assume the order in features_df matches the order of candidates

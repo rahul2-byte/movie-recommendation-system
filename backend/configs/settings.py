@@ -37,6 +37,18 @@ else: # PROD
 PROCESSED_DATA_PATH = f"{DATA_BASE_PATH}/processed"
 RAW_DATA_PATH = f"{DATA_BASE_PATH}/raw"
 
+# --- Checkpoint Settings ---
+if ENVIRONMENT == "LOCAL":
+    CHECKPOINT_DIR = Path(f"{PROCESSED_DATA_PATH}/checkpoints")
+    CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
+else:
+    CHECKPOINT_DIR = Path("/tmp/checkpoints")
+    # Note: In Lambda, we should handle directory creation if needed
+    # but /tmp usually exists.
+
+CHECKPOINT_FILE = CHECKPOINT_DIR / "enrichment_checkpoint.json"
+FAILED_MOVIES_FILE = CHECKPOINT_DIR / "failed_movies.json"
+
 if ENVIRONMENT == "LOCAL":
     # In LOCAL, artifacts are in the project root under 'artifacts'
     INDICES_PATH = f"{PROJECT_ROOT}/artifacts/indices"
@@ -48,6 +60,7 @@ else:
     MODELS_PATH = f"{DATA_BASE_PATH}/artifacts/models"
 
 INTERMEDIATE_DIR = Path(f"{DATA_BASE_PATH}/intermediate")
+INTERMEDIATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Specific artifact locations
 MOVIES_METADATA_PATH = f"{PROCESSED_DATA_PATH}/movies_enriched.parquet"
@@ -56,6 +69,7 @@ RANKER_MODEL_URI = f"{MODELS_PATH}/ranker" # MLflow model URI path
 LINKS_CSV = Path(f"{RAW_DATA_PATH}/links.csv")
 
 # --- Other Configurations ---
+CHECKPOINT_INTERVAL = int(os.getenv("CHECKPOINT_INTERVAL", 100))
 # Example: TOP_N_TAGS for feature building, from environment or default
 TOP_N_TAGS = int(os.getenv("TOP_N_TAGS", 10_000))
 
@@ -64,12 +78,12 @@ CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 50_000))
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", 100))
 
 # --- API Retry & Timeout Settings ---
-REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", 3))
-MAX_RETRIES = int(os.getenv("MAX_RETRIES", 1))
-INITIAL_RETRY_DELAY = float(os.getenv("INITIAL_RETRY_DELAY", 0.5))
-MAX_RETRY_DELAY = float(os.getenv("MAX_RETRY_DELAY", 2.0))
-RETRY_EXPONENTIAL_BASE = float(os.getenv("RETRY_EXPONENTIAL_BASE", 1.5))
-MAX_CONCURRENT_REQUESTS = int(os.getenv("MAX_CONCURRENT_REQUESTS", 10))
+REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", 10))
+MAX_RETRIES = int(os.getenv("MAX_RETRIES", 5))
+INITIAL_RETRY_DELAY = float(os.getenv("INITIAL_RETRY_DELAY", 1.0))
+MAX_RETRY_DELAY = float(os.getenv("MAX_RETRY_DELAY", 5.0))
+RETRY_EXPONENTIAL_BASE = float(os.getenv("RETRY_EXPONENTIAL_BASE", 2.0))
+MAX_CONCURRENT_REQUESTS = int(os.getenv("MAX_CONCURRENT_REQUESTS", 50))
 
 # --- TMDB Specific Settings ---
 TMDB_BASE_URL = os.getenv("TMDB_BASE_URL", "https://api.themoviedb.org/3")

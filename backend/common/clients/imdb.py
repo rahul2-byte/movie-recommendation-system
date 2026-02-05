@@ -79,9 +79,15 @@ class IMDBClient(BaseAPIClient):
             return response
             
         except Exception as e:
+            # If it's a retryable exception (like timeout or 5xx), re-raise it
+            # so the retry logic in BaseAPIClient can handle it.
+            from common.clients.retry import RETRYABLE_EXCEPTIONS
+            if isinstance(e, RETRYABLE_EXCEPTIONS):
+                raise
+                
             logger.error(
-                f"Failed to fetch IMDb data for ID {imdb_id}: "
+                f"Non-retryable IMDb error for {imdb_id}: "
                 f"{type(e).__name__}: {str(e)}"
             )
-            # Return empty dict instead of raising to allow pipeline to continue
+            # Return empty dict for other errors to allow pipeline to continue
             return {}

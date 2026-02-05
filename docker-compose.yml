@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/task # Mount code for live-reload if using a dev entrypoint
+      - ./backend/data:/var/task/data
+      - ./backend/artifacts:/var/task/artifacts
+    env_file:
+      - ./backend/.env
+    environment:
+      - ENVIRONMENT=LOCAL
+      - PORT=8000
+    # Overriding CMD for local development to use uvicorn with reload
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend

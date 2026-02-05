@@ -65,7 +65,7 @@ class EnrichmentService:
             tmdb_id: TMDB movie identifier
             
         Returns:
-            MovieData object or None if enrichment failed
+            MovieData object or None if enrichment failed (or either API failed)
         """
         try:
             # Fetch TMDB data (includes keywords and credits)
@@ -74,8 +74,16 @@ class EnrichmentService:
             # Extract IMDb ID from TMDB response
             imdb_id = tmdb_data.get("imdb_id")
             
+            if not imdb_id:
+                logger.warning(f"Movie {movie_id} (TMDB: {tmdb_id}) has no IMDb ID. Marking as failed.")
+                return None
+            
             # Fetch IMDb data
             imdb_data = await self.imdb_client.fetch_rating(imdb_id)
+            
+            if not imdb_data:
+                logger.warning(f"IMDb fetch failed for {movie_id} (IMDb: {imdb_id}). Marking as failed.")
+                return None
             
             # Extract and normalize fields
             movie_data = extract_movie_fields(movie_id, tmdb_data, imdb_data)
@@ -84,7 +92,6 @@ class EnrichmentService:
             return movie_data
             
         except Exception as e:
-            # This error is important for debugging, so we leave it.
             logger.error(
                 f"Failed to enrich movie {movie_id} (TMDB: {tmdb_id}): "
                 f"{type(e).__name__}: {str(e)}"
@@ -225,6 +232,9 @@ class EnrichmentService:
                 checkpoint.last_processed_movie_id = movie_data.movie_id
                 checkpoint.processed_count += 1
                 processed_count += 1
+                
+                # IMPORTANT: Remove from failed set if it's now successful
+                checkpoint.failed_movie_ids.discard(movie_data.movie_id)
                 
                 # Periodic checkpoint save
                 if processed_count % CHECKPOINT_INTERVAL == 0:

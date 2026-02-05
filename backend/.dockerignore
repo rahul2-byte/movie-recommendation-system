@@ -1,0 +1,30 @@
+# Exclude data and raw files
+data/raw/
+data/processed/checkpoints/
+data/processed/intermediate/
+*.csv
+*.parquet
+*.json
+
+# Exclude training and experiment tracking
+training/
+tracking/
+mlruns/
+logs/
+tests/
+
+# Exclude local environment and git
+.git
+.github
+.env
+.venv
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Exclude native build artifacts
+features/native/*.cpp
+features/native/*.o
+features/native/processor
+features/native/ranker_feature_gen

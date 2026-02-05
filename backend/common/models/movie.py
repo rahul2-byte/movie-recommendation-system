@@ -1,8 +1,8 @@
 """
 Data models for movie data structures.
 """
-from dataclasses import dataclass, fields
-from typing import List, Optional
+from dataclasses import dataclass, fields, asdict
+from typing import List, Optional, Dict, Any, Union, get_origin, get_args
 import pyarrow as pa
 import yaml
 from pathlib import Path
@@ -35,6 +35,10 @@ class MovieData:
     collection_id: Optional[int]
     collection_name: Optional[str]
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert dataclass to dictionary."""
+        return asdict(self)
+
 
 def get_pyarrow_schema() -> pa.Schema:
     """
@@ -47,28 +51,33 @@ def get_pyarrow_schema() -> pa.Schema:
         int: pa.int64(),
         str: pa.string(),
         float: pa.float64(),
-        List[str]: pa.list_(pa.string()),
     }
 
     schema_fields = []
     for field in fields(MovieData):
         field_type = field.type
-        # Handle Optional types (e.g., Optional[int] -> int)
-        # In PyArrow, nullability is a property of the field, not the type.
-        origin = getattr(field_type, "__origin__", None)
-        is_optional = origin is Optional
+        origin = get_origin(field_type)
+        args = get_args(field_type)
         
-        if is_optional:
-            field_type = field_type.__args__[0]
-            
-        origin = getattr(field_type, "__origin__", None)
-        if origin is list:
-             # Assuming list of strings for genres, keywords, top_cast
+        is_optional = False
+        
+        # Handle Optional[T] which is Union[T, None]
+        if origin is Union:
+            if type(None) in args:
+                is_optional = True
+                # Get the underlying type
+                underlying_types = [a for a in args if a is not type(None)]
+                if underlying_types:
+                    field_type = underlying_types[0]
+                    origin = get_origin(field_type)
+                    args = get_args(field_type)
+
+        if origin is list or origin is List:
             pa_type = pa.list_(pa.string())
         else:
             pa_type = type_mapping.get(field_type, pa.string())
 
-        schema_fields.append(pa.field(field.name, pa_type, nullable=is_optional or field.name in ['overview', 'imdb_id', 'title']))
+        schema_fields.append(pa.field(field.name, pa_type, nullable=is_optional))
         
     return pa.schema(schema_fields)
 

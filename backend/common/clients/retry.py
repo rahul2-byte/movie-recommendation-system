@@ -8,6 +8,7 @@ import asyncio
 import random
 from typing import TypeVar, Callable, Tuple, Type
 from functools import wraps
+from aiohttp import ClientResponseError
 
 from configs.settings import (
     MAX_RETRIES,
@@ -26,6 +27,7 @@ RETRYABLE_EXCEPTIONS: Tuple[Type[Exception], ...] = (
     ConnectionError,
     TimeoutError,
     asyncio.TimeoutError,
+    ClientResponseError,
 )
 
 

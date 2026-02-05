@@ -38,10 +38,28 @@ class ParquetWriter:
             buffer_size: Number of records to buffer before writing
         """
         self.output_dir = output_dir
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         self.buffer_size = buffer_size
         self.buffer: List[MovieData] = []
-        self.file_counter = 0
+        self.file_counter = self._get_next_file_counter()
         self.total_written = 0
+    
+    def _get_next_file_counter(self) -> int:
+        """Find the next available file counter by checking existing files."""
+        existing_files = list(self.output_dir.glob("movies_batch_*.parquet"))
+        if not existing_files:
+            return 0
+        
+        indices = []
+        for f in existing_files:
+            try:
+                # Extract 00000 from movies_batch_00000.parquet
+                index_str = f.stem.split("_")[-1]
+                indices.append(int(index_str))
+            except (ValueError, IndexError):
+                continue
+        
+        return max(indices) + 1 if indices else 0
     
     def add(self, movie: MovieData) -> None:
         """

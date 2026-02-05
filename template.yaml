@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Movie Recommendation System API
+  Deployed as a Docker-based Lambda function.
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: Name of the S3 bucket containing model artifacts and data.
+  Environment:
+    Type: String
+    Default: PROD
+    AllowedValues: [LOCAL, PROD]
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 2048 # Recommended due to FAISS and LightGBM memory usage
+
+Resources:
+  MovieRecommendationApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Events:
+        ProxyApiRoot:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+        ProxyApiGreedy:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          S3_BUCKET: !Ref S3BucketName
+          # Optional: Override other settings if needed
+          LOG_LEVEL: INFO
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref S3BucketName
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

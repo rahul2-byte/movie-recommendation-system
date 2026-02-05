@@ -37,8 +37,17 @@ class FeatureBuilder:
         import scipy.sparse
 
         movies_df = pd.read_parquet(local_movies_path)
-        if "vote_average" not in movies_df.columns: movies_df["vote_average"] = 0.0
-        if "vote_count" not in movies_df.columns: movies_df["vote_count"] = 0
+        
+        # Ensure all required numerical columns exist
+        num_cols = [
+            "vote_average", "vote_count", "runtime_minutes", 
+            "release_year", "popularity_score", "imdb_rating", "imdb_votes"
+        ]
+        for col in num_cols:
+            if col not in movies_df.columns:
+                movies_df[col] = 0.0
+            else:
+                movies_df[col] = movies_df[col].fillna(0.0)
         
         # In movies_enriched.parquet, movie_id is the column name
         if "movieId" in movies_df.columns:
@@ -154,6 +163,8 @@ class FeatureBuilder:
         query_g_vecs_agg = np.zeros((num_unique_queries, self.genre_vectors_matrix.shape[1]), dtype=self.genre_vectors_matrix.dtype)
         query_t_vecs_agg = np.zeros((num_unique_queries, self.tag_vectors_matrix.shape[1]), dtype=self.tag_vectors_matrix.dtype)
         query_avg_rating_agg = np.zeros(num_unique_queries, dtype=np.float32)
+        query_avg_year_agg = np.zeros(num_unique_queries, dtype=np.float32)
+        query_avg_runtime_agg = np.zeros(num_unique_queries, dtype=np.float32)
 
         unique_queries_df = df[['query_hash', 'query_movie_ids']].drop_duplicates(subset=['query_hash'])
 
@@ -175,8 +186,12 @@ class FeatureBuilder:
             q_meta = self.movies_meta.loc[self.movies_meta.index.isin(query_movie_ids)]
             if not q_meta.empty:
                 query_avg_rating_agg[idx] = q_meta['vote_average'].mean()
+                query_avg_year_agg[idx] = q_meta['release_year'].replace(0, np.nan).mean() or 0
+                query_avg_runtime_agg[idx] = q_meta['runtime_minutes'].replace(0, np.nan).mean() or 0
 
         df['feat_avg_query_rating'] = query_avg_rating_agg[query_indices]
+        df['feat_avg_query_year'] = query_avg_year_agg[query_indices]
+        df['feat_avg_query_runtime'] = query_avg_runtime_agg[query_indices]
 
         # --- Candidate Feature Lookup & Overlap Calculation ---
         log.debug("Looking up candidate features and calculating overlaps...")
@@ -197,6 +212,15 @@ class FeatureBuilder:
         candidate_meta = self.movies_meta.reindex(candidate_ids)
         df['feat_candidate_avg_rating'] = candidate_meta['vote_average'].values
         df['feat_candidate_rating_count'] = candidate_meta['vote_count'].values
+        df['feat_candidate_runtime'] = candidate_meta['runtime_minutes'].values
+        df['feat_candidate_year'] = candidate_meta['release_year'].values
+        df['feat_candidate_popularity'] = candidate_meta['popularity_score'].values
+        df['feat_candidate_imdb_rating'] = candidate_meta['imdb_rating'].values
+        df['feat_candidate_imdb_votes'] = candidate_meta['imdb_votes'].values
+
+        # Relative features
+        df['feat_year_diff'] = np.abs(df['feat_candidate_year'] - df['feat_avg_query_year'])
+        df['feat_runtime_diff'] = np.abs(df['feat_candidate_runtime'] - df['feat_avg_query_runtime'])
 
         # --- Final Cleanup ---
         feature_cols = [col for col in df.columns if col.startswith("feat_")]
