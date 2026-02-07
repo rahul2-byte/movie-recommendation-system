@@ -3,7 +3,7 @@ from threading import Lock
 from pathlib import Path
 import os
 import boto3
-from common.config import config
+from configs import settings
 from common.logger import get_logger
 
 log = get_logger(__name__)
@@ -16,7 +16,7 @@ def ensure_local_path(remote_path: str) -> str:
     If in PROD, ensures the artifact is downloaded from S3 to /tmp.
     Returns the local path to the artifact.
     """
-    if config.settings.ENVIRONMENT != "PROD":
+    if settings.ENVIRONMENT != "PROD":
         return remote_path
 
     # Extract S3 key from s3://bucket/key
@@ -26,7 +26,7 @@ def ensure_local_path(remote_path: str) -> str:
         key = "/".join(parts[1:])
     else:
         # Fallback if path isn't prefixed
-        bucket = config.settings.S3_BUCKET
+        bucket = settings.S3_BUCKET
         key = str(remote_path)
 
     local_path = Path("/tmp") / key

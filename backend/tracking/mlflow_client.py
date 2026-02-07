@@ -1,55 +1,43 @@
-# backend/tracking/mlflow_client.py
-"""
-Standardized MLflow client for consistent experiment tracking.
-"""
 import mlflow
 import logging
-from typing import Dict, Any, Optional
-
-from common.config import config
+from typing import Optional, Dict, Any
 
 log = logging.getLogger(__name__)
 
 class MlflowClient:
-    """
-    Encapsulates MLflow operations for consistent tracking.
-    """
-    def __init__(self, experiment_name: str, tracking_uri: Optional[str] = None):
+    def __init__(self, experiment_name: str, tracking_uri: str):
         self.experiment_name = experiment_name
-        self.tracking_uri = tracking_uri if tracking_uri else config.system.tracking.tracking_uri
-        
+        # Transition to SQLite if it's a file URI
+        if tracking_uri.startswith("file:"):
+            # Use a fixed SQLite path in the backend folder
+            self.tracking_uri = "sqlite:///backend/mlflow.db"
+        else:
+            self.tracking_uri = tracking_uri
+            
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment(self.experiment_name)
-        log.info(f"MLflow client initialized for experiment: '{self.experiment_name}' "
-                 f"at URI: '{self.tracking_uri}'")
+        log.info(f"MlflowClient: Tracking URI: {self.tracking_uri}, Experiment: {self.experiment_name}")
 
     def start_run(self, run_name: Optional[str] = None):
-        """Starts a new MLflow run."""
         return mlflow.start_run(run_name=run_name)
 
+    def log_param(self, key: str, value: Any):
+        mlflow.log_param(key, value)
+
     def log_params(self, params: Dict[str, Any]):
-        """Logs a dictionary of parameters."""
         mlflow.log_params(params)
 
-    def log_metrics(self, metrics: Dict[str, Any]):
-        """Logs a dictionary of metrics."""
-        mlflow.log_metrics(metrics)
-        
-    def log_model(self, model: Any, artifact_path: str, **kwargs):
-        """Logs a model artifact."""
-        # Use a specific MLflow flavor's log_model
-        if "lightgbm" in str(type(model)).lower():
-            mlflow.lightgbm.log_model(model, artifact_path, **kwargs)
-        # Add other model types (e.g., sklearn, pytorch) as needed
-        else:
-            mlflow.pyfunc.log_model(python_model=model, artifact_path=artifact_path, **kwargs)
-        log.info(f"Logged model to MLflow artifact path: {artifact_path}")
+    def log_metric(self, key: str, value: float, step: Optional[int] = None):
+        mlflow.log_metric(key, value, step=step)
 
-    def log_artifact(self, local_path: str, artifact_path: Optional[str] = None):
-        """Logs a local file or directory as an artifact."""
-        mlflow.log_artifact(local_path, artifact_path)
-        log.info(f"Logged artifact '{local_path}' to '{artifact_path}'")
-        
-    def end_run(self, status: str = "FINISHED"):
-        """Ends the current MLflow run."""
-        mlflow.end_run(status=status)
+    def log_metrics(self, metrics: Dict[str, float], step: Optional[int] = None):
+        mlflow.log_metrics(metrics, step=step)
+
+    def log_model(self, model: Any, artifact_path: str):
+        # Determine model flavor
+        if hasattr(model, "save_model") and "lightgbm" in str(type(model)).lower():
+            mlflow.lightgbm.log_model(model, artifact_path)
+        elif hasattr(model, "state_dict"): # PyTorch
+            mlflow.pytorch.log_model(model, artifact_path)
+        else:
+            mlflow.sklearn.log_model(model, artifact_path)

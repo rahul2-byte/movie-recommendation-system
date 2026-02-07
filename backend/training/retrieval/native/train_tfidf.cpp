@@ -35,15 +35,15 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
     return tokens;
 }
 
-int main() {
+int main(int argc, char** argv) {
     log_header("Starting TF-IDF Training (Armadillo)");
     
     // Optimization for stdio
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(NULL);
 
-    std::string movies_path = "../../../data/raw/movies.csv";
-    std::string output_dir = "../../../artifacts/native/";
+    std::string movies_path = (argc > 1) ? argv[1] : "backend/data/raw/movies.csv";
+    std::string output_dir = (argc > 2) ? argv[2] : "backend/artifacts/native/";
 
     std::ifstream file(movies_path);
     if (!file.is_open()) {
@@ -85,6 +85,10 @@ int main() {
         if (!genres_str.empty() && genres_str.back() == '\r') genres_str.pop_back();
 
         auto genres = split(genres_str, '|');
+        // Deduplicate genres for this movie
+        std::sort(genres.begin(), genres.end());
+        genres.erase(std::unique(genres.begin(), genres.end()), genres.end());
+
         Doc d;
         d.id = id;
         
@@ -157,11 +161,15 @@ int main() {
     
     // Row-wise normalization
     for (int i = 0; i < num_movies; ++i) {
+        if (i % 10000 == 0) {
+            std::cout << "\r[TF-IDF] Normalizing: " << (i * 100 / num_movies) << "%" << std::flush;
+        }
         double n = arma::norm(dense_tfidf.row(i), 2);
         if (n > 1e-9) {
             dense_tfidf.row(i) /= n;
         }
     }
+    std::cout << "\r[TF-IDF] Normalization complete.          " << std::endl;
 
     // 3. Save
     log_info("Step 3/3: Saving Artifacts...");

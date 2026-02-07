@@ -61,15 +61,15 @@ class ALSBuilder:
         num_movies = len(unique_movies)
 
         log.info(f"ALSBuilder: Creating sparse user-item matrix ({num_users} users, {num_movies} movies)...")
-        # Build Item-User matrix (items as rows, users as columns)
-        # This is the format the implicit library often prefers for item factors
-        item_user_data = np.ones(len(positive_ratings)) # Implicit feedback
-        item_user_rows = positive_ratings['movieId'].map(movie_to_idx).values
-        item_user_cols = positive_ratings['userId'].map(user_to_idx).values
+        # implicit.als.fit expects a USER-ITEM matrix (users as rows, items as columns)
+        # to correctly learn item_factors.
+        user_item_data = np.ones(len(positive_ratings))
+        user_item_rows = positive_ratings['userId'].map(user_to_idx).values
+        user_item_cols = positive_ratings['movieId'].map(movie_to_idx).values
 
-        item_user_matrix = csr_matrix((item_user_data, (item_user_rows, item_user_cols)), 
-                                      shape=(num_movies, num_users))
-        log.info(f"ALSBuilder: Item-User matrix shape: {item_user_matrix.shape}")
+        user_item_matrix = csr_matrix((user_item_data, (user_item_rows, user_item_cols)), 
+                                      shape=(num_users, num_movies))
+        log.info(f"ALSBuilder: User-Item matrix shape: {user_item_matrix.shape}")
 
         # --- Train ALS Model ---
         log.info("ALSBuilder: Training ALS model...")
@@ -80,9 +80,10 @@ class ALSBuilder:
             calculate_training_loss=True,
             random_state=42
         )
-        model.fit(item_user_matrix)
+        # fit expects user_items matrix
+        model.fit(user_item_matrix)
         
-        # Extract item embeddings
+        # Extract item embeddings (these are the factors for the columns)
         item_embeddings = model.item_factors
         log.info(f"ALSBuilder: Extracted item embeddings shape: {item_embeddings.shape}")
         

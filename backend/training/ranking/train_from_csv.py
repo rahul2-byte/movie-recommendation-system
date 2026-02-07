@@ -11,17 +11,25 @@ log = logging.getLogger(__name__)
 
 
 def train():
-    data_dir = Path("backend/training/ranking/native")
-    model_dir = Path("backend/artifacts/models/ranker")
+    project_root = Path(__file__).resolve().parent.parent.parent.parent
+    data_dir = project_root / "backend/training/ranking/native"
+    model_dir = project_root / "backend/artifacts/models/ranker"
     model_dir.mkdir(parents=True, exist_ok=True)
 
-    log.info("Loading training data from CSV...")
+    log.info(f"Loading training data from {data_dir}...")
     # LightGBM will look for .query files automatically if we point to the CSV
+    train_file = data_dir / "rank.train"
+    test_file = data_dir / "rank.test"
+    
+    if not train_file.exists():
+        log.error(f"Training file missing: {train_file}")
+        return
+
     dtrain = lgb.Dataset(
-        str(data_dir / "rank.train"), params={"two_pass": True, "header": False}
+        str(train_file), params={"two_pass": True, "header": False}
     )
     dtest = lgb.Dataset(
-        str(data_dir / "rank.test"),
+        str(test_file),
         reference=dtrain,
         params={"two_pass": True, "header": False},
     )
@@ -39,12 +47,12 @@ def train():
     model = lgb.train(
         params,
         dtrain,
-        num_boost_round=100,  # Reduced rounds for faster initial completion
+        num_boost_round=100,
         valid_sets=[dtest],
         valid_names=["test"],
         callbacks=[
             lgb.early_stopping(stopping_rounds=20),
-            lgb.log_evaluation(period=10),
+            lgb.log_evaluation(period=5), # Log every 5 rounds instead of 10
         ],
     )
 

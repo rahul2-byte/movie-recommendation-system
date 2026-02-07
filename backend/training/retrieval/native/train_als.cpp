@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 
     // 5. Save Artifacts
     log_info("Saving Artifacts...");
-    std::string output_dir = "../../../artifacts/native/";
+    std::string output_dir = "backend/artifacts/native/";
     
     // Attempt mkdir with absolute path check if needed, but relative should work if CWD is correct.
     // Use simple system call.

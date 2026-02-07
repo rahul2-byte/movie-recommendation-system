@@ -1,0 +1,10 @@
+{
+  "schema_version": "Initial movie enrichment schema",
+  "total_rows": 86077,
+  "total_columns": 23,
+  "file_size_mb": 30.88,
+  "compression": "snappy",
+  "merge_date": "2026-02-06T21:53:43.001434",
+  "batch_count": 861,
+  "schema": "movie_id: int64 not null\ntmdb_id: int64\nimdb_id: string\ntitle: string\noverview: string\ngenres: list<element: string> not null\n  child 0, element: string\nkeywords: list<element: string> not null\n  child 0, element: string\ntop_cast: list<element: string> not null\n  child 0, element: string\ndirector: string\nruntime_minutes: int64\nrelease_year: int64\nrelease_date: string\npopularity_score: double\nvote_count: int64\nvote_average: double\nimdb_rating: double\nimdb_votes: int64\nposter_path: string\nbackdrop_path: string\nlanguage: string\ncountry: string\ncollection_id: int64\ncollection_name: string\n-- schema metadata --\npandas: '{\"index_columns\": [], \"column_indexes\": [{\"name\": null, \"field_n' + 2974"
+}

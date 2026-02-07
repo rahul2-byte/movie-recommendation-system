@@ -10,9 +10,9 @@ movies_metadata_path: "${data_root}/processed/movies_enriched.parquet"
 # Path to the processed tags data
 tags_path: "${data_root}/processed/tags.parquet"
 # Path for the generated query-centric training dataset (for ranker)
-training_dataset_path: "${data_root}/processed/ranker_training_data.parquet"
+training_dataset_path: "${data_root}/processed/ranking_dataset.parquet"
 # Path for the generated sequence-based training dataset (for retrieval models like Two-Tower, ALS)
-training_sequences_path: "${data_root}/processed/training_sequences.csv"
+training_sequences_path: "${data_root}/processed/training_sequences.parquet"
 
 
 # --- Model & Artifact Paths ---
@@ -143,10 +143,27 @@ retrieval:
 # --- MLflow Tracking ---
 
 
+
+
+
+
+
+
+
+
+
 tracking:
-  # URI of the MLflow tracking server. Can be a local path or remote URL.
-  # Example: "http://127.0.0.1:5000"
-  tracking_uri: "file:///home/zeek/ML/movie-recommendation-system/backend/mlruns"
+
+
+
+
+
+
+
+
+
+
+
   # Experiment name for the ranker training
   ranker_experiment_name: "movie_query_ranker"
   # Experiment name for retrieval model training (e.g., embeddings)

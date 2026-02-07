@@ -4,6 +4,7 @@ from pathlib import Path
 import yaml
 from dotmap import DotMap
 
+
 class ConfigLoader:
     def __init__(self, config_dir: Path):
         self.config_dir = config_dir
@@ -71,7 +72,20 @@ class ConfigLoader:
         # Mutate system config in-place so nested values can reference each other.
         walk(self.config.system, self.config.system)
 
+
 # Initialize the global config object
 # Assuming this file is at backend/utils/config.py
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "configs"
-config = ConfigLoader(CONFIG_DIR).config
+config_loader = ConfigLoader(CONFIG_DIR)
+config = config_loader.config
+
+# Import and attach settings.py
+try:
+    from configs import settings
+    config.settings = settings
+except ImportError:
+    # Fallback if configs.settings isn't directly importable (e.g. during some tests)
+    import sys
+    sys.path.append(str(CONFIG_DIR.parent))
+    from configs import settings
+    config.settings = settings

@@ -2,455 +2,279 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <sstream>
-#include <cmath>
 #include <algorithm>
-#include <map>
-#include <unordered_map>
-#include <thread>
-#include <mutex>
-#include <atomic>
+#include <cmath>
 #include <random>
-#include <armadillo>
-#include <iomanip>
 #include <omp.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <cstring>
+#include <atomic>
+#include <iomanip>
+#include <armadillo>
 
-// --- Logging Utils ---
-void log_header(const std::string& title) {
-    std::cout << "\n======================================================\n";
-    std::cout << "   " << title << "\n";
-    std::cout << "======================================================\n" << std::endl;
-}
-
-void log_info(const std::string& msg) {
-    std::cout << "[Two-Tower] [INFO] " << msg << std::endl;
-}
-
-void log_error(const std::string& msg) {
-    std::cerr << "[Two-Tower] [ERROR] " << msg << std::endl;
-}
-
-// Constants
-const int TOP_N_TAGS = 10000; 
+// --- Configuration ---
 const int EMBEDDING_DIM = 64;
-const float LEARNING_RATE = 0.001f;
-const int EPOCHS = 5; 
 const int BATCH_SIZE = 1024; 
-const int NUM_NEGATIVES = 2;
-const float GRAD_CLIP_NORM = 5.0f; // Gradient Clipping
+const float LEARNING_RATE = 0.01f; 
+const int EPOCHS = 5;
 
-// --- Sparse Feature Structure ---
-struct SparseFeatureVec {
-    arma::uvec indices;
-    arma::fvec values;
+// --- Memory Mapped Data Structure ---
+template <typename T>
+struct MappedArray {
+    T* data;
+    size_t size;
+    int fd;
+
+    MappedArray(const std::string& path) {
+        fd = open(path.c_str(), O_RDONLY);
+        if (fd == -1) {
+            std::cerr << "Error opening " << path << std::endl;
+            exit(1);
+        }
+        struct stat sb;
+        fstat(fd, &sb);
+        size = sb.st_size / sizeof(T);
+        data = (T*)mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
+        if (data == MAP_FAILED) {
+            std::cerr << "mmap failed for " << path << std::endl;
+            exit(1);
+        }
+    }
+    ~MappedArray() { if (fd != -1) close(fd); }
+    const T& operator[](size_t i) const { return data[i]; }
 };
 
-struct Sequence {
-    std::vector<int> query_ids; 
-    int pos_id; 
-};
-
-struct MovieStats {
-    double sum_rating = 0;
-    int count_rating = 0;
-};
-
-// Helper for splitting strings
-std::vector<std::string> split(const std::string& s, char delimiter) {
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(s);
-    while (std::getline(tokenStream, token, delimiter)) {
-        tokens.push_back(token);
-    }
-    return tokens;
-}
-
-std::vector<std::string> parse_csv_line(const std::string& line) {
-    return split(line, ',');
-}
-
-inline float sigmoid(float x) {
-    return 1.0f / (1.0f + std::exp(-x));
-}
-
-// --- Sparse Operations ---
-inline arma::fvec forward_sparse(const arma::fmat& W, const arma::fvec& b, const SparseFeatureVec& x) {
-    arma::fvec y = b;
-    for(size_t i=0; i < x.indices.n_elem; ++i) {
-        y += W.col(x.indices[i]) * x.values[i];
-    }
-    return y;
-}
-
-inline void backward_sparse_W(arma::fmat& W_grad, const arma::fvec& dL_dy, const SparseFeatureVec& x) {
-    for(size_t i=0; i < x.indices.n_elem; ++i) {
-        W_grad.col(x.indices[i]) += dL_dy * x.values[i];
+// SIMD-friendly Adagrad Update
+inline void adagrad_update(float* __restrict__ w, float* __restrict__ g_accum, const float* __restrict__ grad, float val, int dim) {
+    // We update 'dim' elements.
+    // val is the feature value (scalar scaling for the gradient vector)
+    for (int d = 0; d < dim; ++d) {
+        float g = grad[d] * val;
+        // Atomic update not strictly required for HOGWILD, but good to be aware.
+        // For max speed, we accept race conditions (Hogwild).
+        g_accum[d] += g * g;
+        w[d] -= LEARNING_RATE * g / (std::sqrt(g_accum[d]) + 1e-7f);
     }
 }
 
-int main() {
-    log_header("Starting Two-Tower Model Training (Sparse Optimized + Stable)");
+int main(int argc, char** argv) {
+    std::cout << "--- [Fast Two-Tower V4] Matrix-Optimized & Vectorized ---" << std::endl;
     
-    std::ios_base::sync_with_stdio(false);
-    std::cin.tie(NULL);
+    std::string base_dir = "backend/data/binary_cache/";
+    if (argc > 1) base_dir = argv[1];
+    std::string artifact_dir = "backend/artifacts/native/";
+    if (argc > 2) artifact_dir = argv[2];
 
-    std::string movies_path = "../../../data/raw/movies.csv";
-    std::string ratings_path = "../../../data/raw/ratings.csv";
-    std::string tags_path = "../../../data/raw/tags.csv";
-    std::string sequences_path = "../../../data/processed/training_sequences.csv";
-    std::string output_dir = "../../../artifacts/native/";
-
-    // --- 1. Feature Engineering ---
-    log_info("Step 1/6: Loading Movies...");
-    std::unordered_map<int, std::vector<std::string>> movie_genres;
-    std::unordered_map<int, int> movie_years;
-    std::vector<int> all_movie_ids;
-    std::unordered_map<int, int> id_to_idx;
-    std::map<std::string, int> genre_vocab;
-    int genre_idx = 0;
-
-    std::ifstream f_mov(movies_path);
-    if (!f_mov.is_open()) return 1;
-    std::string line;
-    std::getline(f_mov, line); 
-
-    while (std::getline(f_mov, line)) {
-        if (line.empty()) continue;
-        size_t first_comma = line.find(',');
-        size_t last_comma = line.find_last_of(',');
-        if (first_comma == std::string::npos || last_comma == std::string::npos) continue;
-
-        int id = std::stoi(line.substr(0, first_comma));
-        std::string title = line.substr(first_comma + 1, last_comma - first_comma - 1);
-        std::string genres_str = line.substr(last_comma + 1);
-        if (!genres_str.empty() && genres_str.back() == '\r') genres_str.pop_back();
-
-        id_to_idx[id] = all_movie_ids.size();
-        all_movie_ids.push_back(id);
-
-        int year = 0;
-        try {
-            size_t open = title.find_last_of('(');
-            size_t close = title.find_last_of(')');
-            if (open != std::string::npos && close > open) 
-                year = std::stoi(title.substr(open + 1, close - open - 1));
-        } catch(...) {}
-        movie_years[id] = year;
-
-        auto genres = split(genres_str, '|');
-        for (auto& g : genres) {
-            if (g == "(no genres listed)") continue;
-            if (genre_vocab.find(g) == genre_vocab.end()) genre_vocab[g] = genre_idx++;
-            movie_genres[id].push_back(g);
-        }
+    // 1. Load Meta
+    int num_movies = 0, num_features = 0;
+    std::ifstream meta_file(base_dir + "features_meta.bin", std::ios::binary);
+    if (!meta_file.is_open()) {
+        std::cerr << "Error: Could not open features_meta.bin" << std::endl;
+        return 1;
     }
-    f_mov.close();
+    meta_file.read((char*)&num_movies, sizeof(int));
+    meta_file.read((char*)&num_features, sizeof(int));
+    meta_file.close();
 
-    log_info("Step 2/6: Loading Ratings...");
-    std::unordered_map<int, MovieStats> stats;
-    std::ifstream f_rat(ratings_path);
-    if (f_rat.is_open()) {
-        std::getline(f_rat, line);
-        while (std::getline(f_rat, line)) {
-            auto t = parse_csv_line(line);
-            if (t.size() < 3) continue;
-            try {
-                int mid = std::stoi(t[1]);
-                if (id_to_idx.count(mid)) {
-                    stats[mid].sum_rating += std::stof(t[2]);
-                    stats[mid].count_rating++;
-                }
-            } catch(...) {}
-        }
-        f_rat.close();
-    }
+    MappedArray<int> offsets(base_dir + "features_offsets.bin");
+    MappedArray<int> indices(base_dir + "features_indices.bin");
+    MappedArray<float> values(base_dir + "features_values.bin");
+    MappedArray<int> train_data(base_dir + "train_data.bin");
+    size_t num_samples = train_data.size / 6;
+    std::cout << "Samples: " << num_samples << " | Features: " << num_features << std::endl;
 
-    log_info("Step 3/6: Loading Tags...");
-    std::unordered_map<std::string, int> tag_counts;
-    std::unordered_map<int, std::vector<std::string>> movie_tags;
-    std::ifstream f_tag(tags_path);
-    if (f_tag.is_open()) {
-        std::getline(f_tag, line);
-        while (std::getline(f_tag, line)) {
-            auto t = parse_csv_line(line);
-            if (t.size() < 3) continue;
-            try {
-                int mid = std::stoi(t[1]);
-                if (id_to_idx.count(mid)) {
-                    std::string tag = t[2];
-                    std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
-                    tag_counts[tag]++;
-                    movie_tags[mid].push_back(tag);
-                }
-            } catch(...) {}
-        }
-        f_tag.close();
-    }
-
-    std::vector<std::pair<int, std::string>> sorted_tags;
-    for (auto& p : tag_counts) sorted_tags.push_back({p.second, p.first});
-    std::sort(sorted_tags.rbegin(), sorted_tags.rend());
+    // 2. Initialize Weights
+    arma::fmat weights(EMBEDDING_DIM, num_features, arma::fill::randn);
+    weights *= 0.01f;
+    arma::fmat grad_accum(EMBEDDING_DIM, num_features, arma::fill::zeros);
+    grad_accum.fill(1e-6f); // Avoid div by zero
     
-    std::map<std::string, int> top_tag_vocab;
-    for (int i = 0; i < std::min((int)sorted_tags.size(), TOP_N_TAGS); ++i) {
-        top_tag_vocab[sorted_tags[i].second] = i;
-    }
+    std::vector<int> sample_indices(num_samples);
+    for(size_t i=0; i<num_samples; ++i) sample_indices[i] = i;
+    std::mt19937 rng(42);
 
-    // --- Build Sparse Feature Matrix ---
-    log_info("Step 4/6: Building Sparse Features (Normalized)...");
-    int input_dim = genre_vocab.size() + top_tag_vocab.size() + 3;
-    std::vector<SparseFeatureVec> sparse_features(all_movie_ids.size());
-    
-    float max_year = 0, min_year = 3000, max_pop = 0;
-    for (int mid : all_movie_ids) {
-        if (movie_years[mid] > 0) {
-            max_year = std::max(max_year, (float)movie_years[mid]);
-            min_year = std::min(min_year, (float)movie_years[mid]);
-        }
-        max_pop = std::max(max_pop, (float)stats[mid].count_rating);
-    }
-
-    #pragma omp parallel for
-    for (size_t i = 0; i < all_movie_ids.size(); ++i) {
-        int mid = all_movie_ids[i];
-        std::vector<arma::uword> idxs;
-        std::vector<float> vals;
-        idxs.reserve(32); vals.reserve(32);
-
-        // Genres
-        auto genres_it = movie_genres.find(mid);
-        if (genres_it != movie_genres.end()) {
-            for (const auto& g : genres_it->second) {
-                auto v_it = genre_vocab.find(g);
-                if (v_it != genre_vocab.end()) {
-                    idxs.push_back(v_it->second);
-                    vals.push_back(1.0f);
-                }
-            }
-        }
-        
-        // Tags
-        int tag_offset = genre_vocab.size();
-        auto tags_it = movie_tags.find(mid);
-        if (tags_it != movie_tags.end()) {
-            for (const auto& t : tags_it->second) {
-                auto v_it = top_tag_vocab.find(t);
-                if (v_it != top_tag_vocab.end()) {
-                    idxs.push_back(tag_offset + v_it->second);
-                    vals.push_back(1.0f);
-                }
-            }
-        }
-        
-        // Numerical
-        int num_offset = tag_offset + top_tag_vocab.size();
-        auto year_it = movie_years.find(mid);
-        if (year_it != movie_years.end() && year_it->second > 0) {
-            idxs.push_back(num_offset);
-            vals.push_back((year_it->second - min_year) / (max_year - min_year + 1e-5f));
-        }
-        
-        float avg_r = 0;
-        auto stat_it = stats.find(mid);
-        if (stat_it != stats.end() && stat_it->second.count_rating > 0) {
-            avg_r = stat_it->second.sum_rating / stat_it->second.count_rating;
-        }
-        idxs.push_back(num_offset + 1);
-        vals.push_back(avg_r / 5.0f);
-        
-        float count = (stat_it != stats.end()) ? (float)stat_it->second.count_rating : 0.0f;
-        float pop = std::log(count + 1.0f);
-        idxs.push_back(num_offset + 2);
-        vals.push_back(pop / std::log(max_pop + 1.0f));
-
-        // L2 Normalization (Crucial!)
-        float sq_sum = 0.0f;
-        for (float v : vals) sq_sum += v * v;
-        if (sq_sum > 1e-9f) {
-            float scale = 1.0f / std::sqrt(sq_sum);
-            for (float& v : vals) v *= scale;
-        }
-
-        sparse_features[i].indices = arma::uvec(idxs);
-        sparse_features[i].values = arma::fvec(vals);
-    }
-    log_info("Features Built. Total Movies: " + std::to_string(all_movie_ids.size()));
-
-    // --- 2. Load Sequences ---
-    log_info("Step 5/6: Loading Training Sequences...");
-    std::vector<Sequence> sequences;
-    std::ifstream f_seq(sequences_path);
-    if (f_seq.is_open()) {
-        std::getline(f_seq, line); 
-        while (std::getline(f_seq, line)) {
-            auto t = parse_csv_line(line);
-            if (t.size() < 3) continue;
-            if (t[2] != "1") continue; 
-
-            Sequence seq;
-            auto q_tokens = split(t[0], '|');
-            for (auto& q : q_tokens) {
-                try {
-                    int qid = std::stoi(q);
-                    auto it = id_to_idx.find(qid);
-                    if (it != id_to_idx.end()) seq.query_ids.push_back(it->second);
-                } catch(...) {}
-            }
-            try {
-                int pid = std::stoi(t[1]);
-                auto it = id_to_idx.find(pid);
-                if (it != id_to_idx.end()) {
-                    seq.pos_id = it->second;
-                    sequences.push_back(seq);
-                }
-            } catch(...) {}
-        }
-        f_seq.close();
-    }
-    log_info("Loaded " + std::to_string(sequences.size()) + " positive sequences.");
-
-    // --- 3. Init Weights ---
-    arma::fmat W(EMBEDDING_DIM, input_dim, arma::fill::randn);
-    W *= 0.05f;
-    arma::fvec b(EMBEDDING_DIM, arma::fill::zeros);
-
-    // --- 4. Training Loop ---
-    unsigned int num_threads = std::thread::hardware_concurrency();
-    if (num_threads == 0) num_threads = 2;
-    log_info("Step 6/6: Training Model (Threads: " + std::to_string(num_threads) + ", Batch Size: " + std::to_string(BATCH_SIZE) + ")...");
-
-    std::mt19937 global_rng(42);
-    size_t total_batches = (sequences.size() + BATCH_SIZE - 1) / BATCH_SIZE;
-    
+    // 3. Training Loop
     for (int epoch = 0; epoch < EPOCHS; ++epoch) {
-        std::shuffle(sequences.begin(), sequences.end(), global_rng);
-        double total_loss = 0;
-        int processed_batches = 0;
+        std::shuffle(sample_indices.begin(), sample_indices.end(), rng);
+        double epoch_loss = 0;
+        std::atomic<int> processed(0);
 
-        for (size_t batch_start = 0; batch_start < sequences.size(); batch_start += BATCH_SIZE) {
-            size_t batch_end = std::min(batch_start + BATCH_SIZE, sequences.size());
-            size_t current_batch_size = batch_end - batch_start;
-            
-            arma::fmat batch_W_grad(EMBEDDING_DIM, input_dim, arma::fill::zeros);
-            arma::fvec batch_b_grad(EMBEDDING_DIM, arma::fill::zeros);
-            std::atomic<double> batch_loss(0.0);
-            std::mutex grad_mutex;
+        #pragma omp parallel
+        {
+            // Thread-local scratchpads
+            arma::fmat q_batch(EMBEDDING_DIM, BATCH_SIZE);
+            arma::fmat p_batch(EMBEDDING_DIM, BATCH_SIZE);
+            arma::fmat scores(BATCH_SIZE, BATCH_SIZE);
+            arma::fmat grad_scores(BATCH_SIZE, BATCH_SIZE);
+            arma::fmat q_grads(EMBEDDING_DIM, BATCH_SIZE);
+            arma::fmat p_grads(EMBEDDING_DIM, BATCH_SIZE);
 
-            auto worker = [&](size_t start, size_t end, int thread_id) {
-                arma::fmat local_W_grad(EMBEDDING_DIM, input_dim, arma::fill::zeros);
-                arma::fvec local_b_grad(EMBEDDING_DIM, arma::fill::zeros);
-                std::mt19937 local_rng(42 + thread_id + epoch * 100);
-                double local_loss = 0;
+            #pragma omp for schedule(static) reduction(+:epoch_loss)
+            for (size_t i = 0; i < num_samples; i += BATCH_SIZE) {
+                int cur_batch = std::min((size_t)BATCH_SIZE, num_samples - i);
+                
+                // A. Forward Pass (Gather Embeddings)
+                // Zero out only used columns
+                if (cur_batch < BATCH_SIZE) {
+                    q_batch.cols(0, cur_batch-1).zeros();
+                    p_batch.cols(0, cur_batch-1).zeros();
+                } else {
+                    q_batch.zeros();
+                    p_batch.zeros();
+                }
 
-                for (size_t i = start; i < end; ++i) {
-                    const auto& seq = sequences[i];
-                    if (seq.query_ids.empty()) continue;
-
-                    arma::fvec q_emb(EMBEDDING_DIM, arma::fill::zeros);
-                    for(int q_idx : seq.query_ids) {
-                        q_emb += forward_sparse(W, b, sparse_features[q_idx]);
-                    }
-                    float inv_n = 1.0f / seq.query_ids.size();
-                    q_emb *= inv_n;
+                for (int b = 0; b < cur_batch; ++b) {
+                    const int* row = &train_data.data[sample_indices[i + b] * 6];
                     
-                    arma::fvec p_emb = forward_sparse(W, b, sparse_features[seq.pos_id]);
+                    // Query (Average of 5 seeds)
+                    float* q_col_ptr = q_batch.colptr(b);
+                    int valid = 0;
+                    for (int s = 0; s < 5; ++s) {
+                        int mid = row[s]; 
+                        if (mid < 0 || mid >= num_movies) continue; // Should use 0 check if 0 is padding
+                        // Assuming 0 is padding or handled by offsets being empty/dummy
+                        if (mid == 0) continue; 
 
-                    for(int n=0; n<NUM_NEGATIVES; ++n) {
-                        int neg_idx = local_rng() % sparse_features.size();
-                        arma::fvec n_emb = forward_sparse(W, b, sparse_features[neg_idx]);
-
-                        float s_pos = arma::dot(q_emb, p_emb);
-                        float s_neg = arma::dot(q_emb, n_emb);
-                        float diff = s_pos - s_neg;
-                        float sig_diff = sigmoid(diff);
-                        
-                        if (std::isnan(sig_diff)) continue;
-                        local_loss += -std::log(sig_diff + 1e-9f);
-
-                        float grad_factor = sig_diff - 1.0f;
-                        arma::fvec d_q = grad_factor * (p_emb - n_emb);
-                        arma::fvec d_p = grad_factor * q_emb;
-                        arma::fvec d_n = -grad_factor * q_emb;
-
-                        local_b_grad += d_p + d_n + d_q;
-                        backward_sparse_W(local_W_grad, d_p, sparse_features[seq.pos_id]);
-                        backward_sparse_W(local_W_grad, d_n, sparse_features[neg_idx]);
-                        
-                        arma::fvec d_qi = d_q * inv_n;
-                        for(int q_idx : seq.query_ids) {
-                            local_b_grad += d_qi;
-                            backward_sparse_W(local_W_grad, d_qi, sparse_features[q_idx]);
+                        valid++;
+                        int start = offsets[mid], end = offsets[mid+1];
+                        for (int k = start; k < end; ++k) {
+                            int f_idx = indices[k];
+                            float val = values[k];
+                            const float* w_ptr = weights.colptr(f_idx);
+                            for(int d=0; d<EMBEDDING_DIM; ++d) q_col_ptr[d] += w_ptr[d] * val;
                         }
                     }
+                    if (valid > 0) {
+                        float inv_valid = 1.0f / valid;
+                        for(int d=0; d<EMBEDDING_DIM; ++d) q_col_ptr[d] *= inv_valid;
+                    }
+
+                    // Positive Item
+                    int pos_id = row[5];
+                    float* p_col_ptr = p_batch.colptr(b);
+                    int start = offsets[pos_id], end = offsets[pos_id+1];
+                    for (int k = start; k < end; ++k) {
+                        int f_idx = indices[k];
+                        float val = values[k];
+                        const float* w_ptr = weights.colptr(f_idx);
+                        for(int d=0; d<EMBEDDING_DIM; ++d) p_col_ptr[d] += w_ptr[d] * val;
+                    }
                 }
 
-                std::lock_guard<std::mutex> lock(grad_mutex);
-                batch_W_grad += local_W_grad;
-                batch_b_grad += local_b_grad;
+                // B. Scoring & Loss (BLAS Level 3)
+                // Use submatrices for actual batch size
+                arma::fmat q_sub = q_batch.cols(0, cur_batch - 1);
+                arma::fmat p_sub = p_batch.cols(0, cur_batch - 1);
                 
-                double current = batch_loss.load();
-                while(!batch_loss.compare_exchange_weak(current, current + local_loss));
-            };
+                // scores = Q^T * P
+                arma::fmat batch_scores = q_sub.t() * p_sub; // (Batch x Batch)
 
-            std::vector<std::thread> threads;
-            size_t items_per_thread = (current_batch_size + num_threads - 1) / num_threads;
-            
-            for (unsigned int t = 0; t < num_threads; ++t) {
-                size_t t_start = batch_start + t * items_per_thread;
-                size_t t_end = std::min(t_start + items_per_thread, batch_end);
-                if (t_start < t_end) threads.emplace_back(worker, t_start, t_end, t);
-            }
-            for (auto& t : threads) t.join();
+                // Softmax & Gradient Computation
+                // dL/dS = Softmax(S) - Identity
+                float batch_loss = 0;
+                arma::fmat batch_grad_scores(cur_batch, cur_batch);
+                
+                for (int r = 0; r < cur_batch; ++r) {
+                    arma::fvec row_scores = batch_scores.row(r).t();
+                    float max_s = row_scores.max();
+                    // Numerical stability
+                    arma::fvec exps = arma::exp(row_scores - max_s);
+                    float sum_exps = arma::sum(exps);
+                    
+                    // Log-Softmax Loss for the diagonal (positive)
+                    float prob = exps(r) / sum_exps;
+                    batch_loss -= std::log(std::max(prob, 1e-7f));
 
-            // Gradient Clipping
-            float grad_norm = arma::norm(batch_W_grad, 2);
-            if (grad_norm > GRAD_CLIP_NORM) {
-                float scale = GRAD_CLIP_NORM / grad_norm;
-                batch_W_grad *= scale;
-                batch_b_grad *= scale;
-            }
+                    // Gradient w.r.t Scores
+                    arma::fvec grads = exps / sum_exps;
+                    grads(r) -= 1.0f; // Subtract 1 for target
+                    batch_grad_scores.row(r) = grads.t();
+                }
+                epoch_loss += batch_loss;
 
-            W -= LEARNING_RATE * batch_W_grad;
-            b -= LEARNING_RATE * batch_b_grad;
-            total_loss += batch_loss.load();
-            processed_batches++;
+                // C. Compute Gradients (BLAS Level 3)
+                // Q_grads = P * GradScores^T
+                // P_grads = Q * GradScores
+                
+                // Subviews
+                arma::fmat q_grads_sub = p_sub * batch_grad_scores.t();
+                arma::fmat p_grads_sub = q_sub * batch_grad_scores;
 
-            if (processed_batches % 500 == 0 || processed_batches == (int)total_batches) {
-                double avg_loss = total_loss / (processed_batches * BATCH_SIZE);
-                std::cout << "\r[Two-Tower] [INFO] Epoch " << (epoch + 1) << "/" << EPOCHS 
-                          << " | Batch " << processed_batches << "/" << total_batches 
-                          << " | Loss: " << std::fixed << std::setprecision(4) << avg_loss
-                          << "   " << std::flush;
+                // D. Update Weights (Sparse + Hogwild)
+                for (int b = 0; b < cur_batch; ++b) {
+                    const int* row = &train_data.data[sample_indices[i + b] * 6];
+                    
+                    // 1. Query Updates
+                    int valid = 0;
+                    for(int s=0; s<5; ++s) if(row[s]!=0) valid++;
+                    float q_scale = (valid > 0) ? (1.0f/valid) : 0;
+                    
+                    if (q_scale > 0) {
+                        const float* q_grad_ptr = q_grads_sub.colptr(b);
+                        for (int s = 0; s < 5; ++s) {
+                            int mid = row[s]; if (mid == 0) continue;
+                            int start = offsets[mid], end = offsets[mid+1];
+                            for (int k = start; k < end; ++k) {
+                                int f_idx = indices[k];
+                                float val = values[k] * q_scale;
+                                adagrad_update(weights.colptr(f_idx), grad_accum.colptr(f_idx), q_grad_ptr, val, EMBEDDING_DIM);
+                            }
+                        }
+                    }
+
+                    // 2. Positive Item Updates
+                    int mid = row[5];
+                    int start = offsets[mid], end = offsets[mid+1];
+                    const float* p_grad_ptr = p_grads_sub.colptr(b);
+                    for (int k = start; k < end; ++k) {
+                        int f_idx = indices[k];
+                        float val = values[k];
+                        adagrad_update(weights.colptr(f_idx), grad_accum.colptr(f_idx), p_grad_ptr, val, EMBEDDING_DIM);
+                    }
+                }
+                
+                // Progress Log
+                int p = processed.fetch_add(cur_batch) + cur_batch;
+                if (p % 200000 < BATCH_SIZE * omp_get_num_threads()) {
+                     // Approximate check to avoid too much locking
+                     if (omp_get_thread_num() == 0) {
+                         float pct = (float)p / num_samples;
+                         std::cout << "\rEpoch " << epoch+1 << " " << (int)(pct * 100) << "% | Loss: " << (epoch_loss / p) << "   " << std::flush;
+                     }
+                }
             }
         }
         std::cout << std::endl;
     }
 
-    // --- 5. Save Embeddings ---
-    log_info("Generating all embeddings for export...");
-    arma::fmat embeddings(EMBEDDING_DIM, all_movie_ids.size());
+    // 4. Save
+    std::cout << "Saving artifacts..." << std::endl;
+    arma::fmat final_embs(EMBEDDING_DIM, num_movies);
     
-    #pragma omp parallel for
-    for (size_t i = 0; i < all_movie_ids.size(); ++i) {
-        embeddings.col(i) = forward_sparse(W, b, sparse_features[i]);
+    // Parallelize final embedding generation
+    #pragma omp parallel for schedule(static)
+    for (int mid = 0; mid < num_movies; ++mid) {
+        float* emb_ptr = final_embs.colptr(mid);
+        std::memset(emb_ptr, 0, EMBEDDING_DIM * sizeof(float)); // Initialize to 0
+        
+        // Handle 0th item (often padding) or just ensure offsets checks are safe
+        if (mid >= (int)offsets.size - 1) continue; 
+        
+        int start = offsets[mid], end = offsets[mid+1];
+        for (int k = start; k < end; ++k) {
+            int f_idx = indices[k];
+            float val = values[k];
+            const float* w_ptr = weights.colptr(f_idx);
+            for(int d=0; d<EMBEDDING_DIM; ++d) emb_ptr[d] += w_ptr[d] * val;
+        }
     }
-    arma::fmat embeddings_t = embeddings.t(); 
-
-    std::string cmd = "mkdir -p " + output_dir;
-    system(cmd.c_str());
-
-    std::string out_path = output_dir + "two_tower_embeddings.bin";
-    embeddings_t.save(out_path, arma::raw_binary);
     
-    std::ofstream meta(output_dir + "two_tower_embeddings_meta.txt");
-    meta << embeddings_t.n_rows << " " << embeddings_t.n_cols << "\n";
-    meta.close();
-    
-    std::ofstream map_file(output_dir + "two_tower_movie_ids.txt");
-    for (int id : all_movie_ids) map_file << id << "\n";
-    map_file.close();
-
-    log_info("Training complete. Saved artifacts to " + output_dir);
+    arma::fmat final_embs_t = final_embs.t();
+    final_embs_t.save(artifact_dir + "two_tower_embeddings.bin", arma::raw_binary);
+    weights.save(artifact_dir + "two_tower_weights.bin", arma::raw_binary);
+    std::cout << "Success!" << std::endl;
     return 0;
 }

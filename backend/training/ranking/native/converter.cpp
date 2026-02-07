@@ -1,25 +1,28 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <fstream>
 #include <algorithm>
 #include <random>
+#include <memory>
+#include <numeric>
+#include <stdexcept>
 
 #include <arrow/api.h>
 #include <arrow/io/api.h>
 #include <parquet/arrow/reader.h>
-
-/**
- * Native Converter: Parquet -> LightGBM CSV + Query files.
- * Implements Grouped Random Split (80/20).
- */
+#include <parquet/exception.h>
 
 struct QueryKey {
     int64_t ids[5];
     bool operator==(const QueryKey& other) const {
         for(int i=0; i<5; ++i) if(ids[i] != other.ids[i]) return false;
         return true;
+    }
+    bool operator!=(const QueryKey& other) const {
+        return !(*this == other);
     }
 };
 
@@ -31,94 +34,177 @@ struct QueryKeyHash {
     }
 };
 
-class ParquetToLGBM {
+class StreamingConverter {
 public:
-    void convert(const std::string& input_path, const std::string& out_prefix) {
-        std::cout << "[C++] Pass 1: Mapping groups..." << std::endl;
+    void run(const std::string& input_path, const std::string& out_prefix) {
+        // --- Pass 1: Identify Queries for Split ---
+        std::cout << "[C++] Pass 1: Streaming queries to determine split..." << std::endl;
         
-        arrow::MemoryPool* pool = arrow::default_memory_pool();
-        std::shared_ptr<arrow::io::ReadableFile> infile;
-        PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(input_path));
-
-        std::unique_ptr<parquet::arrow::FileReader> reader;
-        auto open_result = parquet::arrow::OpenFile(infile, pool);
-        if (!open_result.ok()) throw std::runtime_error("Open failed");
-        reader = std::move(open_result).ValueOrDie();
-
-        std::shared_ptr<arrow::Table> table;
-        PARQUET_THROW_NOT_OK(reader->ReadTable(&table));
-
-        auto query_ids_list = std::static_pointer_cast<arrow::ListArray>(table->GetColumnByName("query_movie_ids")->chunk(0));
-        int64_t num_rows = table->num_rows();
-
-        std::vector<QueryKey> row_to_query(num_rows);
-        std::unordered_map<QueryKey, int, QueryKeyHash> query_counts;
-        std::vector<QueryKey> unique_queries;
-
-        for (int64_t i = 0; i < num_rows; i++) {
-            QueryKey key;
-            auto q_values = std::static_pointer_cast<arrow::Int64Array>(query_ids_list->values());
-            int64_t start = query_ids_list->value_offset(i);
-            for(int j=0; j<5; ++j) key.ids[j] = q_values->Value(start + j);
-            
-            row_to_query[i] = key;
-            if (query_counts[key] == 0) unique_queries.push_back(key);
-            query_counts[key]++;
-        }
-
-        std::cout << "[C++] Found " << unique_queries.size() << " unique queries. Splitting..." << std::endl;
-
-        std::shuffle(unique_queries.begin(), unique_queries.end(), std::mt19937{42});
-        size_t train_size = (size_t)(unique_queries.size() * 0.8);
+        std::vector<QueryKey> all_queries;
         
-        std::unordered_map<QueryKey, bool, QueryKeyHash> is_train;
-        for(size_t i=0; i<train_size; ++i) is_train[unique_queries[i]] = true;
-
-        std::cout << "[C++] Pass 2: Writing files..." << std::endl;
-        
-        std::ofstream f_train_data(out_prefix + ".train");
-        std::ofstream f_test_data(out_prefix + ".test");
-        std::ofstream f_train_query(out_prefix + ".train.query");
-        std::ofstream f_test_query(out_prefix + ".test.query");
-
-        auto labels = std::static_pointer_cast<arrow::Int64Array>(table->GetColumnByName("label")->chunk(0));
-        auto f1 = std::static_pointer_cast<arrow::FloatArray>(table->GetColumnByName("feat_avg_query_rating")->chunk(0));
-        auto f2 = std::static_pointer_cast<arrow::FloatArray>(table->GetColumnByName("feat_genre_overlap")->chunk(0));
-        auto f3 = std::static_pointer_cast<arrow::FloatArray>(table->GetColumnByName("feat_candidate_avg_rating")->chunk(0));
-        auto f4 = std::static_pointer_cast<arrow::Int32Array>(table->GetColumnByName("feat_candidate_rating_count")->chunk(0));
-
-        std::unordered_map<QueryKey, int, QueryKeyHash> current_group_counts;
-        std::vector<QueryKey> train_order, test_order;
-
-        for (int64_t i = 0; i < num_rows; i++) {
-            QueryKey key = row_to_query[i];
-            std::ostream& out = is_train[key] ? f_train_data : f_test_data;
+        {
+            // Scope for Reader 1
+            auto reader = open_file(input_path);
+            auto batch_reader = get_batch_reader(reader.get(), {"query_movie_ids"});
             
-            out << labels->Value(i) << "," 
-                << f1->Value(i) << "," << f2->Value(i) << "," 
-                << f3->Value(i) << "," << f4->Value(i) << "\n";
-            
-            if (current_group_counts[key] == 0) {
-                if (is_train[key]) train_order.push_back(key);
-                else test_order.push_back(key);
+            std::shared_ptr<arrow::RecordBatch> batch;
+            std::unordered_set<QueryKey, QueryKeyHash> seen;
+
+            while (batch_reader->ReadNext(&batch).ok() && batch) {
+                auto q_col = std::static_pointer_cast<arrow::ListArray>(batch->column(0));
+                auto values = std::static_pointer_cast<arrow::Int64Array>(q_col->values());
+                
+                for (int64_t i = 0; i < batch->num_rows(); ++i) {
+                    QueryKey key = {{0}};
+                    int64_t offset = q_col->value_offset(i);
+                    for(int j=0; j<5; ++j) key.ids[j] = values->Value(offset + j);
+                    
+                    if (seen.find(key) == seen.end()) {
+                        seen.insert(key);
+                        all_queries.push_back(key);
+                    }
+                }
             }
-            current_group_counts[key]++;
-        }
+        } // Reader 1 closed
 
-        for(auto& k : train_order) f_train_query << query_counts[k] << "\n";
-        for(auto& k : test_order) f_test_query << query_counts[k] << "\n";
+        std::cout << "[C++] Found " << all_queries.size() << " unique queries." << std::endl;
+        
+        // Split
+        std::shuffle(all_queries.begin(), all_queries.end(), std::mt19937{42});
+        size_t n_train = (size_t)(all_queries.size() * 0.8);
+        std::unordered_set<QueryKey, QueryKeyHash> train_set;
+        for(size_t i=0; i<n_train; ++i) train_set.insert(all_queries[i]);
+
+        std::cout << "[C++] Train groups: " << train_set.size() << ", Test groups: " << (all_queries.size() - n_train) << std::endl;
+
+        // --- Pass 2: Write Data ---
+        std::cout << "[C++] Pass 2: Streaming full data and writing..." << std::endl;
+
+        std::vector<std::string> feature_names = {
+            "query_movie_ids", "label",
+            "feat_avg_query_rating", "feat_avg_query_year", "feat_avg_query_runtime",
+            "feat_genre_overlap", "feat_candidate_avg_rating", "feat_candidate_rating_count",
+            "feat_candidate_runtime", "feat_candidate_year", "feat_candidate_popularity",
+            "feat_candidate_imdb_rating", "feat_candidate_imdb_votes", "feat_year_diff", "feat_runtime_diff"
+        };
+
+        {
+            // Scope for Reader 2
+            auto reader = open_file(input_path);
+            auto batch_reader = get_batch_reader(reader.get(), feature_names);
+            
+            std::shared_ptr<arrow::RecordBatch> batch;
+
+            std::ofstream f_train(out_prefix + ".train");
+            std::ofstream f_test(out_prefix + ".test");
+            std::ofstream f_train_q(out_prefix + ".train.query");
+            std::ofstream f_test_q(out_prefix + ".test.query");
+            
+            QueryKey last_key_train = {{0}}, last_key_test = {{0}};
+            int count_train = 0, count_test = 0;
+            bool first_train = true, first_test = true;
+
+            while (batch_reader->ReadNext(&batch).ok() && batch) {
+                auto q_col = std::static_pointer_cast<arrow::ListArray>(batch->column(0));
+                auto q_vals = std::static_pointer_cast<arrow::Int64Array>(q_col->values());
+                auto l_col = std::static_pointer_cast<arrow::Int64Array>(batch->column(1));
+                
+                std::vector<std::shared_ptr<arrow::FloatArray>> f_cols;
+                for(size_t k=2; k<feature_names.size(); ++k) {
+                    f_cols.push_back(std::static_pointer_cast<arrow::FloatArray>(batch->column(k)));
+                }
+
+                for (int64_t i = 0; i < batch->num_rows(); ++i) {
+                    QueryKey key = {{0}};
+                    int64_t offset = q_col->value_offset(i);
+                    for(int j=0; j<5; ++j) key.ids[j] = q_vals->Value(offset + j);
+
+                    bool is_train = (train_set.find(key) != train_set.end());
+                    std::ofstream& out = is_train ? f_train : f_test;
+
+                    out << l_col->Value(i);
+                    for(auto& col : f_cols) out << "," << col->Value(i);
+                    out << "\n";
+
+                    if (is_train) {
+                        if (!first_train && key != last_key_train) {
+                            f_train_q << count_train << "\n";
+                            count_train = 0;
+                        }
+                        last_key_train = key;
+                        count_train++;
+                        first_train = false;
+                    } else {
+                        if (!first_test && key != last_key_test) {
+                            f_test_q << count_test << "\n";
+                            count_test = 0;
+                        }
+                        last_key_test = key;
+                        count_test++;
+                        first_test = false;
+                    }
+                }
+            }
+            if (count_train > 0) f_train_q << count_train << "\n";
+            if (count_test > 0) f_test_q << count_test << "\n";
+        } // Reader 2 closed
 
         std::cout << "[C++] Conversion complete." << std::endl;
+    }
+
+private:
+    std::unique_ptr<parquet::arrow::FileReader> open_file(const std::string& path) {
+        arrow::MemoryPool* pool = arrow::default_memory_pool();
+        std::shared_ptr<arrow::io::ReadableFile> infile;
+        auto result = arrow::io::ReadableFile::Open(path);
+        if (!result.ok()) throw std::runtime_error("Failed to open file: " + path);
+        infile = result.ValueOrDie();
+
+        // Fixed API Call
+        auto open_result = parquet::arrow::OpenFile(infile, pool);
+        if (!open_result.ok()) throw std::runtime_error("Failed to create parquet reader");
+        return std::move(open_result).ValueOrDie();
+    }
+
+    std::shared_ptr<arrow::RecordBatchReader> get_batch_reader(parquet::arrow::FileReader* reader, const std::vector<std::string>& columns) {
+        std::vector<int> all_row_groups(reader->num_row_groups());
+        std::iota(all_row_groups.begin(), all_row_groups.end(), 0);
+
+        std::vector<int> col_idxs;
+        std::shared_ptr<arrow::Schema> arrow_schema;
+        auto status = reader->GetSchema(&arrow_schema);
+        if(!status.ok()) throw std::runtime_error("Failed to get schema");
+        
+        for(const auto& name : columns) {
+            int idx = arrow_schema->GetFieldIndex(name);
+            if (idx == -1) throw std::runtime_error("Column not found: " + name);
+            col_idxs.push_back(idx);
+        }
+
+        std::shared_ptr<arrow::RecordBatchReader> rb_reader;
+        // Suppress deprecation warning or just use it.
+        // For new API (if available): reader->GetRecordBatchReader(..., &rb_reader) is deprecated?
+        // Actually, the new API returns arrow::Result<std::shared_ptr<RecordBatchReader>>.
+        // Let's try the Result version if the deprecated one fails or just assume it works.
+        // The error log showed: deprecated, use Result version.
+        // But the deprecated function should still work for now.
+        status = reader->GetRecordBatchReader(all_row_groups, col_idxs, &rb_reader);
+        if(!status.ok()) throw std::runtime_error("Failed to get batch reader");
+        
+        return rb_reader;
     }
 };
 
 int main(int argc, char** argv) {
-    if (argc < 3) return 1;
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <input_parquet> <output_prefix>" << std::endl;
+        return 1;
+    }
     try {
-        ParquetToLGBM conv;
-        conv.convert(argv[1], argv[2]);
+        StreamingConverter app;
+        app.run(argv[1], argv[2]);
     } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
     return 0;

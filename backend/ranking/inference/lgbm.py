@@ -8,26 +8,19 @@ from common.logger import get_logger
 
 log = get_logger(__name__)
 
+from common.config import config
+
 class LGBMRanker:
     """
     LightGBM LambdaRank based ranker.
-    Feature schema MUST match training exactly:
-    1. feat_avg_query_rating
-    2. feat_genre_overlap
-    3. feat_candidate_avg_rating
-    4. feat_candidate_rating_count
+    Feature schema MUST match training exactly.
     """
-
-    FEATURE_NAMES = [
-        "feat_avg_query_rating",
-        "feat_genre_overlap",
-        "feat_candidate_avg_rating",
-        "feat_candidate_rating_count",
-    ]
 
     def __init__(self, model_path: str):
         self.model = get_lgbm_model(model_path)
+        self.feature_names = config.features.ranker_features
         log.info(f"LGBMRanker: Loaded model from {model_path} with {self.model.num_feature()} features.")
+        log.info(f"LGBMRanker: Using features: {self.feature_names}")
 
     def rank(
         self,
@@ -42,12 +35,23 @@ class LGBMRanker:
             return candidates
 
         # Ensure features are in the correct order
-        X = features_df[self.FEATURE_NAMES].values.astype(np.float32)
+        # Fallback if config is missing keys (though it shouldn't be)
+        if not self.feature_names:
+            log.warning("LGBMRanker: Feature names not found in config, using all 'feat_' columns.")
+            self.feature_names = [c for c in features_df.columns if c.startswith("feat_")]
+
+        # Check for missing columns and fill with 0
+        for col in self.feature_names:
+            if col not in features_df.columns:
+                log.warning(f"LGBMRanker: Missing feature {col}, filling with 0.")
+                features_df[col] = 0.0
+
+        X = features_df[self.feature_names].values.astype(np.float32)
 
         if X.shape[1] != self.model.num_feature():
             raise RuntimeError(
                 f"LGBMRanker: Feature mismatch. Model expects {self.model.num_feature()}, "
-                f"but got {X.shape[1]}"
+                f"but got {X.shape[1]}. Features used: {self.feature_names}"
             )
 
         # Predict relevance scores

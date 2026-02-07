@@ -168,26 +168,26 @@ public:
                 }
             }
 
-            f_avg_q_rating.Append(avg_q_rating);
-            f_avg_q_year.Append(avg_q_year);
-            f_avg_q_runtime.Append(avg_q_runtime);
-            f_genre_overlap.Append((float)genre_overlap);
-            f_cand_rating.Append(cand_rating);
-            f_cand_votes.Append(cand_votes);
-            f_cand_runtime.Append(cand_runtime);
-            f_cand_year.Append(cand_year);
-            f_cand_pop.Append(cand_pop);
-            f_cand_imdb_rating.Append(cand_imdb_r);
-            f_cand_imdb_votes.Append(cand_imdb_v);
-            f_year_diff.Append(avg_q_year > 0 && cand_year > 0 ? std::abs(cand_year - avg_q_year) : 0);
-            f_runtime_diff.Append(avg_q_runtime > 0 && cand_runtime > 0 ? std::abs(cand_runtime - avg_q_runtime) : 0);
+            PARQUET_THROW_NOT_OK(f_avg_q_rating.Append(avg_q_rating));
+            PARQUET_THROW_NOT_OK(f_avg_q_year.Append(avg_q_year));
+            PARQUET_THROW_NOT_OK(f_avg_q_runtime.Append(avg_q_runtime));
+            PARQUET_THROW_NOT_OK(f_genre_overlap.Append((float)genre_overlap));
+            PARQUET_THROW_NOT_OK(f_cand_rating.Append(cand_rating));
+            PARQUET_THROW_NOT_OK(f_cand_votes.Append(cand_votes));
+            PARQUET_THROW_NOT_OK(f_cand_runtime.Append(cand_runtime));
+            PARQUET_THROW_NOT_OK(f_cand_year.Append(cand_year));
+            PARQUET_THROW_NOT_OK(f_cand_pop.Append(cand_pop));
+            PARQUET_THROW_NOT_OK(f_cand_imdb_rating.Append(cand_imdb_r));
+            PARQUET_THROW_NOT_OK(f_cand_imdb_votes.Append(cand_imdb_v));
+            PARQUET_THROW_NOT_OK(f_year_diff.Append(avg_q_year > 0 && cand_year > 0 ? std::abs(cand_year - avg_q_year) : 0));
+            PARQUET_THROW_NOT_OK(f_runtime_diff.Append(avg_q_runtime > 0 && cand_runtime > 0 ? std::abs(cand_runtime - avg_q_runtime) : 0));
         }
 
         std::shared_ptr<arrow::Table> final_table = table;
         
         auto append_col = [&](const std::string& name, arrow::FloatBuilder& builder) {
             std::shared_ptr<arrow::Array> arr;
-            builder.Finish(&arr);
+            PARQUET_THROW_NOT_OK(builder.Finish(&arr));
             auto chunked_arr = std::make_shared<arrow::ChunkedArray>(arr);
             PARQUET_ASSIGN_OR_THROW(final_table, final_table->AddColumn(final_table->num_columns(), arrow::field(name, arrow::float32()), chunked_arr));
         };

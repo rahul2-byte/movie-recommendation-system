@@ -6,12 +6,13 @@ data/processed/intermediate/
 *.parquet
 *.json
 
-# Exclude training and experiment tracking
+# Exclude training, scripts, and experiment tracking
 training/
 tracking/
 mlruns/
 logs/
 tests/
+scripts/
 
 # Exclude local environment and git
 .git
@@ -23,8 +24,14 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
-# Exclude native build artifacts
-features/native/*.cpp
-features/native/*.o
-features/native/processor
-features/native/ranker_feature_gen
+# Exclude native source and binaries
+**/native/*.cpp
+**/native/*.hpp
+**/native/*.o
+**/native/Makefile
+backend/features/native/processor
+backend/features/native/ranker_feature_gen
+backend/features/native/content_vectorizer
+backend/features/native/interaction_matrix_builder
+backend/features/native/sequence_builder
+backend/training/retrieval/native/train_*

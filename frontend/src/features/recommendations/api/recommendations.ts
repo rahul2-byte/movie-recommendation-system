@@ -9,7 +9,7 @@ if (!API_BASE) {
 export async function fetchRecommendations(
   payload: RecommendRequest
 ): Promise<RecommendResponse> {
-  const res = await fetch(`${API_BASE}/recommend`, {
+  const res = await fetch(`${API_BASE}/api/v1/recommend`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

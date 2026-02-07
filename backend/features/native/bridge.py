@@ -3,11 +3,13 @@ import pandas as pd
 import struct
 import os
 
-# Define the input path - relative to project root usually
-DEFAULT_INPUT_FILE = "backend/data/processed/ratings.parquet"
+# Add backend to path to allow imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from common.config import config
 
 def main():
-    input_file = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_INPUT_FILE
+    input_file = sys.argv[1] if len(sys.argv) > 1 else config.system.ratings_path
     
     if not os.path.exists(input_file):
         sys.stderr.write(f"Error: Input file {input_file} not found. CWD: {os.getcwd()}\n")
@@ -54,12 +56,14 @@ def main():
         
         # Structured array matching C++ struct
         # int32, int32, float32, int64
+        # Force strict alignment to match C++ #pragma pack(1)
+        # itemsize will be 4+4+4+8 = 20
         dtype = np.dtype([
             ('userId', 'i4'),
             ('movieId', 'i4'),
             ('rating', 'f4'),
             ('timestamp', 'i8')
-        ])
+        ], align=False)
         
         # Convert df to numpy
         # Ensure column order matches!

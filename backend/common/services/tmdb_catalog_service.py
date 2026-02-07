@@ -24,24 +24,43 @@ def normalize_tmdb_movie(movie: Dict) -> Dict:
 
 
 async def fetch_trending_movies(limit: int = 20) -> List[Dict]:
-    async with client:
-        data = await client.fetch_path("/trending/movie/week")
-        return [normalize_tmdb_movie(m) for m in data["results"][:limit]]
+    await client.start()
+    data = await client.fetch_path("/trending/movie/week")
+    return [normalize_tmdb_movie(m) for m in data["results"][:limit]]
 
 
 async def fetch_popular_movies(limit: int = 20) -> List[Dict]:
-    async with client:
-        data = await client.fetch_path("/movie/popular")
-        return [normalize_tmdb_movie(m) for m in data["results"][:limit]]
+    await client.start()
+    data = await client.fetch_path("/movie/popular")
+    return [normalize_tmdb_movie(m) for m in data["results"][:limit]]
 
 
 async def fetch_new_releases(limit: int = 20) -> List[Dict]:
-    async with client:
-        data = await client.fetch_path(
-            "/discover/movie",
-            {
-                "sort_by": "release_date.desc",
-                "primary_release_date.lte": "2025-12-31",
-            },
-        )
-        return [normalize_tmdb_movie(m) for m in data["results"][:limit]]
+
+
+    await client.start()
+
+
+    data = await client.fetch_path(
+
+
+        "/discover/movie",
+
+
+        {
+
+
+            "sort_by": "release_date.desc",
+
+
+            "primary_release_date.lte": "2025-12-31",
+
+
+        },
+
+
+    )
+
+
+    return [normalize_tmdb_movie(m) for m in data["results"][:limit]]
+

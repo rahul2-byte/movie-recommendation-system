@@ -3,11 +3,14 @@
 import mlflow
 import numpy as np
 from datetime import datetime
-from logger.config.settings import (
-    MLFLOW_TRACKING_URI,
-    TRACE_SAMPLE_SIZE,
-    MLFLOW_EXPERIMENTS,
-)
+from common.config import config
+
+# Access settings from global config
+settings = config.settings
+MLFLOW_TRACKING_URI = settings.MLFLOW_TRACKING_URI
+TRACE_SAMPLE_SIZE = settings.TRACE_SAMPLE_SIZE
+MLFLOW_EXPERIMENTS = settings.MLFLOW_EXPERIMENTS
+
 from logger.services.mlflow_utils import get_or_create_experiment
 
 # -------------------------------

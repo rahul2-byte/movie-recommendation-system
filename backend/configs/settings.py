@@ -77,6 +77,22 @@ TOP_N_TAGS = int(os.getenv("TOP_N_TAGS", 10_000))
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 50_000))
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", 100))
 
+# --- MLflow Specific Settings ---
+MLFLOW_EXPERIMENTS = {
+    "offline": "recommender_offline_eval",
+    "online": "recommender_online_inference",
+}
+TRACE_SAMPLE_SIZE = int(os.getenv("TRACE_SAMPLE_SIZE", 2))
+
+# --- Security Settings ---
+# In production, this should be a comma-separated list of allowed domains
+_DEFAULT_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000"
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", _DEFAULT_ORIGINS).split(",")
+
+# --- Logging Settings ---
+# Default to JSON in PROD, allow override
+LOG_FORMAT_JSON = os.getenv("LOG_FORMAT_JSON", str(ENVIRONMENT == "PROD")).lower() == "true"
+
 # --- API Retry & Timeout Settings ---
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", 10))
 MAX_RETRIES = int(os.getenv("MAX_RETRIES", 5))

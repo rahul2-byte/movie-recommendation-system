@@ -50,17 +50,17 @@ std::vector<std::string> parse_csv_line(const std::string& line) {
     return split(line, ',');
 }
 
-int main() {
+int main(int argc, char** argv) {
     log_header("Starting Content-Based Model Training (High-Dim)");
     
     // Optimization for stdio
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(NULL);
 
-    std::string movies_path = "../../../data/raw/movies.csv";
-    std::string ratings_path = "../../../data/raw/ratings.csv";
-    std::string tags_path = "../../../data/raw/tags.csv";
-    std::string output_dir = "../../../artifacts/native/";
+    std::string movies_path = (argc > 1) ? argv[1] : "backend/data/raw/movies.csv";
+    std::string ratings_path = (argc > 2) ? argv[2] : "backend/data/raw/ratings.csv";
+    std::string tags_path = (argc > 3) ? argv[3] : "backend/data/raw/tags.csv";
+    std::string output_dir = (argc > 4) ? argv[4] : "backend/artifacts/native/";
 
     // 1. Load Movies & Extract Year/Genres
     log_info("Step 1/5: Loading Movies...");
@@ -244,14 +244,17 @@ int main() {
         #pragma omp atomic
         processed++;
         
-        if (processed % 5000 == 0) {
+        if (processed % 1000 == 0 || processed == total_movies) {
             #pragma omp critical
             {
-                std::cout << "\r[Content-Based] [INFO] Building features: " << (processed * 100 / total_movies) << "% (" << processed << "/" << total_movies << ")..." << std::flush;
+                float pct = (float)processed / total_movies;
+                int bar_width = 30;
+                std::cout << "\r[Content-Based] [" << std::string(pct * bar_width, '=') << std::string(bar_width - (pct * bar_width), ' ') << "] "
+                          << (int)(pct * 100) << "% (" << processed << "/" << total_movies << ")" << std::flush;
             }
         }
     }
-    std::cout << "\r[Content-Based] [INFO] Building features: 100%..." << std::endl;
+    std::cout << std::endl;
 
     // 5. Save
     log_info("Step 5/5: Saving Artifacts...");

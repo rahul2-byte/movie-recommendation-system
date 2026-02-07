@@ -47,7 +47,7 @@ class TMDBClient(BaseAPIClient):
             return response
         except Exception as e:
             logger.error(
-                f"Failed to fetch TMDB data for movie ID {tmdb_id}: "
+                f"Failed to fetch TMDB data: "
                 f"{type(e).__name__}: {str(e)}"
             )
             raise

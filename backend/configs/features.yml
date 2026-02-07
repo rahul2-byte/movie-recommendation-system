@@ -1,6 +1,14 @@
 ranker_features:
   - feat_avg_query_rating
+  - feat_avg_query_year
+  - feat_avg_query_runtime
   - feat_genre_overlap
-  - feat_tag_overlap
   - feat_candidate_avg_rating
   - feat_candidate_rating_count
+  - feat_candidate_runtime
+  - feat_candidate_year
+  - feat_candidate_popularity
+  - feat_candidate_imdb_rating
+  - feat_candidate_imdb_votes
+  - feat_year_diff
+  - feat_runtime_diff

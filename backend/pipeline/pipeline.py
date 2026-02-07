@@ -1,3 +1,4 @@
+import asyncio
 import pandas as pd
 from typing import List, Dict, Any
 from retrieval.inference.recall import RecallService
@@ -57,11 +58,17 @@ class RecommendationPipeline:
         # e.g., Diversity filtering, business rules
         final_candidates = ranked_candidates[:top_n]
 
-        # 5. Enrichment: Get full movie metadata from the store
-        log.info("Pipeline: Enriching final recommendations...")
+        # 5. Enrichment: Get full movie metadata from the store in parallel
+        log.info(f"Pipeline: Enriching {len(final_candidates)} final recommendations in parallel...")
+        
+        # Create tasks for all candidates to be enriched concurrently
+        enrichment_tasks = [self.movie_store.get(c.movie_id) for c in final_candidates]
+        
+        # Wait for all tasks to complete
+        movie_metas = await asyncio.gather(*enrichment_tasks)
+        
         enriched_results = []
-        for c in final_candidates:
-            movie_meta = await self.movie_store.get(c.movie_id)
+        for c, movie_meta in zip(final_candidates, movie_metas):
             if movie_meta:
                 # Add scores for transparency in UI if needed
                 result = movie_meta.copy()

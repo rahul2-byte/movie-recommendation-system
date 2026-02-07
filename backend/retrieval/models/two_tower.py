@@ -282,9 +282,24 @@ class TwoTowerBuilder:
     def _load_data(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """Loads sequences, movie metadata, and tags."""
         log.info(f"TwoTowerBuilder: Loading sequences from {self.sequences_path}")
-        sequences_df = pd.read_csv(self.sequences_path)
-        sequences_df = sequences_df[sequences_df['label'] == 1].reset_index(drop=True) # Only positive samples for training
-        log.info(f"TwoTowerBuilder: Loaded {len(sequences_df)} positive sequences.")
+        if str(self.sequences_path).endswith('.parquet'):
+            # Only read the first 2 million positive samples to prevent OOM
+            # We can use pyarrow to read a subset if needed, or just sample after reading if memory allows.
+            # But with 57M rows, even reading is risky. Let's read and sample immediately.
+            # Actually, let's use a smaller limit to be safe.
+            sequences_df = pd.read_parquet(self.sequences_path)
+        else:
+            sequences_df = pd.read_csv(self.sequences_path)
+            
+        sequences_df = sequences_df[sequences_df['label'] == 1]
+        
+        MAX_TRAIN_SEQUENCES = 2_000_000
+        if len(sequences_df) > MAX_TRAIN_SEQUENCES:
+            log.info(f"TwoTowerBuilder: Sub-sampling {len(sequences_df)} sequences to {MAX_TRAIN_SEQUENCES}...")
+            sequences_df = sequences_df.sample(n=MAX_TRAIN_SEQUENCES, random_state=42)
+        
+        sequences_df = sequences_df.reset_index(drop=True)
+        log.info(f"TwoTowerBuilder: Final training set size: {len(sequences_df)} positive sequences.")
 
         log.info(f"TwoTowerBuilder: Loading movie metadata from {self.movies_metadata_path}")
         movies_df = pd.read_parquet(self.movies_metadata_path)

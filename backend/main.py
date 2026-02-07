@@ -3,8 +3,10 @@ load_dotenv()
 
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api.v1.catalog import router as catalog_router
 from api.v1.movies import router as movies_router
@@ -16,16 +18,34 @@ from ranking.inference.lgbm import LGBMRanker
 from features.builder import FeatureBuilder
 from common.services.movie_store import MovieStore
 from common.config import config
+from common.logger import get_logger
 from data.loader import load_movielens_movies, load_movielens_links
 
 from logger.background.tasks import start_background_tasks
 
 from mangum import Mangum
 
+log = get_logger(__name__)
+
 app = FastAPI(title="Movie Platform API")
 
 # Mangum handler for AWS Lambda
 handler = Mangum(app)
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    log.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
 
 @app.get("/ping")
 def ping():
@@ -69,7 +89,7 @@ def startup():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config.settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

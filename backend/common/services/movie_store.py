@@ -57,10 +57,9 @@ class MovieStore:
             return self._tmdb_cache[tmdb_id]
 
         try:
-            async with self.tmdb_client as client:
-                data = await client.fetch_movie_full(tmdb_id)
-                self._tmdb_cache[tmdb_id] = data
-                return data
+            data = await self.tmdb_client.fetch_movie_full(tmdb_id)
+            self._tmdb_cache[tmdb_id] = data
+            return data
         except Exception as e:
             log.error(f"Error fetching TMDB data for {tmdb_id}: {e}")
             return None
@@ -82,6 +81,10 @@ class MovieStore:
         poster_url = None
         overview = None
         if tmdb_id:
+            # Note: The caller (Pipeline) should ideally manage the TMDB session 
+            # if calling many 'get' in parallel, or we ensure 'start' is called once.
+            # To be safe for parallel usage within this instance:
+            await self.tmdb_client.start()
             tmdb_data = await self._fetch_tmdb_movie(tmdb_id)
             if tmdb_data:
                 if "poster_path" in tmdb_data and tmdb_data["poster_path"]:
