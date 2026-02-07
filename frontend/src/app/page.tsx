@@ -1,16 +1,14 @@
-import { getTrendingMovies, getPopularMovies, getNewReleases } from "@/features/movies/api"
-
-import { MovieRow } from "@/features/movies/components/MovieRow"
+import { Suspense } from "react"
+import { 
+  TrendingMoviesRow, 
+  PopularMoviesRow, 
+  NewReleasesRow 
+} from "@/features/movies/components/CatalogRows"
+import { MovieRowSkeleton } from "@/features/movies/components/MovieRowSkeleton"
 import { Hero } from "@/features/movies/components/Hero"
 import { PageTransition } from "@/shared/ui/motion/PageTransition"
 
-export default async function HomePage() {
-  const [trending, popular, newReleases] = await Promise.all([
-    getTrendingMovies(20),
-    getPopularMovies(20),
-    getNewReleases(20),
-  ])
-
+export default function HomePage() {
   return (
     <PageTransition>
       <div className="container py-page space-y-section">
@@ -60,9 +58,17 @@ export default async function HomePage() {
         </section>
 
         <div className="space-y-section pb-section">
-          <MovieRow title="Trending now" movies={trending} />
-          <MovieRow title="Popular hits" movies={popular} />
-          <MovieRow title="Fresh arrivals" movies={newReleases} />
+          <Suspense fallback={<MovieRowSkeleton title="Trending now" />}>
+            <TrendingMoviesRow />
+          </Suspense>
+          
+          <Suspense fallback={<MovieRowSkeleton title="Popular hits" />}>
+            <PopularMoviesRow />
+          </Suspense>
+          
+          <Suspense fallback={<MovieRowSkeleton title="Fresh arrivals" />}>
+            <NewReleasesRow />
+          </Suspense>
         </div>
 
         <section className="grid gap-grid lg:grid-cols-[1.1fr_0.9fr] items-center">

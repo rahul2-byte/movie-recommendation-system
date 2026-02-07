@@ -1,10 +1,8 @@
 import type { Movie } from "@/features/movies/types/movie";
+import { env } from "@/shared/config/env";
+import { logger } from "@/shared/lib/logger";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE!
-
-if (!API_BASE) {
-    throw new Error("NEXT_PUBLIC_API_BASE is not defined")
-}
+const API_BASE = env.NEXT_PUBLIC_API_BASE
 
 export async function fetchFromAPI<T>(path: string): Promise<T | null> {
     try {
@@ -13,13 +11,13 @@ export async function fetchFromAPI<T>(path: string): Promise<T | null> {
         })
 
         if (!res.ok) {
-            console.error("API failed:", path, res.status)
+            logger.error("API failed:", path, res.status)
             return null
         }
 
         return res.json()
     } catch (err) {
-        console.error("Fetch failed:", path, err)
+        logger.error("Fetch failed:", path, err)
         return null
     }
 }

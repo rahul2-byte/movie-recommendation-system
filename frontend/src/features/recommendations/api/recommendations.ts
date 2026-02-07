@@ -1,10 +1,8 @@
 import { RecommendRequest, RecommendResponse } from "../types"
+import { env } from "@/shared/config/env"
+import { logger } from "@/shared/lib/logger"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE
-
-if (!API_BASE) {
-  throw new Error("NEXT_PUBLIC_API_BASE is not defined")
-}
+const API_BASE = env.NEXT_PUBLIC_API_BASE
 
 export async function fetchRecommendations(
   payload: RecommendRequest
@@ -19,10 +17,10 @@ export async function fetchRecommendations(
 
   if (!res.ok) {
     const text = await res.text()
+    logger.error(`Recommendation API failed: ${text}`)
     throw new Error(`Recommendation API failed: ${text}`)
   }
 
   const responseData = await res.json()
-  console.log("Response :- ", responseData)
   return responseData
 }
