@@ -44,7 +44,7 @@ export function Header() {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="bg-surface border-border/60">
+            <SheetContent position="left" className="bg-surface border-border/60">
               <div className="flex flex-col gap-6 pt-10">
                 {siteConfig.nav.map((item) => (
                   <Link

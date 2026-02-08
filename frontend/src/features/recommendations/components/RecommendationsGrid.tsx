@@ -15,7 +15,19 @@ export function RecommendationsGrid({
       {movies.map((movie, index) => (
         <MovieCard
           key={`${movie.movieId}-${index}`}
-          movie={movie}
+          movie={{
+             ...movie,
+             year: movie.year ?? null,
+             posterUrl: movie.posterUrl ?? null,
+             rating: movie.rating ?? null,
+             voteAverage: movie.rating ?? null,
+             backdropUrl: null,
+             overview: movie.overview ?? null,
+             genres: movie.genres,
+             tmdbId: movie.tmdbId,
+             title: movie.title,
+             movieId: movie.movieId
+          }}
           onClick={() => onSelect(movie)}
         />
       ))}

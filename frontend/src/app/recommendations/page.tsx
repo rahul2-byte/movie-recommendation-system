@@ -50,7 +50,8 @@ export default function RecommendationsPage() {
         <RecommendationsGrid movies={recommendations} onSelect={handleMovieClick} />
 
         <MovieDetailModal
-          movie={selectedMovie}
+          movieId={selectedMovie?.movieId ?? null}
+          tmdbId={selectedMovie?.tmdbId ?? null}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />

@@ -22,7 +22,7 @@ export function MovieCard({ movie, index = 0, onClick }: MovieCardProps) {
         className="group w-full cursor-pointer"
         onClick={onClick}
       >
-        <Card className="w-full overflow-hidden border-border/60 bg-surface-strong transition-all group-hover:border-primary/40">
+        <Card className="w-full h-full overflow-hidden border-border/60 bg-surface-strong transition-all group-hover:border-primary/40">
           <div className="relative aspect-poster w-full overflow-hidden bg-surface">
             {movie.posterUrl ? (
               <Image
