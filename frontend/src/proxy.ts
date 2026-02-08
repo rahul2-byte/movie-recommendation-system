@@ -15,13 +15,13 @@ export function proxy(request: NextRequest) {
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline';
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data: https://image.tmdb.org;
+    img-src 'self' blob: data: https://image.tmdb.org https://m.media-amazon.com https://ia.media-imdb.com;
     font-src 'self' data:;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    connect-src 'self' ${process.env.NEXT_PUBLIC_API_BASE || ""};
+    connect-src 'self' http://localhost:8080 ${process.env.NEXT_PUBLIC_API_BASE || ""};
     upgrade-insecure-requests;
   `.replace(/\s{2,}/g, " ").trim();
 

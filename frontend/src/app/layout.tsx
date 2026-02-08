@@ -1,26 +1,26 @@
 import "./globals.css"
 import type { Metadata } from "next"
-import { Space_Grotesk, Fraunces } from "next/font/google"
+import { Inter, Playfair_Display } from "next/font/google"
 import { Header } from "@/shared/ui/layout/Header"
 import { Footer } from "@/shared/ui/layout/Footer"
 import { RecommendationProvider } from "@/features/recommendations/context/RecommendationContext"
 import { Providers } from "@/shared/ui/Providers"
 
-const space = Space_Grotesk({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-space",
+  variable: "--font-sans",
   display: "swap",
 })
 
-const fraunces = Fraunces({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-serif",
   display: "swap",
 })
 
 export const metadata: Metadata = {
-  title: "Movies99 | Premium Film Discovery",
-  description: "Curated recommendations with a premium cinematic feel.",
+  title: "M99 - Cinema, Understood.",
+  description: "Discover films based on mood, tone, and cinematic DNA.",
 }
 
 export default function RootLayout({
@@ -31,11 +31,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${space.variable} ${fraunces.variable} font-sans selection:bg-primary selection:text-primary-foreground`}
+        className={`${inter.variable} ${playfair.variable} font-sans selection:bg-accent selection:text-black`}
       >
+        <div className="grain-overlay" />
         <Providers>
           <RecommendationProvider>
-            <div className="flex min-h-screen flex-col">
+            <div className="flex min-h-screen flex-col bg-black text-white">
               <Header />
               <main className="w-full flex-1">{children}</main>
               <Footer />

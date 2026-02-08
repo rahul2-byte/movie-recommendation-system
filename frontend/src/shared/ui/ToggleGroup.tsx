@@ -20,10 +20,8 @@ export function ToggleGroupItem({
     <button
       onClick={onClick}
       className={cn(
-        "px-control-x h-control-sm rounded-pill text-overline transition-all border",
-        active
-          ? "bg-primary border-primary text-primary-foreground shadow-glow scale-105"
-          : "bg-transparent border-border text-muted-foreground hover:border-primary/40"
+        "tag",
+        active ? "tag-selected" : "tag-default"
       )}
     >
       {children}

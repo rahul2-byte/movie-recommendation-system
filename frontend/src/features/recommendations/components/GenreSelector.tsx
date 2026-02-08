@@ -2,18 +2,15 @@
 
 import { useRecommendationStore } from "@/features/recommendations/store"
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/ToggleGroup"
+import { Mood } from "../types"
 
-const GENRES = [
-    "Action",
-    "Drama",
-    "Comedy",
-    "Thriller",
-    "Sci-Fi",
-    "Romance",
-    "Horror",
-    "Animation",
-    "Fantasy",
-    "Mystery"
+const MOODS: { label: string; value: Mood }[] = [
+    { label: "Dark", value: "DARK" },
+    { label: "Feel-good", value: "FEEL_GOOD" },
+    { label: "Romantic", value: "ROMANTIC" },
+    { label: "Thrilling", value: "THRILLING" },
+    { label: "Chill", value: "CHILL" },
+    { label: "Adventurous", value: "ADVENTUROUS" },
 ]
 
 export function GenreSelector() {
@@ -21,17 +18,17 @@ export function GenreSelector() {
 
     return (
         <ToggleGroup>
-            {GENRES.map((genre) => {
-                const active = selectedGenres.includes(genre)
+            {MOODS.map((mood) => {
+                const active = selectedGenres.includes(mood.value)
                 return (
                     <ToggleGroupItem
-                        key={genre}
+                        key={mood.value}
                         active={active}
                         onClick={() =>
-                            active ? removeGenre(genre) : addGenre(genre)
+                            active ? removeGenre(mood.value) : addGenre(mood.value)
                         }
                     >
-                        {genre}
+                        {mood.label}
                     </ToggleGroupItem>
                 )
             })}

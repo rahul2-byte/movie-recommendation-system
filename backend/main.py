@@ -19,7 +19,7 @@ from features.builder import FeatureBuilder
 from common.services.movie_store import MovieStore
 from common.config import config
 from common.logger import get_logger
-from data.loader import load_movielens_movies, load_movielens_links
+from data.loader import load_movies_metadata, load_movielens_links
 
 from logger.background.tasks import start_background_tasks
 
@@ -56,7 +56,9 @@ def startup():
     start_background_tasks()
     
     # Load data
-    movies_df = load_movielens_movies()
+    # Use enriched metadata for MovieStore so we have poster_path
+    enriched_df = load_movies_metadata()
+    movies_df = enriched_df.rename(columns={"movie_id": "movieId", "tmdb_id": "tmdbId"})
     links_df = load_movielens_links()
     
     # Instantiate services

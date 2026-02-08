@@ -1,0 +1,7 @@
+.gemini/
+.git/
+node_modules/
+backend/data/
+backend/artifacts/
+mlruns/
+.env

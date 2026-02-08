@@ -76,3 +76,6 @@ dist/
 # =========================
 .env
 .env.*
+
+# Project Memory
+.gemini/

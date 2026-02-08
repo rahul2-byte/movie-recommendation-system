@@ -8,6 +8,7 @@ export type SelectedMovie = {
   movieId: number
   title: string
   tmdbId: number | null
+  posterUrl?: string | null
 }
 
 export type Genre = string

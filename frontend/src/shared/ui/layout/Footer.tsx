@@ -1,27 +1,39 @@
-import { siteConfig } from "@/shared/config/site"
+import Link from "next/link"
 
 export function Footer() {
   return (
-    <footer className="w-full mt-section pb-section">
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
-
-      <div className="container flex flex-col md:flex-row justify-between items-center gap-stack pt-stack">
-        <div className="space-y-tight text-center md:text-left">
-          <span className="text-h3 font-semibold italic tracking-tight text-primary uppercase">
-            {siteConfig.shortName}
-          </span>
-          <p className="text-overline text-muted-foreground/60">
-            © 2026 Cinematic Intelligence
+    <footer className="py-12 border-t border-[rgba(255,255,255,0.1)] mt-20 bg-black relative z-10">
+      <div className="container flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="text-center md:text-left">
+          <span className="font-serif text-xl text-white block mb-2">M99</span>
+          <p className="text-sm text-text-muted">
+            © {new Date().getFullYear()} Zeek. All rights reserved.
           </p>
         </div>
 
-        <nav className="flex flex-wrap items-center justify-center gap-6 text-overline text-muted-foreground/70">
-          {siteConfig.footerLinks.map((item) => (
-            <a key={item.label} href={item.href} className="hover:text-primary transition-colors">
-              {item.label}
-            </a>
-          ))}
-        </nav>
+        <div className="flex items-center gap-8">
+          <Link 
+            href="https://github.com" 
+            target="_blank" 
+            className="text-sm text-text-muted hover:text-accent transition-colors uppercase tracking-wider"
+          >
+            GitHub
+          </Link>
+          <Link 
+            href="https://linkedin.com" 
+            target="_blank" 
+            className="text-sm text-text-muted hover:text-accent transition-colors uppercase tracking-wider"
+          >
+            LinkedIn
+          </Link>
+          <Link 
+            href="#" 
+            target="_blank" 
+            className="text-sm text-text-muted hover:text-accent transition-colors uppercase tracking-wider"
+          >
+            Portfolio
+          </Link>
+        </div>
       </div>
     </footer>
   )
