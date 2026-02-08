@@ -1,5 +1,5 @@
 import "./globals.css"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter, Playfair_Display } from "next/font/google"
 import { Header } from "@/shared/ui/layout/Header"
 import { Footer } from "@/shared/ui/layout/Footer"
@@ -19,8 +19,26 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "M99 - Cinema, Understood.",
-  description: "Discover films based on mood, tone, and cinematic DNA.",
+  title: "M99 | Premium Cinema Curation",
+  description: "Discover films based on mood, tone, and cinematic DNA. Your personal digital film archive.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  openGraph: {
+    title: "M99 Cinema",
+    description: "AI-Powered Movie Recommendations",
+    type: "website",
+    locale: "en_US",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  }
+}
+
+export const viewport: Viewport = {
+  themeColor: "#121212",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({

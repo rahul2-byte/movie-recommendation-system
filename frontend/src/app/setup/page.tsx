@@ -7,11 +7,13 @@ import { GenreSelector } from "@/features/recommendations/components/GenreSelect
 import { SelectedMovies } from "@/features/recommendations/components/SelectedMovies"
 import { Play, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { LazyMotion, domAnimation, m } from "framer-motion"
 import { Mood } from "@/features/recommendations/types"
 
 export default function SetupPage() {
-   const { selectedMovies, selectedGenres } = useRecommendationStore()
+   const selectedMovies = useRecommendationStore(state => state.selectedMovies)
+   const selectedGenres = useRecommendationStore(state => state.selectedGenres)
    const { mutate, isPending } = useRecommendations()
    
    const handleRecommend = () => {
@@ -46,7 +48,13 @@ export default function SetupPage() {
                        return (
                          <div key={i} className={`w-12 h-[72px] rounded-sm border overflow-hidden flex items-center justify-center bg-[rgba(255,255,255,0.05)] ${movie ? 'border-accent' : 'border-[rgba(255,255,255,0.1)] border-dashed'}`}>
                             {movie?.posterUrl ? (
-                              <img src={movie.posterUrl} className="w-full h-full object-cover" alt={movie.title} />
+                              <Image 
+                                src={movie.posterUrl} 
+                                alt={movie.title}
+                                width={48}
+                                height={72}
+                                className="w-full h-full object-cover"
+                              />
                             ) : (
                               <span className="text-xs text-text-muted/20">{i + 1}</span>
                             )}

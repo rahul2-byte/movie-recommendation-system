@@ -10,7 +10,10 @@ import { MovieCard } from "@/features/movies/components/MovieCard"
 import { Search, Loader2 } from "lucide-react"
 
 export function MovieAutocomplete() {
-  const { addMovie, removeMovie, selectedMovies } = useRecommendationStore()
+  const addMovie = useRecommendationStore(state => state.addMovie)
+  const removeMovie = useRecommendationStore(state => state.removeMovie)
+  const selectedMovies = useRecommendationStore(state => state.selectedMovies)
+  
   const { query, setQuery, results, isLoading, isError } = useMovieSearch()
   const inputRef = useRef<HTMLInputElement>(null)
 

@@ -13,7 +13,11 @@ import Link from "next/link"
 import { ArrowLeft, RefreshCw, Share2 } from "lucide-react"
 
 export default function RecommendationsPage() {
-  const { recommendations, error, selectedMovies, selectedGenres } = useRecommendationStore()
+  const recommendations = useRecommendationStore(state => state.recommendations)
+  const error = useRecommendationStore(state => state.error)
+  const selectedMovies = useRecommendationStore(state => state.selectedMovies)
+  const selectedGenres = useRecommendationStore(state => state.selectedGenres)
+  
   const { mutate, isPending: isRefreshing } = useRecommendations()
   const [selectedMovie, setSelectedMovie] = useState<RecommendedMovie | null>(
     null

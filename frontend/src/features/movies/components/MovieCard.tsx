@@ -21,14 +21,19 @@ export function MovieCard({ movie, index = 0, onClick, selected = false }: Movie
         className={`movie-card group ${selected ? "movie-card-selected" : ""}`}
         onClick={onClick}
       >
-        <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-[rgba(255,255,255,0.03)]">
+        <div 
+          className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-[rgba(255,255,255,0.03)]"
+          aria-label={`View details for ${movie.title}`}
+          role="button"
+        >
           {movie.posterUrl ? (
             <Image
               src={movie.posterUrl}
               alt={movie.title}
               fill
               className="movie-card-poster transition-transform duration-500 group-hover:scale-110"
-              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 15vw"
+              priority={index < 4}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-xs text-text-muted uppercase tracking-widest border border-white/10 rounded-md">
