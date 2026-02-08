@@ -1,3 +1,4 @@
+from common.lifecycle import get_movie_store
 from fastapi import APIRouter, Query, Request, HTTPException
 from typing import List, Dict, Any
 import logging
@@ -15,7 +16,7 @@ async def movie_search(
     q: str = Query(..., min_length=2),
     limit: int = Query(10, ge=5, le=20),
 ) -> List[dict]:
-    movie_store = request.app.state.movie_store
+    movie_store = get_movie_store()
     results = await movie_store.search(q, limit)
     
     # Log the first result to check for anomalies or NaN values
@@ -38,7 +39,7 @@ async def get_movie_by_id(
     """
     Get movie details by internal MovieLens ID.
     """
-    movie_store = request.app.state.movie_store
+    movie_store = get_movie_store()
     movie = await movie_store.get(movie_id)
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
@@ -57,7 +58,7 @@ async def get_movie_by_tmdb_id(
     2. Fallback to Live TMDB API for new releases.
     3. Fallback to IMDb (OMDb) for missing fields.
     """
-    movie_store = request.app.state.movie_store
+    movie_store = get_movie_store()
     
     # 1. Try to find in Local DB
     matches = movie_store.df[movie_store.df["tmdbId"] == tmdb_id]

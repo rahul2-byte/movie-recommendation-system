@@ -12,7 +12,8 @@ router = APIRouter(prefix="/recommend", tags=["recommend"])
 async def recommend_movies(request: Request, payload: RecommendRequest):
     start = time.time()
 
-    pipeline = request.app.state.recommendation_pipeline
+    from common.lifecycle import get_pipeline
+    pipeline = get_pipeline()
     
     # We await the async recommend method
     results = await pipeline.recommend(

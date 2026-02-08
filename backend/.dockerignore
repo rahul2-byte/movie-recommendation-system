@@ -1,37 +1,30 @@
-# Exclude data and raw files
-data/raw/
-data/processed/checkpoints/
-data/processed/intermediate/
-*.csv
-*.parquet
-*.json
-
-# Exclude training, scripts, and experiment tracking
-training/
-tracking/
-mlruns/
-logs/
-tests/
-scripts/
-
-# Exclude local environment and git
+**/__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
 .git
 .github
-.env
-.venv
-venv/
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
+.pytest_cache
 
-# Exclude native source and binaries
-**/native/*.cpp
-**/native/*.hpp
-**/native/*.o
-**/native/Makefile
-backend/features/native/processor
-backend/features/native/ranker_feature_gen
-backend/features/native/content_vectorizer
-backend/features/native/interaction_matrix_builder
-backend/features/native/sequence_builder
-backend/training/retrieval/native/train_*
+# Data - Should be in S3, not image
+data/raw/
+data/processed/
+data/intermediate/
+data/binary_cache/
+data/test_mini/
+
+# Artifacts - Large ML models should be in S3
+artifacts/models/
+mlruns/
+
+# Training & Dev Scripts
+scripts/
+training/
+tests/
+features/native/*.cpp
+retrieval/native/
+
+# Logs
+*.log
+logs/
