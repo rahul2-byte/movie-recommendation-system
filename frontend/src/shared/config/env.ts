@@ -5,7 +5,7 @@ import { z } from "zod";
  * NEXT_PUBLIC_ variables are exposed to the browser.
  */
 const envSchema = z.object({
-  NEXT_PUBLIC_API_BASE: z.string().url("NEXT_PUBLIC_API_BASE must be a valid URL"),
+  NEXT_PUBLIC_API_BASE: z.string().url().default("http://localhost:8080"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 });
 
