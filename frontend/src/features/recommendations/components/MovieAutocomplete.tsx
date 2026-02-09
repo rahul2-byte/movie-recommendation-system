@@ -28,7 +28,7 @@ export function MovieAutocomplete() {
   const toggleMovie = (movie: any) => {
     // Backend returns movieId (or movie_id). 
     // We should be consistent. Our store uses movieId.
-    const mid = movie.movieId || movie.movie_id
+    const mid = movie.movieId
     const isSelected = selectedMovies.some((m) => m.movieId === mid)
     if (isSelected) {
       removeMovie(mid)
@@ -73,7 +73,7 @@ export function MovieAutocomplete() {
                 className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6"
               >
                 {filteredResults.map((movie, index) => {
-                  const mid = movie.movieId || movie.movie_id
+                  const mid = movie.movieId
                   const isSelected = selectedMovies.some((m) => m.movieId === mid)
                   return (
                     <MovieCard
