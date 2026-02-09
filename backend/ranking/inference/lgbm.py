@@ -1,14 +1,16 @@
 from typing import List
+
+import lightgbm as lgb
 import numpy as np
 import pandas as pd
-import lightgbm as lgb
-from common.types import Candidate
-from common.model_loader import get_lgbm_model
 from common.logger import get_logger
+from common.model_loader import get_lgbm_model
+from common.types import Candidate
 
 log = get_logger(__name__)
 
 from common.config import config
+
 
 class LGBMRanker:
     """
@@ -19,7 +21,9 @@ class LGBMRanker:
     def __init__(self, model_path: str):
         self.model = get_lgbm_model(model_path)
         self.feature_names = config.features.ranker_features
-        log.info(f"LGBMRanker: Loaded model from {model_path} with {self.model.num_feature()} features.")
+        log.info(
+            f"LGBMRanker: Loaded model from {model_path} with {self.model.num_feature()} features."
+        )
         log.info(f"LGBMRanker: Using features: {self.feature_names}")
 
     def rank(
@@ -37,8 +41,12 @@ class LGBMRanker:
         # Ensure features are in the correct order
         # Fallback if config is missing keys (though it shouldn't be)
         if not self.feature_names:
-            log.warning("LGBMRanker: Feature names not found in config, using all 'feat_' columns.")
-            self.feature_names = [c for c in features_df.columns if c.startswith("feat_")]
+            log.warning(
+                "LGBMRanker: Feature names not found in config, using all 'feat_' columns."
+            )
+            self.feature_names = [
+                c for c in features_df.columns if c.startswith("feat_")
+            ]
 
         # Check for missing columns and fill with 0
         for col in self.feature_names:
@@ -56,7 +64,7 @@ class LGBMRanker:
 
         # Predict relevance scores
         scores = self.model.predict(X)
-        
+
         log.info(f"LGBMRanker: First 5 feature rows:\n{X[:5]}")
         log.info(f"LGBMRanker: First 5 scores: {scores[:5]}")
 
@@ -67,6 +75,6 @@ class LGBMRanker:
 
         # Sort by rank_score descending
         ranked_candidates = sorted(candidates, key=lambda c: c.rank_score, reverse=True)
-        
+
         log.info(f"LGBMRanker: Ranked {len(ranked_candidates)} candidates.")
         return ranked_candidates[:limit]

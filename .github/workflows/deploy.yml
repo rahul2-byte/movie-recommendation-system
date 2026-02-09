@@ -1,7 +1,13 @@
 name: Deploy Backend to AWS Lambda
 
 on:
-  workflow_dispatch: # This adds the "button" in the GitHub Actions UI
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "template.yaml"
 
 jobs:
   deploy:
@@ -15,7 +21,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1 # Change to your region
+          aws-region: ap-south-1
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -25,16 +31,25 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: movie-recommendation-backend
-          IMAGE_TAG: latest
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f backend/Dockerfile.lambda backend/
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Deploy with SAM
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: movie-recommendation-backend
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           sam deploy --template-file template.yaml \
             --stack-name movie-rec-stack \
             --capabilities CAPABILITY_IAM \
-            --parameter-overrides S3BucketName=${{ secrets.S3_BUCKET_NAME }} Environment=PROD \
+            --image-repository $ECR_REGISTRY/$ECR_REPOSITORY \
+            --parameter-overrides \
+              S3BucketName=${{ secrets.S3_BUCKET_NAME }} \
+              Environment=PROD \
+              ImageUri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+              TmdbAccessToken=${{ secrets.TMDB_ACCESS_TOKEN }} \
+              ImdbApiKey=${{ secrets.IMDB_API_KEY }} \
             --no-confirm-changeset
-

@@ -6,16 +6,17 @@ Provides decorators and functions for handling transient failures.
 
 import asyncio
 import random
-from typing import TypeVar, Callable, Tuple, Type
 from functools import wraps
-from aiohttp import ClientResponseError
+from typing import Callable, Tuple, Type, TypeVar
 
+from aiohttp import ClientResponseError
 from configs.settings import (
-    MAX_RETRIES,
     INITIAL_RETRY_DELAY,
+    MAX_RETRIES,
     MAX_RETRY_DELAY,
     RETRY_EXPONENTIAL_BASE,
 )
+
 from common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -39,17 +40,17 @@ def calculate_backoff_delay(
 ) -> float:
     """
     Calculate exponential backoff delay with jitter.
-    
+
     Args:
         attempt: Current attempt number (0-indexed)
         initial_delay: Initial delay in seconds
         max_delay: Maximum delay in seconds
         exponential_base: Base for exponential calculation
-        
+
     Returns:
         Delay in seconds with random jitter applied
     """
-    exponential_delay = initial_delay * (exponential_base ** attempt)
+    exponential_delay = initial_delay * (exponential_base**attempt)
     capped_delay = min(exponential_delay, max_delay)
     jitter = random.uniform(0, capped_delay * 0.1)  # 10% jitter
     return capped_delay + jitter
@@ -64,34 +65,34 @@ async def retry_async(
 ) -> T:
     """
     Retry an async function with exponential backoff.
-    
+
     Args:
         func: Async function to retry
         *args: Positional arguments for func
         max_retries: Maximum number of retry attempts
         retryable_exceptions: Tuple of exceptions that trigger retries
         **kwargs: Keyword arguments for func
-        
+
     Returns:
         Result from successful function call
-        
+
     Raises:
         Last exception if all retries exhausted
     """
     last_exception = None
-    
+
     for attempt in range(max_retries):
         try:
             return await func(*args, **kwargs)
         except retryable_exceptions as e:
             last_exception = e
-            
+
             if attempt == max_retries - 1:
                 logger.error(
                     f"All {max_retries} retry attempts exhausted for {func.__name__}"
                 )
                 raise
-            
+
             delay = calculate_backoff_delay(attempt)
             logger.warning(
                 f"Attempt {attempt + 1}/{max_retries} failed for {func.__name__}: "
@@ -105,7 +106,7 @@ async def retry_async(
                 f"{type(e).__name__}: {str(e)}"
             )
             raise
-    
+
     # Should never reach here, but for type safety
     if last_exception:
         raise last_exception
@@ -118,20 +119,21 @@ def retry_async_decorator(
 ):
     """
     Decorator for async functions with automatic retry logic.
-    
+
     Args:
         max_retries: Maximum number of retry attempts
         retryable_exceptions: Tuple of exceptions that trigger retries
-        
+
     Returns:
         Decorated function with retry capability
-        
+
     Example:
         @retry_async_decorator(max_retries=3)
         async def fetch_data():
             # ... async API call
             pass
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         async def wrapper(*args, **kwargs) -> T:
@@ -142,5 +144,8 @@ def retry_async_decorator(
                 retryable_exceptions=retryable_exceptions,
                 **kwargs,
             )
+
         return wrapper
+
     return decorator
+

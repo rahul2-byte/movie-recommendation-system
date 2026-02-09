@@ -2,7 +2,7 @@
 set -e
 
 # Directory of this script
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$DIR/../../.."
 
 # Output files
@@ -24,7 +24,8 @@ echo "[Native Pipeline] Compiling C++ tools..."
 # 3. Run Pipeline 2: Sequence Builder (Listwise/Query)
 echo "[Native Pipeline] Generating Sequence Training Data (5-Movie Query)..."
 # Uses the same bridge (same binary format)
-python3 "$DIR/bridge.py" "$INPUT_PARQUET" | "$DIR/sequence_builder" > "$SEQUENCE_CSV"
+python3 "$DIR/bridge.py" "$INPUT_PARQUET" | "$DIR/sequence_builder" >"$SEQUENCE_CSV"
 
 echo "[Native Pipeline] Done! Sequences saved to: $SEQUENCE_CSV"
 ls -lh "$SEQUENCE_CSV"
+

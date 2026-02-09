@@ -5,9 +5,10 @@ Transforms raw API responses from TMDB and IMDb into a unified
 MovieData model.
 """
 
-from typing import Dict, Optional, List
-from common.models.movie import MovieData
+from typing import Dict, List, Optional
+
 from common.logger import get_logger
+from common.models.movie import MovieData
 
 logger = get_logger(__name__)
 
@@ -19,41 +20,43 @@ def extract_movie_fields(
 ) -> MovieData:
     """
     Extract and normalize fields from API responses.
-    
+
     Args:
         movie_id: Original MovieLens ID
         tmdb_data: Raw JSON response from TMDB
         imdb_data: Raw JSON response from IMDb (OMDb)
-        
+
     Returns:
         Populated MovieData object
     """
     # 1. Basic Metadata
     title = tmdb_data.get("title") or tmdb_data.get("original_title")
     imdb_id = tmdb_data.get("imdb_id")
-    
+
     # 2. Extract Genres
     genres = [g["name"].lower() for g in tmdb_data.get("genres", []) if "name" in g]
-    
+
     # 3. Extract Keywords
     keywords = []
     kw_data = tmdb_data.get("keywords", {})
     if isinstance(kw_data, dict):
-        keywords = [k["name"].lower() for k in kw_data.get("keywords", []) if "name" in k]
-    
+        keywords = [
+            k["name"].lower() for k in kw_data.get("keywords", []) if "name" in k
+        ]
+
     # 4. Extract Credits (Cast and Director)
     credits = tmdb_data.get("credits", {})
     top_cast = []
     if "cast" in credits:
         top_cast = [c["name"].lower() for c in credits["cast"][:5] if "name" in c]
-    
+
     director = None
     if "crew" in credits:
         for member in credits["crew"]:
             if member.get("job") == "Director":
                 director = member.get("name", "").lower()
                 break
-    
+
     # 5. Extract Release Year
     release_date = tmdb_data.get("release_date")
     release_year = None
@@ -62,7 +65,7 @@ def extract_movie_fields(
             release_year = int(release_date[:4])
         except ValueError:
             pass
-            
+
     # 6. Extract Collection
     collection_id = None
     collection_name = None
@@ -70,25 +73,25 @@ def extract_movie_fields(
     if belongs_to_collection:
         collection_id = belongs_to_collection.get("id")
         collection_name = belongs_to_collection.get("name")
-        
+
     # 7. Language and Country
     language = tmdb_data.get("original_language")
     country = None
     production_countries = tmdb_data.get("production_countries", [])
     if production_countries:
         country = production_countries[0].get("name")
-    
+
     # 8. Ratings (Merge TMDB and IMDb)
     # IMDb data (from OMDb)
     imdb_rating = None
     imdb_votes = None
-    
+
     if imdb_data:
         try:
             r = imdb_data.get("imdbRating", "N/A")
             if r != "N/A":
                 imdb_rating = float(r)
-            
+
             v = imdb_data.get("imdbVotes", "N/A").replace(",", "")
             if v != "N/A":
                 imdb_votes = int(v)

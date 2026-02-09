@@ -14,8 +14,8 @@
 #ifndef MLPACK_METHODS_CF_DECOMPOSITION_POLICIES_REGULARIZED_SVD_METHOD_HPP
 #define MLPACK_METHODS_CF_DECOMPOSITION_POLICIES_REGULARIZED_SVD_METHOD_HPP
 
-#include <mlpack/prereqs.hpp>
 #include <mlpack/methods/regularized_svd/regularized_svd.hpp>
+#include <mlpack/prereqs.hpp>
 
 namespace mlpack {
 
@@ -37,18 +37,15 @@ namespace mlpack {
  * cf.GetRecommendations(10, recommendations);
  * @endcode
  */
-class RegSVDPolicy
-{
- public:
+class RegSVDPolicy {
+public:
   /**
    * Use regularized SVD method to perform collaborative filtering.
    *
    * @param maxIterations Number of iterations for the power method
    *        (Default: 10).
    */
-  RegSVDPolicy(const size_t maxIterations = 10) :
-      maxIterations(maxIterations)
-  {
+  RegSVDPolicy(const size_t maxIterations = 10) : maxIterations(maxIterations) {
     /* Nothing to do here */
   }
 
@@ -64,13 +61,9 @@ class RegSVDPolicy
    * @param * (minResidue) Residue required to terminate.
    * @param * (mit) Whether to terminate only when maxIterations is reached.
    */
-  void Apply(const arma::mat& data,
-             const arma::sp_mat& /* cleanedData */,
-             const size_t rank,
-             const size_t maxIterations,
-             const double /* minResidue */,
-             const bool /* mit */)
-  {
+  void Apply(const arma::mat &data, const arma::sp_mat & /* cleanedData */,
+             const size_t rank, const size_t maxIterations,
+             const double /* minResidue */, const bool /* mit */) {
     // Do singular value decomposition using the regularized SVD algorithm.
     RegularizedSVD<> regsvd(maxIterations);
     regsvd.Apply(data, rank, w, h);
@@ -82,8 +75,7 @@ class RegSVDPolicy
    * @param user User ID.
    * @param item Item ID.
    */
-  double GetRating(const size_t user, const size_t item) const
-  {
+  double GetRating(const size_t user, const size_t item) const {
     double rating = arma::as_scalar(w.row(item) * h.col(user));
     return rating;
   }
@@ -94,8 +86,7 @@ class RegSVDPolicy
    * @param user User ID.
    * @param rating Resulting rating vector.
    */
-  void GetRatingOfUser(const size_t user, arma::vec& rating) const
-  {
+  void GetRatingOfUser(const size_t user, arma::vec &rating) const {
     rating = w * h.col(user);
   }
 
@@ -111,12 +102,11 @@ class RegSVDPolicy
    * @param similarities Similarity between each user and each of its
    *     neighbors.
    */
-  template<typename NeighborSearchPolicy>
-  void GetNeighborhood(const arma::Col<size_t>& users,
+  template <typename NeighborSearchPolicy>
+  void GetNeighborhood(const arma::Col<size_t> &users,
                        const size_t numUsersForSimilarity,
-                       arma::Mat<size_t>& neighborhood,
-                       arma::mat& similarities) const
-  {
+                       arma::Mat<size_t> &neighborhood,
+                       arma::mat &similarities) const {
     // We want to avoid calculating the full rating matrix, so we will do
     // nearest neighbor search only on the H matrix, using the observation that
     // if the rating matrix X = W*H, then d(X.col(i), X.col(j)) = d(W H.col(i),
@@ -134,31 +124,30 @@ class RegSVDPolicy
       query.col(i) = stretchedH.col(users(i));
 
     NeighborSearchPolicy neighborSearch(stretchedH);
-    neighborSearch.Search(
-        query, numUsersForSimilarity, neighborhood, similarities);
+    neighborSearch.Search(query, numUsersForSimilarity, neighborhood,
+                          similarities);
   }
 
   //! Get the Item Matrix.
-  const arma::mat& W() const { return w; }
+  const arma::mat &W() const { return w; }
   //! Get the User Matrix.
-  const arma::mat& H() const { return h; }
+  const arma::mat &H() const { return h; }
 
   //! Get the number of iterations.
   size_t MaxIterations() const { return maxIterations; }
   //! Modify the number of iterations.
-  size_t& MaxIterations() { return maxIterations; }
+  size_t &MaxIterations() { return maxIterations; }
 
   /**
    * Serialization.
    */
-  template<typename Archive>
-  void serialize(Archive& ar, const uint32_t /* version */)
-  {
+  template <typename Archive>
+  void serialize(Archive &ar, const uint32_t /* version */) {
     ar(CEREAL_NVP(w));
     ar(CEREAL_NVP(h));
   }
 
- private:
+private:
   //! Locally stored number of iterations.
   size_t maxIterations;
   //! Item matrix.

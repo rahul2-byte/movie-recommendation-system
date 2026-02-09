@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import pandas as pd
 
 
@@ -19,11 +20,9 @@ class MovieIdMapper:
         )
 
         # movieId → metadata
-        self.movie_meta = (
-            self.movies_df
-            .set_index("movieId")[["title", "genres"]]
-            .to_dict(orient="index")
-        )
+        self.movie_meta = self.movies_df.set_index("movieId")[
+            ["title", "genres"]
+        ].to_dict(orient="index")
 
     def tmdb_to_movielens(self, tmdb_ids: list[int]) -> list[int]:
         movie_ids = []

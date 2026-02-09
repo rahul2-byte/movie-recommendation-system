@@ -1,7 +1,8 @@
-import pandas as pd
 import logging
-from pathlib import Path
 import os
+from pathlib import Path
+
+import pandas as pd
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -10,6 +11,7 @@ log = logging.getLogger(__name__)
 DATA_DIR = Path("backend/data")
 PROCESSED_DIR = DATA_DIR / "processed"
 RAW_DIR = DATA_DIR / "raw"
+
 
 def main():
     log.info("Starting data cleaning and filtering...")
@@ -36,14 +38,14 @@ def main():
     # 2. Filter Ratings
     ratings_parquet = PROCESSED_DIR / "ratings.parquet"
     ratings_raw = RAW_DIR / "ratings.csv"
-    
+
     ratings_df = None
     if ratings_parquet.exists():
-         log.info(f"Loading ratings from {ratings_parquet}...")
-         ratings_df = pd.read_parquet(ratings_parquet)
+        log.info(f"Loading ratings from {ratings_parquet}...")
+        ratings_df = pd.read_parquet(ratings_parquet)
     elif ratings_raw.exists():
-         log.info(f"Loading ratings from {ratings_raw}...")
-         ratings_df = pd.read_csv(ratings_raw)
+        log.info(f"Loading ratings from {ratings_raw}...")
+        ratings_df = pd.read_csv(ratings_raw)
     else:
         log.error("No ratings data found.")
         return
@@ -51,8 +53,10 @@ def main():
     original_ratings_count = len(ratings_df)
     ratings_df = ratings_df[ratings_df["movieId"].isin(valid_movie_ids)]
     filtered_ratings_count = len(ratings_df)
-    log.info(f"Filtered ratings: {original_ratings_count} -> {filtered_ratings_count} (Dropped {original_ratings_count - filtered_ratings_count})")
-    
+    log.info(
+        f"Filtered ratings: {original_ratings_count} -> {filtered_ratings_count} (Dropped {original_ratings_count - filtered_ratings_count})"
+    )
+
     ratings_df.to_parquet(ratings_parquet, index=False)
     log.info(f"Saved filtered ratings to {ratings_parquet}")
 
@@ -62,11 +66,11 @@ def main():
 
     tags_df = pd.DataFrame()
     if tags_parquet.exists():
-         log.info(f"Loading tags from {tags_parquet}...")
-         tags_df = pd.read_parquet(tags_parquet)
+        log.info(f"Loading tags from {tags_parquet}...")
+        tags_df = pd.read_parquet(tags_parquet)
     elif tags_raw.exists():
-         log.info(f"Loading tags from {tags_raw}...")
-         tags_df = pd.read_csv(tags_raw)
+        log.info(f"Loading tags from {tags_raw}...")
+        tags_df = pd.read_csv(tags_raw)
     else:
         log.warning("No tags data found.")
 
@@ -81,19 +85,20 @@ def main():
     # 4. Filter Links (Optional but good for consistency)
     links_parquet = PROCESSED_DIR / "links.parquet"
     links_raw = RAW_DIR / "links.csv"
-    
+
     links_df = pd.DataFrame()
     if links_parquet.exists():
-         links_df = pd.read_parquet(links_parquet)
+        links_df = pd.read_parquet(links_parquet)
     elif links_raw.exists():
-         links_df = pd.read_csv(links_raw)
-    
+        links_df = pd.read_csv(links_raw)
+
     if not links_df.empty:
         links_df = links_df[links_df["movieId"].isin(valid_movie_ids)]
         links_df.to_parquet(links_parquet, index=False)
         log.info(f"Saved filtered links to {links_parquet}")
 
     log.info("Data cleaning complete.")
+
 
 if __name__ == "__main__":
     main()

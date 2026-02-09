@@ -14,28 +14,13 @@ training_dataset_path: "${data_root}/processed/ranking_dataset.parquet"
 # Path for the generated sequence-based training dataset (for retrieval models like Two-Tower, ALS)
 training_sequences_path: "${data_root}/processed/training_sequences.parquet"
 
-
 # --- Model & Artifact Paths ---
-
-
 model_root: "artifacts/models"
-
-
 # Directory to save trained ranker models
-
-
 ranker_model_dir: "${model_root}/ranker/"
-
-
-
-
-
 # --- Retrieval Model Artifacts (defined relative to model_root) ---
 
-
 retrieval_artifacts:
-
-
   # TF-IDF (Genre-Based)
   tfidf:
     model_dir: "${model_root}/tfidf"
@@ -43,127 +28,41 @@ retrieval_artifacts:
     faiss_index_path: "${retrieval_artifacts.tfidf.model_dir}/faiss.index"
     id_map_path: "${retrieval_artifacts.tfidf.model_dir}/movie_id_to_idx.json"
 
-
-  
-
-
   # Content-Based (Dense Embeddings)
-
-
   content_based:
-
-
     model_dir: "${model_root}/content_based"
-
-
     embeddings_path: "${retrieval_artifacts.content_based.model_dir}/item_embeddings.npy"
-
-
     faiss_index_path: "${retrieval_artifacts.content_based.model_dir}/faiss.index" # Using model_dir for FAISS here as well
-
-
     id_map_path: "${retrieval_artifacts.content_based.model_dir}/movie_id_to_idx.json"
-
-
     preprocessors_path: "${retrieval_artifacts.content_based.model_dir}/preprocessors.pkl"
 
-
   # ALS (Collaborative)
-
-
   als:
-
-
     model_dir: "${model_root}/als"
-
-
     embeddings_path: "${retrieval_artifacts.als.model_dir}/item_embeddings.npy"
-
-
     faiss_index_path: "${retrieval_artifacts.als.model_dir}/faiss.index"
-
-
     id_map_path: "${retrieval_artifacts.als.model_dir}/movie_id_to_idx.json"
 
-
   # Two-Tower (Neural)
-
-
   two_tower:
-
-
     model_dir: "${model_root}/two_tower"
-
-
     item_encoder_path: "${retrieval_artifacts.two_tower.model_dir}/item_encoder.pth"
-
-
     embeddings_path: "${retrieval_artifacts.two_tower.model_dir}/item_embeddings.npy"
-
-
     faiss_index_path: "${retrieval_artifacts.two_tower.model_dir}/faiss.index"
-
-
     id_map_path: "${retrieval_artifacts.two_tower.model_dir}/movie_id_to_idx.json"
-
-
     preprocessors_path: "${retrieval_artifacts.two_tower.model_dir}/feature_preprocessors.pkl"
-
-
     embedding_dim: 64 # Moved from retrieval section
 
-
-
-
-
 # --- Retrieval Hyperparameters ---
-
-
 retrieval:
-
-
   two_tower:
-
-
     epochs: 5
-
-
     batch_size: 256
-
-
     learning_rate: 0.001
-
-
     num_negatives: 4 # Number of negative samples per positive interaction
 
-
-
-
-
 # --- MLflow Tracking ---
-
-
-
-
-
-
-
-
-
-
-
 tracking:
-
-
-
-
-
-
-
-
-
-
-
   # Experiment name for the ranker training
   ranker_experiment_name: "movie_query_ranker"
   # Experiment name for retrieval model training (e.g., embeddings)

@@ -5,8 +5,8 @@
  *
  * Collaborative filtering.
  *
- * Defines the CFType class to perform collaborative filtering on the specified data
- * set using alternating least squares (ALS).
+ * Defines the CFType class to perform collaborative filtering on the specified
+ * data set using alternating least squares (ALS).
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -18,13 +18,13 @@
 
 #include <mlpack/core.hpp>
 
-#include <mlpack/methods/neighbor_search/neighbor_search.hpp>
 #include <mlpack/methods/amf/amf.hpp>
+#include <mlpack/methods/neighbor_search/neighbor_search.hpp>
 
-#include "normalization/normalization.hpp"
 #include "decomposition_policies/decomposition_policies.hpp"
-#include "neighbor_search_policies/neighbor_search_policies.hpp"
 #include "interpolation_policies/interpolation_policies.hpp"
+#include "neighbor_search_policies/neighbor_search_policies.hpp"
+#include "normalization/normalization.hpp"
 
 namespace mlpack {
 
@@ -62,14 +62,13 @@ namespace mlpack {
  *     Data is normalized before calling Train() method. Predicted rating is
  *     denormalized before return.
  */
-template<typename DecompositionPolicy = NMFPolicy,
-         typename NormalizationType = NoNormalization>
-class CFType
-{
- public:
+template <typename DecompositionPolicy = NMFPolicy,
+          typename NormalizationType = NoNormalization>
+class CFType {
+public:
   /**
-   * Initialize the CFType object without performing any factorization.  Be sure to
-   * call Train() before calling GetRecommendations() or any other functions!
+   * Initialize the CFType object without performing any factorization.  Be sure
+   * to call Train() before calling GetRecommendations() or any other functions!
    */
   CFType(const size_t numUsersForSimilarity = 5, const size_t rank = 0);
 
@@ -97,13 +96,11 @@ class CFType
    * @param minResidue Residue required to terminate.
    * @param mit Whether to terminate only when maxIterations is reached.
    */
-  template<typename MatType>
-  CFType(const MatType& data,
-         const DecompositionPolicy& decomposition = DecompositionPolicy(),
-         const size_t numUsersForSimilarity = 5,
-         const size_t rank = 0,
-         const size_t maxIterations = 1000,
-         const double minResidue = 1e-5,
+  template <typename MatType>
+  CFType(const MatType &data,
+         const DecompositionPolicy &decomposition = DecompositionPolicy(),
+         const size_t numUsersForSimilarity = 5, const size_t rank = 0,
+         const size_t maxIterations = 1000, const double minResidue = 1e-5,
          const bool mit = false);
 
   /**
@@ -117,10 +114,8 @@ class CFType
    * @param minResidue Residue required to terminate.
    * @param mit Whether to terminate only when maxIterations is reached.
    */
-  void Train(const arma::mat& data,
-             const DecompositionPolicy& decomposition,
-             const size_t maxIterations = 1000,
-             const double minResidue = 1e-5,
+  void Train(const arma::mat &data, const DecompositionPolicy &decomposition,
+             const size_t maxIterations = 1000, const double minResidue = 1e-5,
              const bool mit = false);
 
   /**
@@ -134,50 +129,38 @@ class CFType
    * @param minResidue Residue required to terminate.
    * @param mit Whether to terminate only when maxIterations is reached.
    */
-  void Train(const arma::sp_mat& data,
-             const DecompositionPolicy& decomposition,
-             const size_t maxIterations = 1000,
-             const double minResidue = 1e-5,
+  void Train(const arma::sp_mat &data, const DecompositionPolicy &decomposition,
+             const size_t maxIterations = 1000, const double minResidue = 1e-5,
              const bool mit = false);
 
   //! Sets number of users for calculating similarity.
-  void NumUsersForSimilarity(const size_t num)
-  {
-    if (num < 1)
-    {
+  void NumUsersForSimilarity(const size_t num) {
+    if (num < 1) {
       Log::Warn << "CFType::NumUsersForSimilarity(): invalid value (< 1) "
-          "ignored." << std::endl;
+                   "ignored."
+                << std::endl;
       return;
     }
     this->numUsersForSimilarity = num;
   }
 
   //! Gets number of users for calculating similarity.
-  size_t NumUsersForSimilarity() const
-  {
-    return numUsersForSimilarity;
-  }
+  size_t NumUsersForSimilarity() const { return numUsersForSimilarity; }
 
   //! Sets rank parameter for matrix factorization.
-  void Rank(const size_t rankValue)
-  {
-    this->rank = rankValue;
-  }
+  void Rank(const size_t rankValue) { this->rank = rankValue; }
 
   //! Gets rank parameter for matrix factorization.
-  size_t Rank() const
-  {
-    return rank;
-  }
+  size_t Rank() const { return rank; }
 
   //! Gets decomposition object.
-  const DecompositionPolicy& Decomposition() const { return decomposition; }
+  const DecompositionPolicy &Decomposition() const { return decomposition; }
 
   //! Get the cleaned data matrix.
-  const arma::sp_mat& CleanedData() const { return cleanedData; }
+  const arma::sp_mat &CleanedData() const { return cleanedData; }
 
   //! Get the normalization object.
-  const NormalizationType& Normalization() const { return normalization; }
+  const NormalizationType &Normalization() const { return normalization; }
 
   /**
    * Generates the given number of recommendations for all users.
@@ -190,10 +173,10 @@ class CFType
    * @param numRecs Number of Recommendations.
    * @param recommendations Matrix to save recommendations into.
    */
-  template<typename NeighborSearchPolicy = EuclideanSearch,
-           typename InterpolationPolicy = AverageInterpolation>
+  template <typename NeighborSearchPolicy = EuclideanSearch,
+            typename InterpolationPolicy = AverageInterpolation>
   void GetRecommendations(const size_t numRecs,
-                          arma::Mat<size_t>& recommendations);
+                          arma::Mat<size_t> &recommendations);
 
   /**
    * Generates the given number of recommendations for the specified users.
@@ -207,14 +190,14 @@ class CFType
    * @param recommendations Matrix to save recommendations.
    * @param users Users for which recommendations are to be generated.
    */
-  template<typename NeighborSearchPolicy = EuclideanSearch,
-           typename InterpolationPolicy = AverageInterpolation>
+  template <typename NeighborSearchPolicy = EuclideanSearch,
+            typename InterpolationPolicy = AverageInterpolation>
   void GetRecommendations(const size_t numRecs,
-                          arma::Mat<size_t>& recommendations,
-                          const arma::Col<size_t>& users);
+                          arma::Mat<size_t> &recommendations,
+                          const arma::Col<size_t> &users);
 
   //! Converts the User, Item, Value Matrix to User-Item Table.
-  static void CleanData(const arma::mat& data, arma::sp_mat& cleanedData);
+  static void CleanData(const arma::mat &data, arma::sp_mat &cleanedData);
 
   /**
    * Predict the rating of an item by a particular user.
@@ -227,8 +210,8 @@ class CFType
    * @param user User to predict for.
    * @param item Item to predict for.
    */
-  template<typename NeighborSearchPolicy = EuclideanSearch,
-           typename InterpolationPolicy = AverageInterpolation>
+  template <typename NeighborSearchPolicy = EuclideanSearch,
+            typename InterpolationPolicy = AverageInterpolation>
   double Predict(const size_t user, const size_t item) const;
 
   /**
@@ -248,18 +231,18 @@ class CFType
    * @param combinations User/item combinations to predict.
    * @param predictions Predicted ratings for each user/item combination.
    */
-  template<typename NeighborSearchPolicy = EuclideanSearch,
-           typename InterpolationPolicy = AverageInterpolation>
-  void Predict(const arma::Mat<size_t>& combinations,
-               arma::vec& predictions) const;
+  template <typename NeighborSearchPolicy = EuclideanSearch,
+            typename InterpolationPolicy = AverageInterpolation>
+  void Predict(const arma::Mat<size_t> &combinations,
+               arma::vec &predictions) const;
 
   /**
    * Serialize the CFType model to the given archive.
    */
-  template<typename Archive>
-  void serialize(Archive& ar, const uint32_t /* version */);
+  template <typename Archive>
+  void serialize(Archive &ar, const uint32_t /* version */);
 
- private:
+private:
   //! Number of users for similarity.
   size_t numUsersForSimilarity;
   //! Rank used for matrix factorization.
@@ -276,8 +259,7 @@ class CFType
 
   //! Compare two candidates based on the value.
   struct CandidateCmp {
-    bool operator()(const Candidate& c1, const Candidate& c2)
-    {
+    bool operator()(const Candidate &c1, const Candidate &c2) {
       return c1.first > c2.first;
     };
   };

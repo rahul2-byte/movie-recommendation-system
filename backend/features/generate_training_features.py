@@ -3,16 +3,21 @@
 Batch feature generator for the ranking dataset.
 Standardizes logic for both Python serving and C++ offline training.
 """
-import pandas as pd
-import numpy as np
+
 import logging
 import os
 from pathlib import Path
-from features.builder import FeatureBuilder
-from common.config import config
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+import numpy as np
+import pandas as pd
+from common.config import config
+from features.builder import FeatureBuilder
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 log = logging.getLogger(__name__)
+
 
 def generate_features():
     # 1. Paths from config
@@ -20,7 +25,7 @@ def generate_features():
     output_path = "backend/data/processed/ranking_featured.parquet"
     movies_path = "backend/data/processed/movies_enriched.parquet"
     tags_path = "backend/data/processed/tags.parquet"
-    
+
     if not os.path.exists(input_path):
         log.error(f"Input file not found: {input_path}")
         return
@@ -34,7 +39,7 @@ def generate_features():
     log.info(f"Processing {len(df_raw)} rows...")
 
     # Data Validation
-    required_cols = ['query_movie_ids', 'candidate_movie_id', 'label']
+    required_cols = ["query_movie_ids", "candidate_movie_id", "label"]
     for col in required_cols:
         if col not in df_raw.columns:
             raise ValueError(f"Missing required column: {col}")
@@ -53,13 +58,11 @@ def generate_features():
     log.info(f"Saving featured dataset to {output_path}...")
     # Use Snappy compression for Parquet balance between speed and size
     df_featured.to_parquet(
-        output_path, 
-        engine='pyarrow', 
-        compression='snappy',
-        index=False
+        output_path, engine="pyarrow", compression="snappy", index=False
     )
-    
+
     log.info("✨ Feature generation complete! ✨")
+
 
 if __name__ == "__main__":
     generate_features()

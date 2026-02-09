@@ -1,16 +1,19 @@
 """
 Data models for movie data structures.
 """
-from dataclasses import dataclass, fields, asdict
-from typing import List, Optional, Dict, Any, Union, get_origin, get_args
+
+from dataclasses import asdict, dataclass, fields
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union, get_args, get_origin
+
 import pyarrow as pa
 import yaml
-from pathlib import Path
 
 
 @dataclass
 class MovieData:
     """Dataclass to hold enriched movie data."""
+
     movie_id: int
     tmdb_id: Optional[int]
     imdb_id: Optional[str]
@@ -58,9 +61,9 @@ def get_pyarrow_schema() -> pa.Schema:
         field_type = field.type
         origin = get_origin(field_type)
         args = get_args(field_type)
-        
+
         is_optional = False
-        
+
         # Handle Optional[T] which is Union[T, None]
         if origin is Union:
             if type(None) in args:
@@ -78,7 +81,7 @@ def get_pyarrow_schema() -> pa.Schema:
             pa_type = type_mapping.get(field_type, pa.string())
 
         schema_fields.append(pa.field(field.name, pa_type, nullable=is_optional))
-        
+
     return pa.schema(schema_fields)
 
 
@@ -90,12 +93,15 @@ def load_schema_version() -> dict:
         A dictionary containing details of the current schema version.
     """
     # Path is relative to this file's location
-    schema_config_path = Path(__file__).resolve().parent.parent.parent / "configs/schemas/schema_versions.yaml"
-    with open(schema_config_path, 'r') as f:
+    schema_config_path = (
+        Path(__file__).resolve().parent.parent.parent
+        / "configs/schemas/schema_versions.yaml"
+    )
+    with open(schema_config_path, "r") as f:
         schema_config = yaml.safe_load(f)
-    
-    current_version_str = schema_config['current_version']
-    return schema_config['versions'][current_version_str]
+
+    current_version_str = schema_config["current_version"]
+    return schema_config["versions"][current_version_str]
 
 
 # Global schema variable

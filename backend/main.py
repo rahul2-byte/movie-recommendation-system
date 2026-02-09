@@ -1,23 +1,18 @@
 from dotenv import load_dotenv
+
 load_dotenv()
-
-from pathlib import Path
-
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api.v1.catalog import router as catalog_router
 from api.v1.movies import router as movies_router
 from api.v1.recommend import router as recommend_router
-
 from common.config import config
 from common.logger import get_logger
-
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from logger.background.tasks import start_background_tasks
-
 from mangum import Mangum
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 log = get_logger(__name__)
 
@@ -26,12 +21,14 @@ app = FastAPI(title="Movie Platform API")
 # Mangum handler for AWS Lambda
 handler = Mangum(app)
 
+
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
     )
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -41,15 +38,18 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "Internal server error"},
     )
 
+
 @app.get("/ping")
 def ping():
     return {"status": "ok", "environment": config.settings.ENVIRONMENT}
+
 
 @app.on_event("startup")
 def startup():
     # Only start essential lightweight background tasks
     # Heavy model/data loading is now LAZY (occurs on first request)
     start_background_tasks()
+
 
 app.add_middleware(
     CORSMiddleware,

@@ -20,14 +20,12 @@ def train():
     # LightGBM will look for .query files automatically if we point to the CSV
     train_file = data_dir / "rank.train"
     test_file = data_dir / "rank.test"
-    
+
     if not train_file.exists():
         log.error(f"Training file missing: {train_file}")
         return
 
-    dtrain = lgb.Dataset(
-        str(train_file), params={"two_pass": True, "header": False}
-    )
+    dtrain = lgb.Dataset(str(train_file), params={"two_pass": True, "header": False})
     dtest = lgb.Dataset(
         str(test_file),
         reference=dtrain,
@@ -52,7 +50,7 @@ def train():
         valid_names=["test"],
         callbacks=[
             lgb.early_stopping(stopping_rounds=20),
-            lgb.log_evaluation(period=5), # Log every 5 rounds instead of 10
+            lgb.log_evaluation(period=5),  # Log every 5 rounds instead of 10
         ],
     )
 

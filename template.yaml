@@ -5,9 +5,20 @@ Description: >
   Deployed as a Docker-based Lambda function.
 
 Parameters:
+  ImageUri:
+    Type: String
+    Description: URI of the Docker image in ECR
   S3BucketName:
     Type: String
     Description: Name of the S3 bucket containing model artifacts and data.
+  TmdbAccessToken:
+    Type: String
+    Description: TMDB API Access Token
+    NoEcho: true
+  ImdbApiKey:
+    Type: String
+    Description: OMDb/IMDb API Key
+    NoEcho: true
   Environment:
     Type: String
     Default: PROD
@@ -23,6 +34,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
+      ImageUri: !Ref ImageUri
       Architectures:
         - x86_64
       Events:
@@ -40,7 +52,8 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref Environment
           S3_BUCKET: !Ref S3BucketName
-          # Optional: Override other settings if needed
+          TMDB_ACCESS_TOKEN: !Ref TmdbAccessToken
+          IMDB_API_KEY: !Ref ImdbApiKey
           LOG_LEVEL: INFO
       Policies:
         - S3ReadPolicy:

@@ -82,10 +82,13 @@ config = config_loader.config
 # Import and attach settings.py
 try:
     from configs import settings
+
     config.settings = settings
 except ImportError:
     # Fallback if configs.settings isn't directly importable (e.g. during some tests)
     import sys
+
     sys.path.append(str(CONFIG_DIR.parent))
     from configs import settings
+
     config.settings = settings

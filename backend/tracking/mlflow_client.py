@@ -1,8 +1,10 @@
-import mlflow
 import logging
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
+import mlflow
 
 log = logging.getLogger(__name__)
+
 
 class MlflowClient:
     def __init__(self, experiment_name: str, tracking_uri: str):
@@ -13,10 +15,12 @@ class MlflowClient:
             self.tracking_uri = "sqlite:///backend/mlflow.db"
         else:
             self.tracking_uri = tracking_uri
-            
+
         mlflow.set_tracking_uri(self.tracking_uri)
         mlflow.set_experiment(self.experiment_name)
-        log.info(f"MlflowClient: Tracking URI: {self.tracking_uri}, Experiment: {self.experiment_name}")
+        log.info(
+            f"MlflowClient: Tracking URI: {self.tracking_uri}, Experiment: {self.experiment_name}"
+        )
 
     def start_run(self, run_name: Optional[str] = None):
         return mlflow.start_run(run_name=run_name)
@@ -37,7 +41,8 @@ class MlflowClient:
         # Determine model flavor
         if hasattr(model, "save_model") and "lightgbm" in str(type(model)).lower():
             mlflow.lightgbm.log_model(model, artifact_path)
-        elif hasattr(model, "state_dict"): # PyTorch
+        elif hasattr(model, "state_dict"):  # PyTorch
             mlflow.pytorch.log_model(model, artifact_path)
         else:
             mlflow.sklearn.log_model(model, artifact_path)
+
