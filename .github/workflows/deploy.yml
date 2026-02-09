@@ -15,7 +15,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1 # Change to your region
+          aws-region: ap-south-1 # Change to your region
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -37,3 +37,4 @@ jobs:
             --capabilities CAPABILITY_IAM \
             --parameter-overrides S3BucketName=${{ secrets.S3_BUCKET_NAME }} Environment=PROD \
             --no-confirm-changeset
+
