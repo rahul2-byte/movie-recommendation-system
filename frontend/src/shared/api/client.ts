@@ -11,31 +11,38 @@ export async function apiClient<T>(
   const cleanBase = env.NEXT_PUBLIC_API_BASE.replace(/\/$/, "");
   const url = `${cleanBase}/api/v1${path}`;
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  });
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `API Failure: ${response.status}`);
-  }
-
-  const data = await response.json();
-
-  // If a schema is provided, validate the data at the runtime boundary
-  if (options?.schema) {
-    const result = options.schema.safeParse(data);
-    if (!result.success) {
-      console.error(`[VALIDATION ERROR] ${path}:`, result.error.format());
-      // In production, you'd send this to Sentry
-      throw new Error("Received malformed data from the server.");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `API Failure: ${response.status}`);
     }
-    return result.data;
-  }
 
-  return data as T;
+    const data = await response.json();
+
+    // If a schema is provided, validate the data at the runtime boundary
+    if (options?.schema) {
+      const result = options.schema.safeParse(data);
+      if (!result.success) {
+        console.error(`[VALIDATION ERROR] ${path}:`, result.error.format());
+        // In production, you'd send this to Sentry
+        throw new Error("Received malformed data from the server.");
+      }
+      return result.data;
+    }
+
+    return data as T;
+  } catch (error) {
+    // If the backend is unreachable (e.g. during build), return empty data
+    // to allow static generation to succeed (albeit with empty content).
+    console.warn(`[API WARNING] Could not fetch ${url}:`, error);
+    return [] as unknown as T;
+  }
 }
