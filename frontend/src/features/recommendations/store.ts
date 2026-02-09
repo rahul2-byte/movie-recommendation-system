@@ -29,6 +29,7 @@ type RecommendationState = {
   /* movie actions */
   addMovie: (m: SelectedMovie) => void
   removeMovie: (id: number) => void
+  clearMovies: () => void
 
   /* recommendation actions */
   setRecommendations: (r: RecommendedMovie[]) => void
@@ -82,6 +83,8 @@ export const useRecommendationStore = create<RecommendationState>()(
             (m) => m.movieId !== id
           ),
         })),
+
+      clearMovies: () => set({ selectedMovies: [] }),
 
       /* recommendation actions */
       setRecommendations: (recommendations) =>
