@@ -19,7 +19,7 @@ export default function proxy(request: NextRequest) {
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    connect-src 'self' ${process.env.NEXT_PUBLIC_API_BASE || ""};
+    connect-src 'self' ${process.env.NEXT_PUBLIC_API_BASE ? new URL(process.env.NEXT_PUBLIC_API_BASE).origin : ""};
     upgrade-insecure-requests;
   `.replace(/\s{2,}/g, " ").trim();
 
