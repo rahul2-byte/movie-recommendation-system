@@ -120,7 +120,7 @@ if ENVIRONMENT == "LOCAL":
 else:
     DATA_BASE_PATH = f"s3://{S3_BUCKET}"
     MLFLOW_TRACKING_URI = os.getenv(
-        "MLFLOW_TRACKING_URI", f"file:{DATA_BASE_PATH}/mlruns"
+        "MLFLOW_TRACKING_URI", "/tmp/mlruns"
     )
     INDICES_PATH = f"{DATA_BASE_PATH}/artifacts/indices"
     MODELS_PATH = f"{DATA_BASE_PATH}/artifacts/models"
