@@ -1,5 +1,4 @@
 from typing import List
-from numpy import source
 from pydantic import BaseModel, Field
 
 from api.domain.moods import MOOD
