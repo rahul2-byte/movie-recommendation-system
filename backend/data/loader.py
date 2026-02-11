@@ -41,7 +41,8 @@ def load_data(path: str) -> pd.DataFrame:
 
 def load_movies_metadata() -> pd.DataFrame:
     """Loads enriched movies metadata from parquet via config."""
-    path = config.system.movies_metadata_path
+    from configs.settings import MOVIES_METADATA_PATH
+    path = str(MOVIES_METADATA_PATH)
     log.info(f"Loading movies metadata from {path}")
     return load_data(path)
 
@@ -49,13 +50,15 @@ def load_movies_metadata() -> pd.DataFrame:
 def load_movielens_movies() -> pd.DataFrame:
     """Loads movielens movies data via config."""
     # Assuming we add these to system.yml or use a default relative to data_root
-    path = f"{config.system.data_root}/raw/movies.csv"
+    from configs.settings import RAW_DATA_PATH
+    path = f"{RAW_DATA_PATH}/movies.csv"
     return read_csv(path)
 
 
 def load_movielens_ratings() -> pd.DataFrame:
     """Loads movielens ratings data via config."""
-    path = config.system.ratings_path
+    from configs.settings import RATINGS_PATH
+    path = str(RATINGS_PATH)
     if path.endswith(".parquet"):
         return pd.read_parquet(ensure_local_path(path))
     return read_csv(path)
@@ -63,12 +66,14 @@ def load_movielens_ratings() -> pd.DataFrame:
 
 def load_movielens_links() -> pd.DataFrame:
     """Loads movielens links data via config."""
-    path = f"{config.system.data_root}/raw/links.csv"
+    from configs.settings import LINKS_CSV
+    path = str(LINKS_CSV)
     return read_csv(path)
 
 
 def load_processed_ratings() -> pd.DataFrame:
     """Loads processed ratings parquet file via config."""
-    path = config.system.ratings_path
+    from configs.settings import RATINGS_PATH
+    path = str(RATINGS_PATH)
     return pd.read_parquet(ensure_local_path(path))
 
