@@ -1,0 +1,21 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - backend/.env
+    environment:
+      AWS_ENDPOINT_URL: http://dynamodb:8000
+      SKIP_INGESTION: "1"
+    ports:
+      - "8000:8080"
+    depends_on:
+      - dynamodb
+    volumes:
+      - ./backend:/var/task
+
+  dynamodb:
+    image: amazon/dynamodb-local:2.5.2
+    ports:
+      - "8001:8000"

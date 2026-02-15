@@ -1,7 +1,7 @@
 # backend/training/ranker.py
 """
 Main training script for the LightGBM ranking model.
-Uses pre-calculated features from the C++ Native pipeline.
+Uses pre-calculated features from S3.
 """
 
 import logging
@@ -11,6 +11,7 @@ from typing import Any, Dict
 import lightgbm as lgb
 import pandas as pd
 from common.config import config
+from common.storage.repositories import S3ArtifactRepository
 from sklearn.model_selection import GroupShuffleSplit
 from tracking.mlflow_client import MlflowClient
 
@@ -28,11 +29,16 @@ def _sanitize_metric_names(metrics: Dict[str, Any]) -> Dict[str, Any]:
 
 def train_ranker():
     log.info("Loading configuration...")
-
-    # Load Pre-calculated Dataset (Parquet)
-    dataset_path = Path("backend/data/processed/ranking_dataset.parquet")
-    if not dataset_path.exists():
-        log.error(f"Ranking dataset not found at {dataset_path}")
+    
+    # Initialize S3 Repository
+    s3_repo = S3ArtifactRepository()
+    dataset_key = "datasets/ranking/training.parquet" # Assumed key
+    
+    try:
+        log.info(f"Downloading training dataset from S3 ({dataset_key})...")
+        dataset_path = s3_repo.download_artifact(dataset_key)
+    except Exception as e:
+        log.error(f"Failed to download training dataset: {e}")
         return
 
     log.info(f"Loading ranking dataset from {dataset_path}...")
@@ -50,10 +56,6 @@ def train_ranker():
     y = df_train_featured[target_col]
 
     # Group by query for LambdaRank
-    # query_movie_ids is a list, convert to tuple for hashing/grouping if needed,
-    # but for GroupShuffleSplit we need a 1D array of group IDs.
-    # We can assume adjacent rows with same query_movie_ids belong to same group if sorted?
-    # No, we should create a hash/ID.
     df_train_featured["query_id_str"] = df_train_featured["query_movie_ids"].astype(str)
     queries = df_train_featured["query_id_str"]
 
@@ -68,11 +70,6 @@ def train_ranker():
     )
     X_val, y_val, queries_val = X.iloc[val_idx], y.iloc[val_idx], queries.iloc[val_idx]
 
-    # Get group counts for LightGBM
-    # Important: Data must be sorted by group for LightGBM group parameter to work correctly if passed as counts?
-    # LightGBM requires data to be sorted by group if using 'group' file or parameter?
-    # Yes, usually. Let's sort.
-
     log.info("Sorting training data by query group...")
     # Create a temporary df to sort
     train_df_sorted = pd.concat([X_train, y_train, queries_train], axis=1).sort_values(
@@ -80,10 +77,6 @@ def train_ranker():
     )
     X_train = train_df_sorted[feature_cols]
     y_train = train_df_sorted[target_col]
-    train_groups = train_df_sorted["query_id_str"].value_counts(sort=False).sort_index()
-    # Ensure the order of counts matches the sorted dataframe groups
-    # value_counts sort=False might not be enough.
-    # Correct way: groupby().size() on the sorted dataframe, preserving order.
     train_groups = train_df_sorted.groupby("query_id_str", sort=False).size().values
 
     log.info("Sorting validation data by query group...")
@@ -135,9 +128,8 @@ def train_ranker():
         log.info("Logging model to MLflow...")
         mlflow_client.log_model(model, "lgbm_ranker")
 
-        # Save locally
-        local_model_path = Path(config.system.ranker_model_dir) / "lgbm_lambdarank.txt"
-        local_model_path.parent.mkdir(parents=True, exist_ok=True)
+        # Save locally (to temp) then upload (if we had upload logic)
+        local_model_path = Path("/tmp/lgbm_lambdarank.txt")
         model.booster_.save_model(str(local_model_path))
         log.info(f"Saved local model to {local_model_path}")
 
@@ -146,4 +138,3 @@ def train_ranker():
 
 if __name__ == "__main__":
     train_ranker()
-

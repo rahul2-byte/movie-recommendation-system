@@ -31,10 +31,10 @@ def main():
 
     # 1. Cleaning & Filtering
     log.info("Step 1/5: Cleaning data against enriched movies...")
-    # Resolve relative to project root
-    movies_path = PROJECT_ROOT / config.system.movies_metadata_path
-    ratings_path = PROJECT_ROOT / config.system.ratings_path
-    tags_path = PROJECT_ROOT / config.system.tags_path
+    # Resolve relative to backend service root
+    movies_path = BACKEND_DIR / str(config.system.movies_metadata_path)
+    ratings_path = BACKEND_DIR / str(config.system.ratings_path)
+    tags_path = BACKEND_DIR / str(config.system.tags_path)
     
     if not movies_path.exists():
         log.error(f"Enriched movies not found at {movies_path}")
@@ -57,15 +57,15 @@ def main():
 
     # 3. Generate Sequences
     log.info("Step 3/5: Generating training sequences...")
-    run_command(f"python3 {NATIVE_FEATURES_DIR}/run_sequences.py")
+    run_command(f"python3 {NATIVE_FEATURES_DIR}/run_sequences.py", cwd=str(BACKEND_DIR))
 
     # 4. Generate Ranking Dataset
     log.info("Step 4/5: Generating ranking features...")
-    run_command(f"python3 {NATIVE_FEATURES_DIR}/run_ranker_gen.py")
+    run_command(f"python3 {NATIVE_FEATURES_DIR}/run_ranker_gen.py", cwd=str(BACKEND_DIR))
 
     # 5. Export for C++ Training
     log.info("Step 5/6: Exporting files for native C++ training...")
-    raw_dir = Path(config.system.data_root) / "raw"
+    raw_dir = BACKEND_DIR / str(config.system.data_root) / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
     
     log.info(f"Exporting ratings.csv to {raw_dir}...")
@@ -86,7 +86,7 @@ def main():
     
     # 6. Binary Dump for Optimized Two-Tower
     log.info("Step 6/6: Creating Optimized Binary Datasets (Zero-Copy)...")
-    run_command(f"python3 {NATIVE_FEATURES_DIR}/dump_binary_data.py")
+    run_command(f"python3 {NATIVE_FEATURES_DIR}/dump_binary_data.py", cwd=str(BACKEND_DIR))
 
     log.info("--- [Python] Data preparation complete! ---")
 

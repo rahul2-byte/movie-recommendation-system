@@ -1,9 +1,11 @@
 from .checkpoint import CheckpointManager, CheckpointData
-from .parquet_writer import ParquetWriter, write_parquet_batch
+from .parquet_writer import ParquetWriter
+from .repositories import DynamoDBMovieRepository, S3ArtifactRepository
 
 __all__ = [
     "CheckpointManager",
     "CheckpointData",
     "ParquetWriter",
-    "write_parquet_batch",
+    "DynamoDBMovieRepository",
+    "S3ArtifactRepository",
 ]

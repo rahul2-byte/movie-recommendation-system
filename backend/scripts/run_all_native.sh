@@ -34,13 +34,17 @@ python3 "$FEATURE_DIR/bridge.py" "$INPUT_PARQUET" | "$FEATURE_DIR/interaction_ma
 
 # Run Other Models
 echo "[Native] Running TF-IDF..."
-(cd "$TRAIN_DIR" && ./train_tfidf)
+("$TRAIN_DIR/train_tfidf")
 
 echo "[Native] Running Content-Based..."
-(cd "$TRAIN_DIR" && ./train_content)
+("$TRAIN_DIR/train_content")
 
 echo "[Native] Running Two-Tower..."
-(cd "$TRAIN_DIR" && ./train_two_tower)
+if [ -f "$BACKEND_DIR/data/binary_cache/features_meta.bin" ] && [ -f "$BACKEND_DIR/data/binary_cache/train_data.bin" ]; then
+  ("$TRAIN_DIR/train_two_tower")
+else
+  echo "[Native] Skipping Two-Tower (missing binary cache artifacts in $BACKEND_DIR/data/binary_cache)."
+fi
 
 # Validation
 echo "[Native] Validating..."

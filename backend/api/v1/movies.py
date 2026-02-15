@@ -1,9 +1,7 @@
 from common.lifecycle import get_movie_store
 from fastapi import APIRouter, Query, Request, HTTPException
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import logging
-import json
-import pandas as pd
 from configs.settings import TMDB_IMAGE_BASE, TMDB_POSTER_SIZE
 
 log = logging.getLogger(__name__)
@@ -17,19 +15,7 @@ async def movie_search(
     limit: int = Query(10, ge=5, le=20),
 ) -> List[dict]:
     movie_store = get_movie_store()
-    results = await movie_store.search(q, limit)
-    
-    # Log the first result to check for anomalies or NaN values
-    if results:
-        try:
-            # json.dumps will verify if it's serializable. 
-            # If it contains Infinity or NaN, allow_nan=False will raise ValueError.
-            log.info(f"Search results sample: {json.dumps(results[0], default=str, allow_nan=False)}")
-        except ValueError as e:
-            log.error(f"JSON Serialization Error (NaN/Infinity detected): {e}")
-            log.error(f"Bad Result Object: {results[0]}")
-    
-    return results
+    return await movie_store.search(q, limit)
 
 @router.get("/{movie_id}")
 async def get_movie_by_id(
@@ -55,20 +41,20 @@ async def get_movie_by_tmdb_id(
     Get movie details by TMDB ID.
     Hybrid Resolver:
     1. Checks Local DB (MovieLens) for rich features.
-    2. Fallback to Live TMDB API for new releases.
+    2. Fallback to Live TMDB API for new releases (if not found in DB).
     3. Fallback to IMDb (OMDb) for missing fields.
     """
     movie_store = get_movie_store()
     
     # 1. Try to find in Local DB
-    matches = movie_store.df[movie_store.df["tmdbId"] == tmdb_id]
-    if not matches.empty:
-        movie_id = matches.index[0]
-        return await movie_store.get(movie_id)
+    local_movie = await movie_store.get_by_tmdb_id(tmdb_id)
+    if local_movie:
+        return local_movie
         
     # 2. Fetch Live from TMDB
     try:
-        await movie_store.tmdb_client.start()
+        # Use the clients attached to MovieStore (or get new ones)
+        # Note: In new lifecycle, store has clients initialized
         tmdb_data = await movie_store.tmdb_client.fetch_movie_full(tmdb_id)
         if not tmdb_data:
              raise HTTPException(status_code=404, detail="Movie not found on TMDB")
@@ -87,7 +73,6 @@ async def get_movie_by_tmdb_id(
         if not poster_url or not overview or not backdrop_url:
             imdb_id = tmdb_data.get("imdb_id")
             if imdb_id:
-                await movie_store.imdb_client.start()
                 imdb_data = await movie_store.imdb_client.fetch_rating(imdb_id)
                 if imdb_data:
                     if not poster_url and imdb_data.get("Poster") != "N/A":
@@ -103,7 +88,7 @@ async def get_movie_by_tmdb_id(
         cast = [m.get("name") for m in credits.get("cast", [])[:5]]
 
         return {
-            "movieId": 0,
+            "movieId": 0, # Virtual ID for new releases
             "tmdbId": tmdb_id,
             "title": tmdb_data.get("title"),
             "year": int(tmdb_data["release_date"][:4]) if tmdb_data.get("release_date") else None,
@@ -124,4 +109,3 @@ async def get_movie_by_tmdb_id(
     except Exception as e:
         log.error(f"Error fetching live movie data: {e}")
         raise HTTPException(status_code=404, detail=f"Movie not found: {str(e)}")
-

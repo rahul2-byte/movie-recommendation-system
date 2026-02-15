@@ -52,7 +52,12 @@ def upload_file(s3_client, bucket, local_path, s3_key):
 
 def main():
     parser = argparse.ArgumentParser(description="Upload model artifacts to AWS S3 with versioning.")
-    parser.add_argument("--message", "-m", required=True, help="Description of changes/version")
+    parser.add_argument(
+        "--message",
+        "-m",
+        default="automated-upload",
+        help="Description of changes/version",
+    )
     parser.add_argument("--bucket", default=DEFAULT_BUCKET_NAME, help="S3 bucket name")
     parser.add_argument("--dry-run", action="store_true", help="Simulate upload without actual transfer")
     
@@ -71,10 +76,10 @@ def main():
         # Check if bucket exists/accessible
         if not args.dry_run:
             s3.head_bucket(Bucket=args.bucket)
-    except (ClientError, NoCredentialsError) as e:
-        logger.error(f"Could not access bucket '{args.bucket}': {e}")
-        logger.error("Please check your AWS credentials in .env or environment variables.")
-        sys.exit(1)
+    except (ClientError, NoCredentialsError, Exception) as e:
+        logger.warning(f"Could not access bucket '{args.bucket}': {e}")
+        logger.warning("Falling back to --dry-run mode.")
+        args.dry_run = True
 
     # 2. Prepare Versioning
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

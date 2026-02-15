@@ -1,150 +1,61 @@
 """
-Parquet file writer for intermediate and final movie data.
-
-Provides efficient streaming writes to minimize memory usage.
+Buffered parquet writer for enrichment batches.
 """
 
+from __future__ import annotations
+
+from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import List
-import pandas as pd
+from typing import Any, Dict, List
+
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from common.models.movie import MovieData, MOVIE_SCHEMA
-from configs.settings import INTERMEDIATE_DIR
 from common.logger import get_logger
+from common.models.movie import MOVIE_SCHEMA
+from configs.settings import INTERMEDIATE_DIR
 
 logger = get_logger(__name__)
 
 
 class ParquetWriter:
-    """
-    Writer for streaming movie data to parquet files.
-    
-    Buffers data in memory and writes when buffer reaches threshold
-    to balance memory usage and write efficiency.
-    """
-    
-    def __init__(
-        self,
-        output_dir: Path = INTERMEDIATE_DIR,
-        buffer_size: int = 100,
-    ):
-        """
-        Initialize parquet writer.
-        
-        Args:
-            output_dir: Directory for intermediate parquet files
-            buffer_size: Number of records to buffer before writing
-        """
+    def __init__(self, output_dir: Path = INTERMEDIATE_DIR, batch_size: int = 1000):
         self.output_dir = output_dir
+        self.batch_size = batch_size
+        self.buffer: List[Dict[str, Any]] = []
+        self.file_index = 0
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.buffer_size = buffer_size
-        self.buffer: List[MovieData] = []
-        self.file_counter = self._get_next_file_counter()
-        self.total_written = 0
-    
-    def _get_next_file_counter(self) -> int:
-        """Find the next available file counter by checking existing files."""
-        existing_files = list(self.output_dir.glob("movies_batch_*.parquet"))
-        if not existing_files:
-            return 0
-        
-        indices = []
-        for f in existing_files:
-            try:
-                # Extract 00000 from movies_batch_00000.parquet
-                index_str = f.stem.split("_")[-1]
-                indices.append(int(index_str))
-            except (ValueError, IndexError):
-                continue
-        
-        return max(indices) + 1 if indices else 0
-    
-    def add(self, movie: MovieData) -> None:
-        """
-        Add a movie to the write buffer.
-        
-        Automatically flushes when buffer is full.
-        
-        Args:
-            movie: MovieData object to add
-        """
-        self.buffer.append(movie)
-        
-        if len(self.buffer) >= self.buffer_size:
+
+    def _to_record(self, movie_data: Any) -> Dict[str, Any]:
+        if movie_data is None:
+            return {}
+        if is_dataclass(movie_data):
+            return asdict(movie_data)
+        if isinstance(movie_data, dict):
+            return movie_data
+        if hasattr(movie_data, "to_dict"):
+            return movie_data.to_dict()
+        raise TypeError(f"Unsupported movie record type: {type(movie_data)}")
+
+    def add(self, movie_data: Any) -> None:
+        record = self._to_record(movie_data)
+        if not record:
+            return
+        self.buffer.append(record)
+        if len(self.buffer) >= self.batch_size:
             self.flush()
-    
+
     def flush(self) -> None:
-        """
-        Write buffered data to parquet file.
-        
-        Creates a new intermediate file with sequential numbering.
-        """
         if not self.buffer:
             return
-        
-        try:
-            # Convert MovieData objects to dictionaries
-            records = [movie.to_dict() for movie in self.buffer]
-            
-            # Create DataFrame and convert to PyArrow Table
-            df = pd.DataFrame(records)
-            table = pa.Table.from_pandas(df, schema=MOVIE_SCHEMA)
-            
-            # Generate output filename
-            output_path = (
-                self.output_dir / f"movies_batch_{self.file_counter:05d}.parquet"
-            )
-            
-            # Write parquet file
-            pq.write_table(table, output_path, compression="snappy")
-            
-            logger.info(
-                f"Wrote batch {self.file_counter}: "
-                f"{len(self.buffer)} records to {output_path.name}"
-            )
-            
-            self.total_written += len(self.buffer)
-            self.buffer.clear()
-            self.file_counter += 1
-            
-        except Exception as e:
-            logger.error(f"Failed to write parquet batch: {e}")
-            raise
-    
-    def close(self) -> int:
-        """
-        Flush remaining buffer and finalize writing.
-        
-        Returns:
-            Total number of records written
-        """
+
+        table = pa.Table.from_pylist(self.buffer, schema=MOVIE_SCHEMA)
+        output_path = self.output_dir / f"movies_batch_{self.file_index:06d}.parquet"
+        pq.write_table(table, output_path, compression="snappy")
+        logger.info(f"Wrote batch file: {output_path}")
+        self.file_index += 1
+        self.buffer.clear()
+
+    def close(self) -> None:
         self.flush()
-        logger.info(f"Parquet writer closed: {self.total_written} total records written")
-        return self.total_written
 
-
-def write_parquet_batch(
-    movies: List[MovieData],
-    output_path: Path,
-) -> None:
-    """
-    Write a batch of movies to a single parquet file.
-    
-    Utility function for one-off writes.
-    
-    Args:
-        movies: List of MovieData objects
-        output_path: Path to output parquet file
-    """
-    if not movies:
-        logger.warning("No movies to write")
-        return
-    
-    records = [movie.to_dict() for movie in movies]
-    df = pd.DataFrame(records)
-    table = pa.Table.from_pandas(df, schema=MOVIE_SCHEMA)
-    
-    pq.write_table(table, output_path, compression="snappy")
-    logger.info(f"Wrote {len(movies)} records to {output_path}")

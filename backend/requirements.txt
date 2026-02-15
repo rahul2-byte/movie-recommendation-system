@@ -2,10 +2,10 @@ numpy
 pandas
 scipy
 scikit-learn
-faiss-cpu
+faiss-cpu==1.7.4
 fastapi
 uvicorn
-lightgbm
+lightgbm==3.3.5
 pydantic
 pyyaml
 loguru
@@ -13,7 +13,7 @@ dotmap
 mangum
 boto3
 python-dotenv
-pyarrow
+pyarrow==12.0.1
 joblib
 pytest
 pytest-asyncio

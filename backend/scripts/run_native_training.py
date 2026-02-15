@@ -21,6 +21,7 @@ log = logging.getLogger(__name__)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+BACKEND_DIR = PROJECT_ROOT
 
 TRAINING_DIR = PROJECT_ROOT / "training"
 
@@ -59,14 +60,14 @@ def main():
     ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Resolve paths from config for C++ args
-    data_root = Path(config.system.data_root)
+    data_root = PROJECT_ROOT / str(config.system.data_root)
     raw_dir = data_root / "raw"
     
     movies_csv = str(raw_dir / "movies.csv")
     ratings_csv = str(raw_dir / "ratings.csv")
     tags_csv = str(raw_dir / "tags.csv")
-    seq_csv = str(Path(config.system.training_sequences_path).with_suffix('.csv'))
-    out_dir = "backend/artifacts/native/"
+    seq_csv = str((PROJECT_ROOT / str(config.system.training_sequences_path)).with_suffix(".csv"))
+    out_dir = str(PROJECT_ROOT / "artifacts" / "native") + "/"
 
     # 1. Compilation
     log.info("Step 1/7: Compiling native training tools...")
@@ -75,7 +76,7 @@ def main():
     # 2. Train ALS (Retrieval)
     if not (ARTIFACTS_DIR / "als_item_embeddings.bin").exists():
         log.info("Step 2/7: Training ALS model (Collaborative Filtering)...")
-        als_cmd = f"python3 backend/training/retrieval/native/als_bridge.py | {BIN_DIR}/train_als"
+        als_cmd = f"python3 training/retrieval/native/als_bridge.py | {BIN_DIR}/train_als"
         run_command(als_cmd)
     else:
         log.info("Step 2/7: ALS artifacts found, skipping.")
@@ -99,7 +100,7 @@ def main():
     # 5. Prepare Ranking Data
     if not list(Path(TRAINING_DIR / "ranking" / "native").glob("*.train")):
         log.info("Step 5/7: Preparing Ranking Data (Parquet -> LGBM CSV)...")
-        input_parquet = config.system.training_dataset_path
+        input_parquet = PROJECT_ROOT / str(config.system.training_dataset_path)
         output_prefix = TRAINING_DIR / "ranking" / "native" / "rank"
         run_command(f"{BIN_DIR}/converter {input_parquet} {output_prefix}")
     else:
@@ -108,14 +109,14 @@ def main():
     # 6. Train Ranking Model (LightGBM)
     log.info("Step 6/7: Training Ranking Model (LightGBM Out-of-Core)...")
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(BACKEND_DIR)
-    run_command(f"python3 backend/training/ranking/train_from_csv.py", env=env)
+    env["PYTHONPATH"] = str(PROJECT_ROOT)
+    run_command("python3 training/ranking/train_from_csv.py", env=env)
 
     # 7. Train Two-Tower (Retrieval)
     if not (ARTIFACTS_DIR / "two_tower_embeddings.bin").exists():
         log.info("Step 7/7: Training Two-Tower model (Neural Sparse)...")
         # Args: binary_base_dir, output_dir
-        binary_dir = "backend/data/binary_cache/"
+        binary_dir = str(PROJECT_ROOT / "data" / "binary_cache") + "/"
         run_command(f"{BIN_DIR}/train_two_tower {binary_dir} {out_dir}")
     else:
         log.info("Step 7/7: Two-Tower artifacts found, skipping.")

@@ -1,41 +1,73 @@
-from fastapi import APIRouter, Request
+import logging
+import time
+import uuid
+
+from fastapi import APIRouter, HTTPException, Request
 from api.schemas.recommend import RecommendRequest, RecommendResponse
 from common.types import Query
 
-import time
-import uuid
 from logger.services.mlflow_logger import log_recommendation, log_click
 
 router = APIRouter(prefix="/recommend", tags=["recommend"])
+log = logging.getLogger(__name__)
 
 @router.post("", response_model=RecommendResponse)
 async def recommend_movies(request: Request, payload: RecommendRequest):
     start = time.time()
+    request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
 
-    from common.lifecycle import get_pipeline
-    pipeline = get_pipeline()
-    
-    # We await the async recommend method
-    results = await pipeline.recommend(
-        query=Query(seed_movie_ids=payload.seed_movie_ids),
-        top_n=payload.limit or 20,
+    log.info(
+        "recommend.request.start request_id=%s seeds=%s limit=%s moods=%s",
+        request_id,
+        payload.seed_movie_ids,
+        payload.limit or 20,
+        payload.moods,
     )
 
-    # Map 'score' from pipeline to 'rating' expected by RecommendResponse schema
-    for r in results:
-        if "score" in r:
-            r["rating"] = r["score"]
+    try:
+        from common.lifecycle import get_pipeline
+        pipeline = get_pipeline()
+        
+        # We await the async recommend method
+        results = await pipeline.recommend(
+            query=Query(seed_movie_ids=payload.seed_movie_ids),
+            top_n=payload.limit or 20,
+            request_id=request_id,
+        )
 
-    latency = int((time.time() - start) * 1000)
-    trace = {
-        "request_id": str(uuid.uuid4()),
-        "final_items": results,
-        "latency_ms": latency,
-    }
+        # Map 'score' from pipeline to 'rating' expected by RecommendResponse schema
+        for r in results:
+            if "score" in r:
+                r["rating"] = r["score"]
 
-    log_recommendation(trace, latency)
+        latency = int((time.time() - start) * 1000)
+        trace = {
+            "request_id": request_id,
+            "final_items": results,
+            "latency_ms": latency,
+        }
 
-    return RecommendResponse(recommendations=results)
+        log_recommendation(trace, latency)
+        log.info(
+            "recommend.request.success request_id=%s latency_ms=%s result_count=%s",
+            request_id,
+            latency,
+            len(results),
+        )
+
+        return RecommendResponse(recommendations=results)
+    except Exception as e:
+        latency = int((time.time() - start) * 1000)
+        log.exception(
+            "recommend.request.failed request_id=%s latency_ms=%s error=%s",
+            request_id,
+            latency,
+            str(e),
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Recommendation failed. request_id={request_id}",
+        )
 
 @router.post("/click")
 def movie_clicked():

@@ -7,8 +7,7 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-BACKEND_ROOT = PROJECT_ROOT / "backend"
+BACKEND_ROOT = Path(__file__).resolve().parent.parent
 
 def run_command(cmd, description):
     log.info(f"--- Starting: {description} ---")
@@ -22,7 +21,7 @@ def run_command(cmd, description):
             cmd, 
             shell=True, 
             check=True, 
-            cwd=str(PROJECT_ROOT),
+            cwd=str(BACKEND_ROOT),
             env=env,
             capture_output=False
         )
@@ -34,22 +33,14 @@ def run_command(cmd, description):
 def main():
     log.info("Starting Full Movie Recommendation Pipeline...")
 
-    # 1. Data Cleaning
-    run_command("python3 backend/data/clean_data.py", "Data Cleaning & Filtering")
+    # 1. Metadata standardization
+    run_command("python3 scripts/finalize_metadata.py", "Metadata Standardization")
 
-    # 2. Sequence Generation (C++ Pipeline)
-    run_command("cd backend/features/native && make", "Compiling C++ Tools")
-    run_command("python3 backend/features/native/run_sequences.py", "Generating Training Sequences")
+    # 2. Prepare data and generate features
+    run_command("python3 scripts/prepare_data.py", "Data Preparation")
 
-    # 3. Train Retrieval Models
-    # Using the native training script for completeness
-    run_command("bash scripts/run_all_native.sh", "Training Retrieval Models (Native)")
-
-    # 4. Generate Ranking Features (C++ Pipeline)
-    run_command("python3 backend/features/native/run_ranker_gen.py", "Generating Ranking Dataset")
-
-    # 5. Train Ranker
-    run_command("python3 backend/training/ranker.py", "Training Ranking Model (LightGBM)")
+    # 3. Train retrieval + ranker models
+    run_command("python3 scripts/run_native_training.py", "Native Training Pipeline")
 
     log.info("All pipeline steps completed successfully!")
 

@@ -308,4 +308,3 @@ class EnrichmentService:
             f"Retry complete: {len(successful)} recovered, "
             f"{len(still_failed)} still failed"
         )
-

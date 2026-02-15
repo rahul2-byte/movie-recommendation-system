@@ -299,7 +299,7 @@ def main():
     )
 
     # Mode selection (mutually exclusive)
-    mode_group = parser.add_mutually_exclusive_group(required=True)
+    mode_group = parser.add_mutually_exclusive_group(required=False)
     mode_group.add_argument(
         "--full",
         action="store_true",
@@ -345,6 +345,17 @@ def main():
     )
 
     args = parser.parse_args()
+    if not any(
+        [
+            args.full,
+            args.enrich,
+            args.merge,
+            args.clear,
+            args.retry_failed_only,
+        ]
+    ):
+        # Safe default for non-interactive script runners
+        args.merge = True
 
     try:
         if args.full:
@@ -401,4 +412,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

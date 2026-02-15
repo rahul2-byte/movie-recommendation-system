@@ -21,9 +21,9 @@ def clean_list(x):
     return cleaned
 
 def main():
-    # Resolve path relative to project root (up one level from backend/)
-    project_root = Path(__file__).resolve().parent.parent.parent
-    path = project_root / config.system.movies_metadata_path
+    # Resolve path relative to backend service root
+    backend_root = Path(__file__).resolve().parent.parent
+    path = backend_root / str(config.system.movies_metadata_path)
     
     if not path.exists():
         log.error(f"Metadata not found at {path}!")

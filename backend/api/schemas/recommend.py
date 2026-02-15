@@ -32,6 +32,7 @@ class MovieOut(BaseModel):
     tmdbId: int | None
     posterUrl: str | None
     rating: float | None
+    score: float | None = None
 
 
 class RecommendResponse(BaseModel):

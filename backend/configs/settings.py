@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     TMDB_ACCESS_TOKEN: str = ""
     IMDB_API_KEY: str = ""
 
-    LOCAL_DATA_PATH: str = "backend/data"
+    LOCAL_DATA_PATH: str = "data"
     LOCAL_MLRUNS_PATH: str = "mlruns"
 
     ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
@@ -36,6 +36,13 @@ class Settings(BaseSettings):
 
     IMDB_BASE_URL: str = "http://www.omdbapi.com/"
     IMDB_RATE_LIMIT: int = 20
+    
+    AWS_REGION: str = "ap-south-1"
+    DYNAMODB_TABLE_NAME: str = "Movies"
+    S3_ARTIFACT_BUCKET: str = "gemini-movie-artifacts"
+    AWS_ACCESS_KEY_ID: str = "dummy"
+    AWS_SECRET_ACCESS_KEY: str = "dummy"
+    AWS_ENDPOINT_URL: str = ""
 
     LOG_FORMAT_JSON: bool = True
     TRACE_SAMPLE_SIZE: int = 2
@@ -67,7 +74,7 @@ except Exception as e:
             self.MAX_RETRIES = 5
             self.MAX_CONCURRENT_REQUESTS = 50
             self.ALLOWED_ORIGINS = ["*"]
-            self.LOCAL_DATA_PATH = "backend/data"
+            self.LOCAL_DATA_PATH = "data"
             self.LOCAL_MLRUNS_PATH = "mlruns"
             self.BATCH_SIZE = 100
             self.TOP_N_TAGS = 10000
@@ -79,6 +86,10 @@ except Exception as e:
             self.TMDB_RATE_LIMIT = 40
             self.IMDB_BASE_URL = "http://www.omdbapi.com/"
             self.IMDB_RATE_LIMIT = 20
+            self.AWS_REGION = "ap-south-1"
+            self.DYNAMODB_TABLE_NAME = "Movies"
+            self.S3_ARTIFACT_BUCKET = "gemini-movie-artifacts"
+            self.AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL", "")
             self.LOG_FORMAT_JSON = True
             self.TRACE_SAMPLE_SIZE = 2
             self.MLFLOW_EXPERIMENTS = {
@@ -107,6 +118,12 @@ TMDB_BASE_URL = settings.TMDB_BASE_URL
 TMDB_RATE_LIMIT = settings.TMDB_RATE_LIMIT
 IMDB_BASE_URL = settings.IMDB_BASE_URL
 IMDB_RATE_LIMIT = settings.IMDB_RATE_LIMIT
+AWS_REGION = settings.AWS_REGION
+DYNAMODB_TABLE_NAME = settings.DYNAMODB_TABLE_NAME
+S3_ARTIFACT_BUCKET = settings.S3_ARTIFACT_BUCKET
+AWS_ACCESS_KEY_ID = settings.AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = settings.AWS_SECRET_ACCESS_KEY
+AWS_ENDPOINT_URL = settings.AWS_ENDPOINT_URL
 LOG_FORMAT_JSON = settings.LOG_FORMAT_JSON
 TRACE_SAMPLE_SIZE = settings.TRACE_SAMPLE_SIZE
 MLFLOW_EXPERIMENTS = settings.MLFLOW_EXPERIMENTS

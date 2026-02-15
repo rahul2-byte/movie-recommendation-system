@@ -23,9 +23,13 @@ log = logging.getLogger("model_verifier")
 
 def verify_retrieval_model(name, artifact_config):
     log.info(f"--- Verifying {name} ---")
+
+    def resolve(p: str) -> Path:
+        path = Path(str(p))
+        return path if path.is_absolute() else (BACKEND_ROOT / path)
     
     # 1. Embeddings
-    emb_path = Path(artifact_config.embeddings_path)
+    emb_path = resolve(artifact_config.embeddings_path)
     if not emb_path.exists():
         log.error(f"FAIL: Embeddings file missing at {emb_path}")
         return False
@@ -41,7 +45,7 @@ def verify_retrieval_model(name, artifact_config):
         return False
 
     # 2. FAISS Index
-    index_path = Path(artifact_config.faiss_index_path)
+    index_path = resolve(artifact_config.faiss_index_path)
     if not index_path.exists():
         log.error(f"FAIL: FAISS index missing at {index_path}")
         return False
@@ -64,7 +68,7 @@ def verify_retrieval_model(name, artifact_config):
         return False
 
     # 3. ID Map
-    map_path = Path(artifact_config.id_map_path)
+    map_path = resolve(artifact_config.id_map_path)
     if not map_path.exists():
         log.error(f"FAIL: ID Map missing at {map_path}")
         return False
@@ -85,7 +89,7 @@ def verify_retrieval_model(name, artifact_config):
 
 def verify_ranker():
     log.info("--- Verifying Ranker ---")
-    model_path = Path(settings.RANKER_MODEL_URI) / "lgbm_lambdarank.txt"
+    model_path = BACKEND_ROOT / str(config.system.ranker_model_dir) / "lgbm_lambdarank.txt"
     if not model_path.exists():
         log.error(f"FAIL: Ranker model missing at {model_path}")
         return False

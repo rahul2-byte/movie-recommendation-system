@@ -1,7 +1,6 @@
 import os
 import sys
 
-from configs import settings
 from loguru import logger
 
 

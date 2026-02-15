@@ -1,39 +1,14 @@
-FROM public.ecr.aws/lambda/python:3.10 as builder
-
-WORKDIR /build
-
-# Install build essentials for potential native deps
-RUN yum install -y gcc-c++ make
-
-COPY requirements.txt .
-# Install to a specific directory for easy copying
-RUN pip install --no-cache-dir --target /install -r requirements.txt
-
-# --- Final Stage ---
 FROM public.ecr.aws/lambda/python:3.10
 
-WORKDIR ${LAMBDA_TASK_ROOT}
+WORKDIR /var/task
 
-# Install ONLY essential runtime libs for FAISS and LightGBM
-RUN yum install -y libgomp mesa-libGL && yum clean all
+RUN python -m pip install --no-cache-dir --upgrade pip
 
-# Copy installed dependencies from builder
-COPY --from=builder /install ${LAMBDA_TASK_ROOT}
+COPY backend/requirements.txt /var/task/requirements.txt
+RUN pip install --no-cache-dir -r /var/task/requirements.txt
 
-# Copy ONLY production application code
-COPY main.py ${LAMBDA_TASK_ROOT}/
-COPY api/ ${LAMBDA_TASK_ROOT}/api/
-COPY common/ ${LAMBDA_TASK_ROOT}/common/
-COPY configs/ ${LAMBDA_TASK_ROOT}/configs/
-COPY features/ ${LAMBDA_TASK_ROOT}/features/
-COPY pipeline/ ${LAMBDA_TASK_ROOT}/pipeline/
-COPY ranking/ ${LAMBDA_TASK_ROOT}/ranking/
-COPY retrieval/ ${LAMBDA_TASK_ROOT}/retrieval/
-COPY data/loader.py ${LAMBDA_TASK_ROOT}/data/loader.py
+COPY backend/ /var/task/
 
-# Set production environment variables
-ENV ENVIRONMENT=PROD
-ENV LOG_FORMAT_JSON=true
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/var/task
 
-CMD [ "main.handler" ]
+ENTRYPOINT ["bash", "scripts/start_backend.sh"]

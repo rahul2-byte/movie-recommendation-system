@@ -1,235 +1,124 @@
+import pandas as pd
+import numpy as np
 import logging
 import time
-from typing import Dict, List
+from typing import List, Dict, Any
+from collections import Counter
 
-import numpy as np
-import pandas as pd
-from scipy.sparse import spmatrix
-
-logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-
 class FeatureBuilder:
-    @classmethod
-    def from_dataframe(cls, movies_df: pd.DataFrame, tags_path: str):
-        from common.model_loader import ensure_local_path
+    def __init__(self):
+        # Stateless!
+        pass
 
-        local_tags_path = ensure_local_path(tags_path)
-        return cls._initialize_logic(movies_df, local_tags_path)
-
-    @classmethod
-    def from_paths(cls, movies_path: str, tags_path: str):
-        from common.model_loader import ensure_local_path
-
-        local_movies_path = ensure_local_path(movies_path)
-        local_tags_path = ensure_local_path(tags_path)
-        movies_df = pd.read_parquet(local_movies_path)
-        return cls._initialize_logic(movies_df, local_tags_path)
-
-    @classmethod
-    def _initialize_logic(cls, movies_df: pd.DataFrame, local_tags_path: str):
-        import scipy.sparse
-        from sklearn.preprocessing import MultiLabelBinarizer
-
-        log.info(
-            f"FeatureBuilder: Initializing from DataFrame and tags at {local_tags_path}..."
-        )
-        num_cols = [
-            "vote_average",
-            "vote_count",
-            "runtime_minutes",
-            "release_year",
-            "popularity_score",
-            "imdb_rating",
-            "imdb_votes",
-        ]
-        for col in num_cols:
-            movies_df[col] = (
-                movies_df[col].fillna(0.0) if col in movies_df.columns else 0.0
-            )
-        movies_meta = (
-            movies_df.set_index("movie_id")
-            if "movie_id" in movies_df.columns
-            else movies_df.set_index("movieId")
-        )
-        movie_id_to_idx = {mid: i for i, mid in enumerate(movies_meta.index)}
-        missing_movie_idx = len(movie_id_to_idx)
-        genres_as_lists = [
-            g.tolist()
-            if isinstance(g, np.ndarray)
-            else (g if isinstance(g, list) else [])
-            for g in movies_meta["genres"]
-        ]
-        all_genres = sorted(
-            {genre.lower() for sublist in genres_as_lists for genre in sublist if genre}
-        )
-        genre_binarizer = MultiLabelBinarizer(classes=all_genres)
-        genres_as_lists_lower = [
-            [genre.lower() for genre in sublist] for sublist in genres_as_lists
-        ]
-        genre_vectors_matrix_dense = genre_binarizer.fit_transform(
-            genres_as_lists_lower
-        ).astype(np.int8)
-        genre_vectors_matrix = np.vstack(
-            [
-                genre_vectors_matrix_dense,
-                np.zeros((1, genre_vectors_matrix_dense.shape[1]), dtype=np.int8),
-            ]
-        )
-        tags_df = pd.read_parquet(local_tags_path)
-        tags_df.dropna(subset=["tag"], inplace=True)
-        tags_df["tag"] = tags_df["tag"].str.lower()
-        top_tags = tags_df["tag"].value_counts().nlargest(10000).index
-        tag_binarizer = MultiLabelBinarizer(
-            classes=top_tags.tolist(), sparse_output=True
-        )
-        tags_filtered = tags_df[tags_df["tag"].isin(top_tags)]
-        movie_tags = (
-            tags_filtered.groupby("movieId")["tag"].unique().reindex(movies_meta.index)
-        )
-        movie_tags_filled = [
-            tags if isinstance(tags, (list, np.ndarray)) else [] for tags in movie_tags
-        ]
-        tag_vectors_matrix_sparse = tag_binarizer.fit_transform(
-            movie_tags_filled
-        ).astype(np.int8)
-        tag_vectors_matrix = scipy.sparse.vstack(
-            [
-                tag_vectors_matrix_sparse,
-                scipy.sparse.csr_matrix(
-                    (1, tag_vectors_matrix_sparse.shape[1]), dtype=np.int8
-                ),
-            ]
-        )
-        return cls(
-            movies_meta,
-            movie_id_to_idx,
-            genre_vectors_matrix,
-            tag_vectors_matrix,
-            missing_movie_idx,
-        )
-
-    def __init__(
-        self,
-        movies_meta,
-        movie_id_to_idx,
-        genre_vectors_matrix,
-        tag_vectors_matrix,
-        missing_movie_idx,
-    ):
-        self.movies_meta = movies_meta
-        self.movie_id_to_idx = movie_id_to_idx
-        self.genre_vectors_matrix = genre_vectors_matrix
-        self.tag_vectors_matrix = tag_vectors_matrix
-        self.missing_movie_idx = missing_movie_idx
-
-    def _get_vectors(self, movie_ids: List[int], matrix) -> np.ndarray:
-        indices = [self.movie_id_to_idx.get(mid) for mid in movie_ids]
-        valid_indices = [idx for idx in indices if idx is not None]
-        if not valid_indices:
-            from scipy.sparse import csr_matrix
-
-            return (
-                csr_matrix((0, matrix.shape[1]), dtype=matrix.dtype)
-                if isinstance(matrix, spmatrix)
-                else np.empty((0, matrix.shape[1]), dtype=matrix.dtype)
-            )
-        return matrix[valid_indices]
-
-    def build_features(self, queries_df: pd.DataFrame) -> pd.DataFrame:
+    def build_features(
+        self, 
+        query_seeds: List[Dict[str, Any]], 
+        candidates: List[Dict[str, Any]]
+    ) -> pd.DataFrame:
+        """
+        Build features dynamically from Seed Metadata and Candidate Metadata.
+        """
         start_time = time.time()
-        df = queries_df.copy()
-        df["query_hash"] = df["query_movie_ids"].apply(tuple)
-        unique_hashes = df["query_hash"].unique()
-        hash_to_idx = {hash_val: i for i, hash_val in enumerate(unique_hashes)}
-        query_indices = df["query_hash"].map(hash_to_idx).to_numpy()
-        num_unique_queries = len(unique_hashes)
-        query_g_vecs_agg = np.zeros(
-            (num_unique_queries, self.genre_vectors_matrix.shape[1]),
-            dtype=self.genre_vectors_matrix.dtype,
-        )
-        query_t_vecs_agg = np.zeros(
-            (num_unique_queries, self.tag_vectors_matrix.shape[1]),
-            dtype=self.tag_vectors_matrix.dtype,
-        )
-        query_avg_rating_agg, query_avg_year_agg, query_avg_runtime_agg = (
-            np.zeros(num_unique_queries),
-            np.zeros(num_unique_queries),
-            np.zeros(num_unique_queries),
-        )
-        unique_queries_df = df[["query_hash", "query_movie_ids"]].drop_duplicates(
-            subset=["query_hash"]
-        )
-        for _, row in unique_queries_df.iterrows():
-            qh, qmids = row["query_hash"], row["query_movie_ids"]
-            idx = hash_to_idx[qh]
-            qgv = self._get_vectors(qmids, self.genre_vectors_matrix)
-            if qgv.size > 0:
-                query_g_vecs_agg[idx] = np.clip(qgv.sum(axis=0), 0, 1)
-            qtv = self._get_vectors(qmids, self.tag_vectors_matrix)
-            if qtv.size > 0:
-                agg = np.clip(qtv.sum(axis=0), 0, 1)
-                query_t_vecs_agg[idx] = (
-                    agg.toarray().squeeze()
-                    if isinstance(agg, (spmatrix, np.matrix))
-                    else agg
-                )
-            qm = self.movies_meta.loc[self.movies_meta.index.isin(qmids)]
-            if not qm.empty:
-                query_avg_rating_agg[idx] = qm["vote_average"].mean()
-                query_avg_year_agg[idx] = (
-                    qm["release_year"].replace(0, np.nan).mean() or 0
-                )
-                query_avg_runtime_agg[idx] = (
-                    qm["runtime_minutes"].replace(0, np.nan).mean() or 0
-                )
-        (
-            df["feat_avg_query_rating"],
-            df["feat_avg_query_year"],
-            df["feat_avg_query_runtime"],
-        ) = (
-            query_avg_rating_agg[query_indices],
-            query_avg_year_agg[query_indices],
-            query_avg_runtime_agg[query_indices],
-        )
-        cids = df["candidate_movie_id"].to_list()
-        cindices = (
-            pd.Series(cids)
-            .map(self.movie_id_to_idx)
-            .fillna(self.missing_movie_idx)
-            .astype(np.int64)
-            .to_numpy()
-        )
-        cgv, ctv = (
-            self.genre_vectors_matrix[cindices],
-            self.tag_vectors_matrix[cindices].toarray(),
-        )
-        qge, qte = query_g_vecs_agg[query_indices], query_t_vecs_agg[query_indices]
-        df["feat_genre_overlap"], df["feat_tag_overlap"] = (
-            (qge * cgv).sum(axis=1),
-            (qte * ctv).sum(axis=1),
-        )
-        cm = self.movies_meta.reindex(cids)
-        df["feat_candidate_avg_rating"] = cm["vote_average"].values
-        df["feat_candidate_rating_count"] = cm["vote_count"].values
-        df["feat_candidate_runtime"] = (
-            cm["vote_minutes"].values
-            if "vote_minutes" in cm.columns
-            else cm["runtime_minutes"].values
-        )
-        df["feat_candidate_year"] = cm["release_year"].values
-        df["feat_candidate_popularity"] = cm["popularity_score"].values
-        df["feat_candidate_imdb_rating"] = cm["imdb_rating"].values
-        df["feat_candidate_imdb_votes"] = cm["imdb_votes"].values
-        df["feat_year_diff"], df["feat_runtime_diff"] = (
-            np.abs(df["feat_candidate_year"] - df["feat_avg_query_year"]),
-            np.abs(df["feat_candidate_runtime"] - df["feat_avg_query_runtime"]),
-        )
-        fcols = [c for c in df.columns if c.startswith("feat_")]
-        final_cols = ["query_movie_ids", "candidate_movie_id"]
-        df_final = df[final_cols + fcols].fillna(0).copy()
-        log.info(
-            f"Finished building {len(fcols)} features in {time.time() - start_time:.2f} seconds."
-        )
-        return df_final
+        
+        # 1. Analyze Query (Seeds)
+        # ------------------------
+        if not query_seeds:
+            log.warning("No query seeds provided for feature building.")
+            return pd.DataFrame()
+            
+        # Stats
+        seed_years = [s.get('year') or s.get('release_year') or 0 for s in query_seeds]
+        seed_ratings = [s.get('rating') or s.get('vote_average') or 0.0 for s in query_seeds]
+        seed_runtimes = [s.get('runtime_minutes') or 0 for s in query_seeds]
+        
+        avg_year = np.mean([y for y in seed_years if y > 0]) if any(y > 0 for y in seed_years) else 0
+        avg_rating = np.mean(seed_ratings)
+        avg_runtime = np.mean([r for r in seed_runtimes if r > 0]) if any(r > 0 for r in seed_runtimes) else 0
+        
+        # Vector Counters (Genre & Tag)
+        # We count how many seeds have 'Action', 'Sci-Fi', etc.
+        # This acts as the "Query Vector" (e.g. Action: 2, Sci-Fi: 1)
+        genre_counter = Counter()
+        tag_counter = Counter()
+        
+        for s in query_seeds:
+            # Genres
+            genres = s.get('genres', [])
+            if isinstance(genres, str): genres = genres.split('|')
+            for g in genres:
+                if g: genre_counter[str(g).lower()] += 1
+                
+            # Tags (User Tags or Keywords)
+            tags = s.get('user_tags', []) + s.get('keywords', [])
+            if isinstance(tags, str): tags = [tags] # Should be list
+            for t in tags:
+                if t: tag_counter[str(t).lower()] += 1
+                
+        # 2. Score Candidates
+        # -------------------
+        features = []
+        
+        for cand in candidates:
+            # Metadata
+            c_id = cand.get('movieId')
+            c_year = cand.get('year') or cand.get('release_year') or 0
+            c_rating = cand.get('rating') or cand.get('vote_average') or 0.0
+            c_votes = cand.get('vote_count') or 0
+            c_pop = cand.get('popularity') or cand.get('popularity_score') or 0.0
+            c_runtime = cand.get('runtime_minutes') or 0
+            
+            # Genres
+            c_genres = cand.get('genres', [])
+            if isinstance(c_genres, str): c_genres = c_genres.split('|')
+            c_genres_lower = [str(g).lower() for g in c_genres if g]
+            
+            # Tags
+            c_tags = cand.get('user_tags', []) + cand.get('keywords', [])
+            c_tags_lower = [str(t).lower() for t in c_tags if t]
+            
+            # Compute Overlaps (Dot Product equivalent)
+            # sum(query_weight * 1 if candidate_has else 0)
+            genre_overlap = sum(genre_counter[g] for g in c_genres_lower)
+            tag_overlap = sum(tag_counter[t] for t in c_tags_lower)
+            
+            # Diffs
+            year_diff = abs(c_year - avg_year) if (c_year > 0 and avg_year > 0) else 0
+            runtime_diff = abs(c_runtime - avg_runtime) if (c_runtime > 0 and avg_runtime > 0) else 0
+            
+            features.append({
+                "candidate_movie_id": c_id,
+                # Query Features
+                "feat_avg_query_rating": avg_rating,
+                "feat_avg_query_year": avg_year,
+                "feat_avg_query_runtime": avg_runtime,
+                # Candidate Features
+                "feat_candidate_avg_rating": c_rating,
+                "feat_candidate_rating_count": c_votes,
+                "feat_candidate_popularity": c_pop,
+                "feat_candidate_year": c_year,
+                "feat_candidate_runtime": c_runtime,
+                # Interaction Features
+                "feat_genre_overlap": genre_overlap,
+                "feat_tag_overlap": tag_overlap,
+                "feat_year_diff": year_diff,
+                "feat_runtime_diff": runtime_diff,
+                # Missing from logic but maybe needed by model? 
+                # "feat_candidate_imdb_rating": 0.0,
+                # "feat_candidate_imdb_votes": 0
+            })
+            
+        df = pd.DataFrame(features)
+        
+        # Ensure ID column is present even if empty
+        if df.empty:
+            return pd.DataFrame(columns=["candidate_movie_id"])
+            
+        log.info(f"Built features for {len(candidates)} candidates in {time.time() - start_time:.4f}s")
+        return df
+
+    @classmethod
+    def from_dataframe(cls, *args, **kwargs):
+        # Backwards compatibility dummy
+        return cls()

@@ -1,4 +1,5 @@
 import asyncio
+import time
 from typing import Dict, List, Tuple
 
 from common.logger import get_logger
@@ -24,7 +25,8 @@ class RecallService:
             return
         async with self._lock:
             if not self._initialized:
-                log.info("RecallService: Lazily loading retrievers in parallel...")
+                start = time.perf_counter()
+                log.info("recall.init.start")
                 # Parallel initialization of retriever objects (if they support async init)
                 # Most just load indices from disk/S3 which is blocking, but we run in thread pool if needed
                 # For now, sequential instantiation but within the lock is safe for Lambda.
@@ -36,16 +38,52 @@ class RecallService:
                 ]
                 self._initialized = True
                 log.info(
-                    f"RecallService initialized with {len(self.retrievers)} retrievers."
+                    "recall.init.success retriever_count=%s duration_ms=%s",
+                    len(self.retrievers),
+                    int((time.perf_counter() - start) * 1000),
                 )
 
-    async def recall(self, query: Query, top_k: int = 500) -> List[Candidate]:
+    async def _safe_retrieve(
+        self, retriever: BaseRetriever, query: Query, top_k: int, request_id: str
+    ):
+        start = time.perf_counter()
+        try:
+            output = await retriever.retrieve(query, top_k=top_k * 2)
+            log.info(
+                "recall.retriever.success request_id=%s retriever=%s candidates=%s duration_ms=%s",
+                request_id,
+                retriever.name,
+                len(output),
+                int((time.perf_counter() - start) * 1000),
+            )
+            return output
+        except Exception:
+            log.exception(
+                "recall.retriever.failed request_id=%s retriever=%s duration_ms=%s",
+                request_id,
+                retriever.name,
+                int((time.perf_counter() - start) * 1000),
+            )
+            return []
+
+    async def recall(
+        self, query: Query, top_k: int = 500, request_id: str = "n/a"
+    ) -> List[Candidate]:
         if not query.seed_movie_ids:
             return []
         await self._ensure_initialized()
-        log.info(f"RecallService: Processing query with seeds: {query.seed_movie_ids}")
+        total_start = time.perf_counter()
+        log.info(
+            "recall.start request_id=%s top_k=%s seeds=%s",
+            request_id,
+            top_k,
+            query.seed_movie_ids,
+        )
         results = await asyncio.gather(
-            *[r.retrieve(query, top_k=top_k * 2) for r in self.retrievers]
+            *[
+                self._safe_retrieve(r, query, top_k=top_k, request_id=request_id)
+                for r in self.retrievers
+            ]
         )
         merged: Dict[int, Candidate] = {}
         for retriever_output in results:
@@ -65,4 +103,11 @@ class RecallService:
             if c.movie_id not in query.seed_movie_ids and c.movie_id != 0
         ]
         final.sort(key=lambda c: c.score, reverse=True)
+        log.info(
+            "recall.success request_id=%s merged_candidates=%s returned=%s duration_ms=%s",
+            request_id,
+            len(final),
+            min(len(final), top_k),
+            int((time.perf_counter() - total_start) * 1000),
+        )
         return final[:top_k]
