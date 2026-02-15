@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.10 as builder
+FROM public.ecr.aws/lambda/python:3.10 AS builder
 
 WORKDIR /build
 
@@ -34,7 +34,6 @@ COPY logger/ ${LAMBDA_TASK_ROOT}/logger/
 COPY pipeline/ ${LAMBDA_TASK_ROOT}/pipeline/
 COPY ranking/ ${LAMBDA_TASK_ROOT}/ranking/
 COPY retrieval/ ${LAMBDA_TASK_ROOT}/retrieval/
-COPY data/loader.py ${LAMBDA_TASK_ROOT}/data/loader.py
 
 # Set production environment variables
 ENV ENVIRONMENT=PROD
