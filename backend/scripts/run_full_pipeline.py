@@ -2,6 +2,7 @@ import subprocess
 import logging
 import sys
 import os
+import argparse
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -31,6 +32,14 @@ def run_command(cmd, description):
         sys.exit(1)
 
 def main():
+    parser = argparse.ArgumentParser(description="Run full training/inference prep pipeline.")
+    parser.add_argument(
+        "--compress-content-model",
+        action="store_true",
+        help="Run content embedding compression after native training.",
+    )
+    args = parser.parse_args()
+
     log.info("Starting Full Movie Recommendation Pipeline...")
 
     # 1. Metadata standardization
@@ -41,6 +50,13 @@ def main():
 
     # 3. Train retrieval + ranker models
     run_command("python3 scripts/run_native_training.py", "Native Training Pipeline")
+
+    # 4. Optional post-training compression for content model artifacts
+    if args.compress_content_model:
+        run_command(
+            "python3 scripts/compress_content_model.py",
+            "Content Model Compression",
+        )
 
     log.info("All pipeline steps completed successfully!")
 

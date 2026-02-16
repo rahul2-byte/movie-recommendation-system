@@ -7,6 +7,25 @@ from collections import Counter
 
 log = logging.getLogger(__name__)
 
+
+def _to_float(value: Any, default: float = 0.0) -> float:
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _to_int(value: Any, default: int = 0) -> int:
+    if value is None:
+        return default
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return default
+
+
 class FeatureBuilder:
     def __init__(self):
         # Stateless!
@@ -29,9 +48,15 @@ class FeatureBuilder:
             return pd.DataFrame()
             
         # Stats
-        seed_years = [s.get('year') or s.get('release_year') or 0 for s in query_seeds]
-        seed_ratings = [s.get('rating') or s.get('vote_average') or 0.0 for s in query_seeds]
-        seed_runtimes = [s.get('runtime_minutes') or 0 for s in query_seeds]
+        seed_years = [
+            _to_int(s.get('year') if s.get('year') is not None else s.get('release_year'))
+            for s in query_seeds
+        ]
+        seed_ratings = [
+            _to_float(s.get('rating') if s.get('rating') is not None else s.get('vote_average'))
+            for s in query_seeds
+        ]
+        seed_runtimes = [_to_float(s.get('runtime_minutes')) for s in query_seeds]
         
         avg_year = np.mean([y for y in seed_years if y > 0]) if any(y > 0 for y in seed_years) else 0
         avg_rating = np.mean(seed_ratings)
@@ -63,11 +88,13 @@ class FeatureBuilder:
         for cand in candidates:
             # Metadata
             c_id = cand.get('movieId')
-            c_year = cand.get('year') or cand.get('release_year') or 0
-            c_rating = cand.get('rating') or cand.get('vote_average') or 0.0
-            c_votes = cand.get('vote_count') or 0
-            c_pop = cand.get('popularity') or cand.get('popularity_score') or 0.0
-            c_runtime = cand.get('runtime_minutes') or 0
+            c_year = _to_int(cand.get('year') if cand.get('year') is not None else cand.get('release_year'))
+            c_rating = _to_float(cand.get('rating') if cand.get('rating') is not None else cand.get('vote_average'))
+            c_votes = _to_int(cand.get('vote_count'))
+            c_pop = _to_float(cand.get('popularity') if cand.get('popularity') is not None else cand.get('popularity_score'))
+            c_runtime = _to_float(cand.get('runtime_minutes'))
+            c_imdb_rating = _to_float(cand.get('imdb_rating'))
+            c_imdb_votes = _to_int(cand.get('imdb_votes'))
             
             # Genres
             c_genres = cand.get('genres', [])
@@ -97,6 +124,8 @@ class FeatureBuilder:
                 "feat_candidate_avg_rating": c_rating,
                 "feat_candidate_rating_count": c_votes,
                 "feat_candidate_popularity": c_pop,
+                "feat_candidate_imdb_rating": c_imdb_rating,
+                "feat_candidate_imdb_votes": c_imdb_votes,
                 "feat_candidate_year": c_year,
                 "feat_candidate_runtime": c_runtime,
                 # Interaction Features
@@ -104,9 +133,6 @@ class FeatureBuilder:
                 "feat_tag_overlap": tag_overlap,
                 "feat_year_diff": year_diff,
                 "feat_runtime_diff": runtime_diff,
-                # Missing from logic but maybe needed by model? 
-                # "feat_candidate_imdb_rating": 0.0,
-                # "feat_candidate_imdb_votes": 0
             })
             
         df = pd.DataFrame(features)

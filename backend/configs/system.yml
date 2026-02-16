@@ -14,31 +14,31 @@ storage:
 # Models allow simple key lookups. The code will prefix with s3://{bucket}/
 model_registry:
   ranker:
-    model_key: "models/ranker/lgbm_lambdarank.txt"
+    model_key: "artifacts/models/ranker/lgbm_lambdarank.txt"
   
   retrieval:
     tfidf:
-      embeddings_key: "models/tfidf/item_embeddings.npy"
-      faiss_index_key: "models/tfidf/faiss.index"
-      id_map_key: "models/tfidf/movie_id_to_idx.json"
+      embeddings_key: "artifacts/models/tfidf/item_embeddings.npy"
+      faiss_index_key: "artifacts/models/tfidf/faiss.index"
+      id_map_key: "artifacts/models/tfidf/movie_id_to_idx.json"
     
     content_based:
-      embeddings_key: "models/content_based/item_embeddings.npy"
-      faiss_index_key: "models/content_based/faiss.index"
-      id_map_key: "models/content_based/movie_id_to_idx.json"
-      preprocessors_key: "models/content_based/preprocessors.pkl"
+      embeddings_key: "artifacts/models/content_based/item_embeddings.npy"
+      faiss_index_key: "artifacts/models/content_based/faiss.index"
+      id_map_key: "artifacts/models/content_based/movie_id_to_idx.json"
+      preprocessors_key: "artifacts/models/content_based/preprocessors.pkl"
 
     als:
-      embeddings_key: "models/als/item_embeddings.npy"
-      faiss_index_key: "models/als/faiss.index"
-      id_map_key: "models/als/movie_id_to_idx.json"
+      embeddings_key: "artifacts/models/als/item_embeddings.npy"
+      faiss_index_key: "artifacts/models/als/faiss.index"
+      id_map_key: "artifacts/models/als/movie_id_to_idx.json"
 
     two_tower:
-      item_encoder_key: "models/two_tower/item_encoder.pth"
-      embeddings_key: "models/two_tower/item_embeddings.npy"
-      faiss_index_key: "models/two_tower/faiss.index"
-      id_map_key: "models/two_tower/movie_id_to_idx.json"
-      preprocessors_key: "models/two_tower/feature_preprocessors.pkl"
+      item_encoder_key: "artifacts/models/two_tower/item_encoder.pth"
+      embeddings_key: "artifacts/models/two_tower/item_embeddings.npy"
+      faiss_index_key: "artifacts/models/two_tower/faiss.index"
+      id_map_key: "artifacts/models/two_tower/movie_id_to_idx.json"
+      preprocessors_key: "artifacts/models/two_tower/feature_preprocessors.pkl"
       embedding_dim: 64
 
 # --- Retrieval Hyperparameters ---

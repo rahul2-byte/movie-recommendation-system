@@ -42,11 +42,17 @@ class ContentBasedRetriever(BaseRetriever):
             self.movie_id_to_idx = {int(k): v for k, v in self.movie_id_to_idx.items()}
             self.idx_to_movie_id = {v: k for k, v in self.movie_id_to_idx.items()}
             
-            # Preprocessors (if needed for inference)
+            # Optional preprocessors are not required for current retrieval logic.
             if hasattr(reg, 'preprocessors_key'):
-                prep_path = self.s3_repo.download_artifact(reg.preprocessors_key)
-                with open(prep_path, 'rb') as f:
-                    self.preprocessors = pickle.load(f)
+                try:
+                    prep_path = self.s3_repo.download_artifact(reg.preprocessors_key)
+                    with open(prep_path, 'rb') as f:
+                        self.preprocessors = pickle.load(f)
+                except Exception as e:
+                    log.warning(
+                        "ContentBasedRetriever: Optional preprocessors missing (%s). Continuing without them.",
+                        e,
+                    )
                     
             log.info("ContentBasedRetriever: Artifacts loaded.")
             

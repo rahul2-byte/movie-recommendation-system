@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from typing import Dict, List
 
-from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Root directory
@@ -11,7 +10,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.absolute()
 
 class Settings(BaseSettings):
     ENVIRONMENT: str = "PROD"
-    S3_BUCKET: str = "movie-recommendation-system-artifacts"
     TMDB_ACCESS_TOKEN: str = ""
     IMDB_API_KEY: str = ""
 
@@ -67,7 +65,6 @@ except Exception as e:
     class MockSettings:
         def __init__(self):
             self.ENVIRONMENT = os.getenv("ENVIRONMENT", "PROD")
-            self.S3_BUCKET = os.getenv("S3_BUCKET", "")
             self.TMDB_ACCESS_TOKEN = os.getenv("TMDB_ACCESS_TOKEN", "")
             self.IMDB_API_KEY = os.getenv("IMDB_API_KEY", "")
             self.REQUEST_TIMEOUT = 10
@@ -101,7 +98,6 @@ except Exception as e:
 
 # --- EXPORT AS GLOBALS FOR BACKWARD COMPATIBILITY ---
 ENVIRONMENT = settings.ENVIRONMENT
-S3_BUCKET = settings.S3_BUCKET
 TMDB_ACCESS_TOKEN = settings.TMDB_ACCESS_TOKEN
 IMDB_API_KEY = settings.IMDB_API_KEY
 REQUEST_TIMEOUT = settings.REQUEST_TIMEOUT
@@ -131,11 +127,14 @@ MLFLOW_EXPERIMENTS = settings.MLFLOW_EXPERIMENTS
 # Derived Paths
 if ENVIRONMENT == "LOCAL":
     DATA_BASE_PATH = PROJECT_ROOT / settings.LOCAL_DATA_PATH
-    MLFLOW_TRACKING_URI = (PROJECT_ROOT / settings.LOCAL_MLRUNS_PATH).as_uri()
+    MLFLOW_TRACKING_URI = os.getenv(
+        "MLFLOW_TRACKING_URI",
+        f"sqlite:///{PROJECT_ROOT / 'mlflow.db'}",
+    )
     INDICES_PATH = PROJECT_ROOT / "artifacts/indices"
     MODELS_PATH = PROJECT_ROOT / "artifacts/models"
 else:
-    DATA_BASE_PATH = f"s3://{S3_BUCKET}"
+    DATA_BASE_PATH = f"s3://{S3_ARTIFACT_BUCKET}"
     MLFLOW_TRACKING_URI = os.getenv(
         "MLFLOW_TRACKING_URI", "/tmp/mlruns"
     )

@@ -11,8 +11,9 @@ from loguru import logger
 import time
 
 # Configuration
-INPUT_DIR = Path("backend/artifacts/models/content_based")
-OUTPUT_DIR = Path("backend/artifacts/models/content_based_compressed")
+BACKEND_ROOT = Path(__file__).resolve().parent.parent
+INPUT_DIR = BACKEND_ROOT / "artifacts" / "models" / "content_based"
+OUTPUT_DIR = BACKEND_ROOT / "artifacts" / "models" / "content_based_compressed"
 TARGET_DIM = 64  # Compressing to 64 dimensions (same as ALS/Two-Tower)
 
 logger.remove()

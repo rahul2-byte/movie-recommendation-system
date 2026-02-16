@@ -1,13 +1,13 @@
-import boto3
-import pandas as pd
-import numpy as np
 import argparse
 import os
+import sys
 from decimal import Decimal
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict, Optional
 
-import sys
+import boto3
+import numpy as np
+import pandas as pd
 
 sys.path.append(os.getcwd())
 
@@ -60,19 +60,20 @@ def sanitize_item(row: pd.Series) -> Dict[str, Any] | None:
         if k in ["movieId", "tmdbId"]:
             continue
 
+        if isinstance(v, (list, np.ndarray)):
+            cleaned = [str(x) for x in v if pd.notna(x) and x != ""]
+            if cleaned:
+                item[k] = cleaned
+            continue
+
         if pd.isna(v) or v == "":
             continue
 
-        if k in ["vote_count", "release_year", "year"]:
+        if k in ["vote_count", "release_year", "year", "runtime_minutes", "imdb_votes", "collection_id"]:
             try:
                 item[k] = int(v)
             except Exception:
                 continue
-
-        elif isinstance(v, (list, np.ndarray)):
-            cleaned = [str(x) for x in v if x]
-            if cleaned:
-                item[k] = cleaned
 
         elif isinstance(v, (float, np.floating)):
             item[k] = v
@@ -91,7 +92,7 @@ def sanitize_item(row: pd.Series) -> Dict[str, Any] | None:
 # =====================================================
 
 
-def setup_table(dynamodb, table_name: str):
+def setup_table(dynamodb, table_name: str, create_if_missing: bool = True):
     client = dynamodb.meta.client
 
     log.info("Testing DynamoDB connectivity...")
@@ -107,6 +108,11 @@ def setup_table(dynamodb, table_name: str):
     if table_name in existing_tables:
         log.info(f"Table {table_name} already exists.")
         return dynamodb.Table(table_name)
+
+    if not create_if_missing:
+        raise RuntimeError(
+            f"Table '{table_name}' does not exist and auto-create is disabled."
+        )
 
     log.info(f"Creating table {table_name} with PAY_PER_REQUEST mode...")
 
@@ -210,9 +216,19 @@ def upload_to_dynamodb(
     table_name: str,
     region_name: str,
     endpoint_url: str | None = None,
+    create_table_if_missing: bool = True,
+    aws_profile: Optional[str] = None,
+    aws_access_key_id: Optional[str] = None,
+    aws_secret_access_key: Optional[str] = None,
+    aws_session_token: Optional[str] = None,
 ):
     log.info(f"Loading data from {file_path}...")
     df = pd.read_parquet(file_path)
+
+    session_kwargs: Dict[str, Any] = {}
+    if aws_profile:
+        session_kwargs["profile_name"] = aws_profile
+    session = boto3.Session(**session_kwargs)
 
     resource_kwargs = {
         "service_name": "dynamodb",
@@ -220,11 +236,16 @@ def upload_to_dynamodb(
     }
     if endpoint_url:
         resource_kwargs["endpoint_url"] = endpoint_url
+    if aws_access_key_id and aws_secret_access_key:
+        resource_kwargs["aws_access_key_id"] = aws_access_key_id
+        resource_kwargs["aws_secret_access_key"] = aws_secret_access_key
+    if aws_session_token:
+        resource_kwargs["aws_session_token"] = aws_session_token
 
     # Use default AWS credential chain (IAM role/profile/env) for production safety.
-    dynamodb = boto3.resource(**resource_kwargs)
+    dynamodb = session.resource(**resource_kwargs)
 
-    table = setup_table(dynamodb, table_name)
+    table = setup_table(dynamodb, table_name, create_if_missing=create_table_if_missing)
 
     log.info("Uploading to DynamoDB (Batch)...")
 
@@ -277,8 +298,44 @@ def main():
         default=os.getenv("AWS_ENDPOINT_URL", "") or None,
         help="Optional DynamoDB endpoint URL (useful for local DynamoDB)",
     )
+    parser.add_argument(
+        "--create-table",
+        action="store_true",
+        help="Create target table if missing (recommended for local/remote container).",
+    )
+    parser.add_argument(
+        "--aws-profile",
+        default=os.getenv("AWS_PROFILE", "") or None,
+        help="Optional AWS profile name to use for authentication.",
+    )
+    parser.add_argument(
+        "--aws-access-key-id",
+        default=os.getenv("AWS_ACCESS_KEY_ID", "") or None,
+        help="Optional static AWS access key.",
+    )
+    parser.add_argument(
+        "--aws-secret-access-key",
+        default=os.getenv("AWS_SECRET_ACCESS_KEY", "") or None,
+        help="Optional static AWS secret key.",
+    )
+    parser.add_argument(
+        "--aws-session-token",
+        default=os.getenv("AWS_SESSION_TOKEN", "") or None,
+        help="Optional AWS session token.",
+    )
 
     args = parser.parse_args()
+    create_if_missing = args.create_table or bool(args.endpoint_url)
+
+    log.info(
+        "Ingestion config: file=%s table=%s region=%s endpoint=%s create_table_if_missing=%s profile=%s",
+        args.file_path,
+        args.table_name,
+        args.region,
+        args.endpoint_url or "aws-managed",
+        create_if_missing,
+        args.aws_profile or "default-chain",
+    )
 
     if not args.skip_processing:
         log.info("Starting Data Processing Phase...")
@@ -291,6 +348,11 @@ def main():
             table_name=args.table_name,
             region_name=args.region,
             endpoint_url=args.endpoint_url,
+            create_table_if_missing=create_if_missing,
+            aws_profile=args.aws_profile,
+            aws_access_key_id=args.aws_access_key_id,
+            aws_secret_access_key=args.aws_secret_access_key,
+            aws_session_token=args.aws_session_token,
         )
 
 

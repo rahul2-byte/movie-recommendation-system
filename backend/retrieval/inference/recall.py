@@ -38,7 +38,7 @@ class RecallService:
                 ]
                 self._initialized = True
                 log.info(
-                    "recall.init.success retriever_count=%s duration_ms=%s",
+                    "recall.init.success retriever_count={} duration_ms={}",
                     len(self.retrievers),
                     int((time.perf_counter() - start) * 1000),
                 )
@@ -50,7 +50,7 @@ class RecallService:
         try:
             output = await retriever.retrieve(query, top_k=top_k * 2)
             log.info(
-                "recall.retriever.success request_id=%s retriever=%s candidates=%s duration_ms=%s",
+                "recall.retriever.success request_id={} retriever={} candidates={} duration_ms={}",
                 request_id,
                 retriever.name,
                 len(output),
@@ -59,7 +59,7 @@ class RecallService:
             return output
         except Exception:
             log.exception(
-                "recall.retriever.failed request_id=%s retriever=%s duration_ms=%s",
+                "recall.retriever.failed request_id={} retriever={} duration_ms={}",
                 request_id,
                 retriever.name,
                 int((time.perf_counter() - start) * 1000),
@@ -74,7 +74,7 @@ class RecallService:
         await self._ensure_initialized()
         total_start = time.perf_counter()
         log.info(
-            "recall.start request_id=%s top_k=%s seeds=%s",
+            "recall.start request_id={} top_k={} seeds={}",
             request_id,
             top_k,
             query.seed_movie_ids,
@@ -104,7 +104,7 @@ class RecallService:
         ]
         final.sort(key=lambda c: c.score, reverse=True)
         log.info(
-            "recall.success request_id=%s merged_candidates=%s returned=%s duration_ms=%s",
+            "recall.success request_id={} merged_candidates={} returned={} duration_ms={}",
             request_id,
             len(final),
             min(len(final), top_k),

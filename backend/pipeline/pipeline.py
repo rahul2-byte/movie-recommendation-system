@@ -35,7 +35,7 @@ class RecommendationPipeline:
         req = request_id or "n/a"
         t0 = time.perf_counter()
         log.info(
-            "pipeline.start request_id=%s seed_count=%s top_n=%s seeds=%s",
+            "pipeline.start request_id={} seed_count={} top_n={} seeds={}",
             req,
             len(query.seed_movie_ids),
             top_n,
@@ -47,7 +47,7 @@ class RecommendationPipeline:
             s0 = time.perf_counter()
             seeds_meta = await self.movie_store.get_many(query.seed_movie_ids)
             log.info(
-                "pipeline.step.seed_fetch request_id=%s requested=%s found=%s duration_ms=%s",
+                "pipeline.step.seed_fetch request_id={} requested={} found={} duration_ms={}",
                 req,
                 len(query.seed_movie_ids),
                 len(seeds_meta),
@@ -55,14 +55,14 @@ class RecommendationPipeline:
             )
             if not seeds_meta:
                 log.warning(
-                    "pipeline.no_seeds_found request_id=%s seeds=%s",
+                    "pipeline.no_seeds_found request_id={} seeds={}",
                     req,
                     query.seed_movie_ids,
                 )
                 return []
         except Exception:
             log.exception(
-                "pipeline.seed_fetch_failed request_id=%s seeds=%s",
+                "pipeline.seed_fetch_failed request_id={} seeds={}",
                 req,
                 query.seed_movie_ids,
             )
@@ -73,16 +73,16 @@ class RecommendationPipeline:
             s1 = time.perf_counter()
             candidates = await self.recall_service.recall(query, top_k=500, request_id=req)
             log.info(
-                "pipeline.step.recall request_id=%s candidates=%s duration_ms=%s",
+                "pipeline.step.recall request_id={} candidates={} duration_ms={}",
                 req,
                 len(candidates),
                 int((time.perf_counter() - s1) * 1000),
             )
             if not candidates:
-                log.warning("pipeline.no_candidates request_id=%s", req)
+                log.warning("pipeline.no_candidates request_id={}", req)
                 return []
         except Exception:
-            log.exception("pipeline.recall_failed request_id=%s", req)
+            log.exception("pipeline.recall_failed request_id={}", req)
             raise
 
         # 2. Fetch Candidate Metadata (Batch from DB)
@@ -100,7 +100,7 @@ class RecommendationPipeline:
                     valid_meta.append(meta_map[c.movie_id])
 
             log.info(
-                "pipeline.step.candidate_meta request_id=%s requested=%s fetched=%s valid=%s duration_ms=%s",
+                "pipeline.step.candidate_meta request_id={} requested={} fetched={} valid={} duration_ms={}",
                 req,
                 len(candidate_ids),
                 len(candidates_meta_list),
@@ -109,10 +109,10 @@ class RecommendationPipeline:
             )
 
             if not valid_candidates:
-                log.warning("pipeline.no_valid_candidates request_id=%s", req)
+                log.warning("pipeline.no_valid_candidates request_id={}", req)
                 return []
         except Exception:
-            log.exception("pipeline.candidate_meta_failed request_id=%s", req)
+            log.exception("pipeline.candidate_meta_failed request_id={}", req)
             raise
 
         # 3. Feature Engineering: Build features on-the-fly
@@ -120,14 +120,14 @@ class RecommendationPipeline:
             s3 = time.perf_counter()
             features_df = self.feature_builder.build_features(seeds_meta, valid_meta)
             log.info(
-                "pipeline.step.features request_id=%s rows=%s cols=%s duration_ms=%s",
+                "pipeline.step.features request_id={} rows={} cols={} duration_ms={}",
                 req,
                 len(features_df.index) if hasattr(features_df, "index") else 0,
                 len(features_df.columns) if hasattr(features_df, "columns") else 0,
                 int((time.perf_counter() - s3) * 1000),
             )
         except Exception:
-            log.exception("pipeline.feature_build_failed request_id=%s", req)
+            log.exception("pipeline.feature_build_failed request_id={}", req)
             raise
 
         # 4. Ranking: Score candidates using LightGBM
@@ -139,13 +139,13 @@ class RecommendationPipeline:
                 limit=top_n * 2,
             )
             log.info(
-                "pipeline.step.rank request_id=%s ranked=%s duration_ms=%s",
+                "pipeline.step.rank request_id={} ranked={} duration_ms={}",
                 req,
                 len(ranked_candidates),
                 int((time.perf_counter() - s4) * 1000),
             )
         except Exception:
-            log.exception("pipeline.rank_failed request_id=%s", req)
+            log.exception("pipeline.rank_failed request_id={}", req)
             raise
 
         # 5. Format Response
@@ -166,7 +166,7 @@ class RecommendationPipeline:
                 final_results.append(result)
 
         log.info(
-            "pipeline.success request_id=%s results=%s total_duration_ms=%s",
+            "pipeline.success request_id={} results={} total_duration_ms={}",
             req,
             len(final_results),
             int((time.perf_counter() - t0) * 1000),

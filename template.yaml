@@ -55,7 +55,6 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Ref Environment
-          S3_BUCKET: !Ref S3BucketName
           S3_ARTIFACT_BUCKET: !Ref S3BucketName
           AWS_REGION: !Ref AWS::Region
           DYNAMODB_TABLE_NAME: !Ref DynamoDBTableName

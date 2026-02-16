@@ -122,7 +122,7 @@ def main():
         log.info("Step 7/7: Two-Tower artifacts found, skipping.")
 
     # 8. Organize Artifacts for Production
-    log.info("Step 8/8: Organizing Models for Production...")
+    log.info("Step 8/9: Organizing Models for Production...")
     MODELS_DIR = BACKEND_DIR / "artifacts" / "models"
     RETRIEVAL_DIR = MODELS_DIR / "retrieval"
     RANKING_DIR = MODELS_DIR / "ranking"
@@ -156,6 +156,11 @@ def main():
         shutil.copy2(src_ranker, RANKING_DIR / "lgbm_ranker.txt")
 
     log.info(f"Models organized in {MODELS_DIR}")
+
+    # 9. Regenerate runtime retrieval artifacts (FAISS + movie_id_to_idx.json)
+    # from the latest native outputs to avoid stale mappings in artifacts/models/*.
+    log.info("Step 9/9: Finalizing retrieval artifacts for runtime...")
+    run_command("python3 scripts/finalize_artifacts.py")
 
     log.info("--- [C++] Central Native Training Pipeline Complete! ---")
 

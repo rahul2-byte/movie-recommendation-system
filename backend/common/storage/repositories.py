@@ -76,6 +76,8 @@ class DynamoDBMovieRepository:
             "rating": item.get("vote_average", 0.0),
             "voteCount": vote_count,
             "vote_count": vote_count,
+            "imdb_rating": item.get("imdb_rating"),
+            "imdb_votes": int(item.get("imdb_votes", 0)) if item.get("imdb_votes") is not None else 0,
             "keywords": item.get("keywords", []),
             "user_tags": item.get("user_tags", []),
             "runtime_minutes": item.get("runtime_minutes", 0),
@@ -110,7 +112,7 @@ class DynamoDBMovieRepository:
                     RequestItems={
                         self.table_name: {
                             "Keys": keys,
-                            "ProjectionExpression": "movieId, tmdbId, title, overview, poster_path, backdrop_path, release_year, vote_average, vote_count, genres, user_tags, keywords, runtime_minutes, popularity_score",
+                            "ProjectionExpression": "movieId, tmdbId, title, overview, poster_path, backdrop_path, release_year, vote_average, vote_count, imdb_rating, imdb_votes, genres, user_tags, keywords, runtime_minutes, popularity_score",
                         }
                     },
                 )
