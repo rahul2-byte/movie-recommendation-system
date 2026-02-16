@@ -65,6 +65,7 @@ jobs:
             --stack-name movie-rec-stack \
             --region ap-south-1 \
             --capabilities CAPABILITY_IAM \
+            --image-repository $ECR_REGISTRY/$ECR_REPOSITORY \
             --parameter-overrides \
               S3BucketName=${{ secrets.S3_BUCKET_NAME }} \
               Environment=PROD \
