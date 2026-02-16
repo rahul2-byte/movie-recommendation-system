@@ -56,7 +56,6 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref Environment
           S3_ARTIFACT_BUCKET: !Ref S3BucketName
-          AWS_REGION: !Ref AWS::Region
           DYNAMODB_TABLE_NAME: !Ref DynamoDBTableName
           TMDB_ACCESS_TOKEN: !Ref TmdbAccessToken
           IMDB_API_KEY: !Ref ImdbApiKey
