@@ -29,8 +29,8 @@ Parameters:
     AllowedValues: [LOCAL, PROD]
   AllowedOrigins:
     Type: String
-    Description: JSON array of allowed CORS origins (e.g. ["https://app.example.com"])
-    Default: '["http://localhost:3000","http://127.0.0.1:3000"]'
+    Description: Allowed CORS origin (single origin URL, no trailing slash).
+    Default: http://localhost:3000
 
 Globals:
   Function:
@@ -38,6 +38,17 @@ Globals:
     MemorySize: 2048 # Recommended due to FAISS and LightGBM memory usage
 
 Resources:
+  PublicApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowOrigin: !Sub "'${AllowedOrigins}'"
+        AllowMethods: "'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'"
+        AllowHeaders: "'Content-Type,Authorization,X-Requested-With,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+        AllowCredentials: true
+        MaxAge: "'600'"
+
   MovieRecommendationApi:
     Type: AWS::Serverless::Function
     Properties:
@@ -49,11 +60,13 @@ Resources:
         ProxyApiRoot:
           Type: Api
           Properties:
+            RestApiId: !Ref PublicApi
             Path: /
             Method: ANY
         ProxyApiGreedy:
           Type: Api
           Properties:
+            RestApiId: !Ref PublicApi
             Path: /{proxy+}
             Method: ANY
       Environment:
@@ -82,4 +95,4 @@ Resources:
 Outputs:
   ApiUrl:
     Description: "API Gateway endpoint URL"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+    Value: !Sub "https://${PublicApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
