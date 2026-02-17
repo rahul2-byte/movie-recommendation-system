@@ -1,7 +1,9 @@
 import os
+import json
 from pathlib import Path
 from typing import Dict, List
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Root directory
@@ -16,7 +18,10 @@ class Settings(BaseSettings):
     LOCAL_DATA_PATH: str = "data"
     LOCAL_MLRUNS_PATH: str = "mlruns"
 
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    ALLOWED_ORIGINS: str | List[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
     REQUEST_TIMEOUT: int = 10
     MAX_RETRIES: int = 5
     MAX_CONCURRENT_REQUESTS: int = 50
@@ -54,6 +59,26 @@ class Settings(BaseSettings):
         env_file=str(PROJECT_ROOT / ".env"), env_file_encoding="utf-8", extra="ignore"
     )
 
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, value):
+        if isinstance(value, list):
+            return [str(v).strip() for v in value if str(v).strip()]
+        if value is None:
+            return ["http://localhost:3000", "http://127.0.0.1:3000"]
+        if isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                return ["http://localhost:3000", "http://127.0.0.1:3000"]
+            try:
+                parsed = json.loads(raw)
+                if isinstance(parsed, list):
+                    return [str(v).strip() for v in parsed if str(v).strip()]
+            except json.JSONDecodeError:
+                pass
+            return [v.strip() for v in raw.split(",") if v.strip()]
+        return ["http://localhost:3000", "http://127.0.0.1:3000"]
+
 
 try:
     settings = Settings()
@@ -86,6 +111,8 @@ except Exception as e:
             self.AWS_REGION = "ap-south-1"
             self.DYNAMODB_TABLE_NAME = "Movies"
             self.S3_ARTIFACT_BUCKET = "gemini-movie-artifacts"
+            self.AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "dummy")
+            self.AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "dummy")
             self.AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL", "")
             self.LOG_FORMAT_JSON = True
             self.TRACE_SAMPLE_SIZE = 2
