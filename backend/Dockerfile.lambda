@@ -2,24 +2,17 @@ FROM public.ecr.aws/lambda/python:3.10 AS builder
 
 WORKDIR /build
 
-# Install build essentials for potential native deps
-# RUN yum install -y gcc-c++ make cmake
-
-# Force binary install for lightgbm to avoid compilation (gcc missing)
-# RUN pip install --upgrade pip && \
-#     pip install --no-cache-dir --target /install --only-binary lightgbm lightgbm==3.3.5
-
 COPY requirements.txt .
 # Install to a specific directory for easy copying
 RUN pip install --no-cache-dir --target /install --only-binary :all: -r requirements.txt
+RUN mkdir -p /install/lib && \
+    cp $(ls /install/scikit_learn.libs/libgomp*.so* 2>/dev/null | head -n 1) /install/lib/libgomp.so.1 || \
+    cp $(ls /install/scipy.libs/libgomp*.so* 2>/dev/null | head -n 1) /install/lib/libgomp.so.1
 
 # --- Final Stage ---
 FROM public.ecr.aws/lambda/python:3.10
 
 WORKDIR ${LAMBDA_TASK_ROOT}
-
-# Install ONLY essential runtime libs for FAISS and LightGBM
-RUN yum install -y libgomp mesa-libGL && yum clean all
 
 # Copy installed dependencies from builder
 COPY --from=builder /install ${LAMBDA_TASK_ROOT}
