@@ -27,6 +27,10 @@ Parameters:
     Type: String
     Default: PROD
     AllowedValues: [LOCAL, PROD]
+  AllowedOrigins:
+    Type: String
+    Description: JSON array of allowed CORS origins (e.g. ["https://app.example.com"])
+    Default: '["http://localhost:3000","http://127.0.0.1:3000"]'
 
 Globals:
   Function:
@@ -55,6 +59,7 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Ref Environment
+          ALLOWED_ORIGINS: !Ref AllowedOrigins
           S3_ARTIFACT_BUCKET: !Ref S3BucketName
           DYNAMODB_TABLE_NAME: !Ref DynamoDBTableName
           TMDB_ACCESS_TOKEN: !Ref TmdbAccessToken
