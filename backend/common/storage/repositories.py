@@ -178,7 +178,7 @@ class S3ArtifactRepository:
         self.bucket_name = bucket_name
         self.s3_client = boto3.client('s3', region_name=region_name)
         # Ephemeral cache directory
-        self.cache_dir = Path("/tmp/gemini_artifacts")
+        self.cache_dir = Path("/tmp/movie_artifacts")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         log.info("s3.repo.init bucket=%s region=%s cache_dir=%s", self.bucket_name, region_name, self.cache_dir)
 

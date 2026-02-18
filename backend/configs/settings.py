@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     
     AWS_REGION: str = "ap-south-1"
     DYNAMODB_TABLE_NAME: str = "Movies"
-    S3_ARTIFACT_BUCKET: str = "gemini-movie-artifacts"
+    S3_ARTIFACT_BUCKET: str = "movie-artifacts"
     AWS_ACCESS_KEY_ID: str = "dummy"
     AWS_SECRET_ACCESS_KEY: str = "dummy"
     AWS_ENDPOINT_URL: str = ""
@@ -110,7 +110,7 @@ except Exception as e:
             self.IMDB_RATE_LIMIT = 20
             self.AWS_REGION = "ap-south-1"
             self.DYNAMODB_TABLE_NAME = "Movies"
-            self.S3_ARTIFACT_BUCKET = "gemini-movie-artifacts"
+            self.S3_ARTIFACT_BUCKET = "movie-artifacts"
             self.AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "dummy")
             self.AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "dummy")
             self.AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL", "")

@@ -8,7 +8,7 @@ storage:
   dynamodb_table: "${settings.DYNAMODB_TABLE_NAME}"
   artifact_bucket: "${settings.S3_ARTIFACT_BUCKET}"
   # Local ephemeral cache for downloaded S3 artifacts
-  artifact_cache_dir: "/tmp/gemini_artifacts"
+  artifact_cache_dir: "/tmp/movie_artifacts"
 
 # --- Model Artifacts (S3 Keys) ---
 # Models allow simple key lookups. The code will prefix with s3://{bucket}/
