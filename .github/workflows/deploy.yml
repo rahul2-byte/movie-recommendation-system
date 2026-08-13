@@ -35,7 +35,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: movie-recommendation-backend
           IMAGE_TAG: ${{ github.sha }}
-          MODEL_BUNDLE_PATH: backend/model_bundle
+          MODEL_BUNDLE_PATH: backend/model_bundle/movielens-32m-4retriever-ranker-v1
         run: |
           test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"
           docker buildx build \

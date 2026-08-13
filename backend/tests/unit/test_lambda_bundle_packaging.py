@@ -27,6 +27,6 @@ def test_lambda_image_and_sam_template_configure_the_model_bundle_contract():
     assert "RUN test -f ${LAMBDA_TASK_ROOT}/model_bundle/bundle_manifest.json" in dockerfile
     assert 'ENV MODEL_BUNDLE_DIR="/var/task/model_bundle"' in dockerfile
     assert "MODEL_BUNDLE_DIR: /var/task/model_bundle" in template
-    assert "MODEL_BUNDLE_PATH: backend/model_bundle" in workflow
+    assert "MODEL_BUNDLE_PATH: backend/model_bundle/movielens-32m-4retriever-ranker-v1" in workflow
     assert 'test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"' in workflow
     assert "--build-arg MODEL_BUNDLE_PATH=$MODEL_BUNDLE_PATH" in workflow
