@@ -269,6 +269,8 @@ def _load_tmdb_ids(
 
 def load_model_bundle(root: Path | str) -> ModelBundle:
     """Verify a bundle before serving any request and load compact retrieval state."""
+    # Hash and metadata validation happens before serving. A mixed-version
+    # bundle could map FAISS positions to the wrong TMDB IDs or feature order.
     root = Path(root).resolve()
     manifest_path = root / "bundle_manifest.json"
     if not manifest_path.is_file():

@@ -16,6 +16,9 @@ def collect_source_candidates(
         rank = 0
         for candidate_id, _ in retriever.retrieve_one(seed_tmdb_id, top_k):
             candidate_id = int(candidate_id)
+            # Seeds are already known user preferences and must not consume a
+            # recommendation slot. Duplicate results from one seed add no new
+            # evidence, so only the first occurrence contributes a rank.
             if candidate_id <= 0 or candidate_id in seed_set or candidate_id in seen:
                 continue
             seen.add(candidate_id)
@@ -40,6 +43,9 @@ def fuse_reciprocal_ranks(
     candidate_limit: int,
 ) -> list[tuple[int, float]]:
     """Fuse source ranks without assuming comparable raw model scores."""
+    # ALS, graph, content, and neural scores have different numerical scales.
+    # Rank fusion keeps one source from dominating merely because its raw
+    # similarity values are larger.
     candidate_ids = sorted(
         {movie_id for rows in source_ranks.values() for movie_id in rows}
     )

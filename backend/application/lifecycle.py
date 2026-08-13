@@ -17,7 +17,8 @@ def get_movie_store() -> MovieStore:
 
     if _movie_store is None:
         log.info("Lifecycle: Initializing MovieStore (Lazy)...")
-        # MovieStore now connects to DynamoDB internally
+        # Lazy construction keeps module import cheap and lets warm Lambda
+        # containers reuse the same metadata client across requests.
         _movie_store = MovieStore()
 
     return _movie_store
@@ -31,7 +32,8 @@ def get_pipeline() -> BundleRecommendationPipeline:
     if _pipeline is None:
         log.info("Lifecycle: Initializing Recommendation Pipeline...")
 
-        # 1. Store
+        # Load the bundle once at startup. Serving a different model release
+        # per request would add latency and could mix incompatible artifacts.
         store = get_movie_store()
 
         bundle_dir = str(settings.MODEL_BUNDLE_DIR).strip()

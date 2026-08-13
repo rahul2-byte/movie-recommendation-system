@@ -57,6 +57,9 @@ def _split_user_events(
     events: pd.DataFrame, config: RankingDataConfig
 ) -> tuple[pd.DataFrame, pd.DataFrame] | None:
     """Return strict earlier history and later events, or exclude the user."""
+    # Ranking must model production time: earlier interactions form seeds and
+    # later interactions are ground truth. Equal timestamps at the boundary
+    # are rejected so a target cannot leak into its own retrieval history.
     events = events.sort_values(["timestamp", "tmdb_id"], kind="stable")
     total = len(events)
     if total < config.minimum_events_per_user:
@@ -269,6 +272,9 @@ def _limit_candidates_by_rrf(
     candidate_limit: int,
 ) -> np.ndarray:
     """Cap candidates by retrieval-only RRF; labels are never an input."""
+    # Labels are deliberately absent here. Using targets during truncation
+    # would inflate retrieval recall and give the ranker an unrealistic set of
+    # candidates to score.
     if len(candidate_ids) <= candidate_limit:
         return candidate_ids
     scores = np.zeros(len(candidate_ids), dtype=np.float32)
@@ -831,6 +837,9 @@ def materialize_ranking_features(
     popularity_train_path: Path | None = None,
 ) -> RankingFeatureResult:
     """Materialize chunked, resumable ranking features from immutable inputs."""
+    # The feature-code hash is part of the output identity. A transformation
+    # change therefore creates a new artifact instead of silently changing an
+    # existing Parquet file's meaning.
     candidate_dir = candidate_dir.resolve()
     ranking_data_dir = ranking_data_dir.resolve()
     candidate_path = candidate_dir / candidate_file_name

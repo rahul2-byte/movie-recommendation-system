@@ -41,6 +41,9 @@ class BundleRecommendationPipeline:
         request_id: str | None = None,
     ) -> list[dict[str, Any]]:
         """Return up to ``top_n`` ranked, metadata-enriched movie records."""
+        # Metadata enrichment is downstream of ranking. A lookup failure drops
+        # one display record without changing the model candidate set or
+        # failing the entire recommendation request.
         seeds = list(dict.fromkeys(query.seed_tmdb_ids))
         seed_movies = await self.movie_store.get_many_by_tmdb_ids(seeds)
         seed_metadata = {int(movie["tmdbId"]): movie for movie in seed_movies}

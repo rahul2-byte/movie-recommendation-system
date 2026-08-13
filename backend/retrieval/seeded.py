@@ -32,6 +32,9 @@ def collect_seed_candidates(
     seed_set = set(seeds)
     candidate_records: list[SeedCandidate] = []
     for seed_id in seeds:
+        # Each seed is queried independently because the retrievers expose
+        # item-to-item indexes; pooling seeds before retrieval would require a
+        # new user-vector contract and change the model semantics.
         seen: set[int] = set()
         rank = 0
         for candidate_id, score in retrieve_one(seed_id, top_k):

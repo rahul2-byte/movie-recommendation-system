@@ -35,6 +35,8 @@ def build_feature_frame(
     schema: FeatureSchema,
 ) -> pd.DataFrame:
     """Build finite, ordered features using only candidate and inner-train data."""
+    # Column order is part of the LightGBM contract. The persisted schema and
+    # serving loader must agree before this matrix can be used for inference.
     required = {"query_index", "candidate_tmdb_id", "label"}
     missing = required - set(candidates.columns)
     if missing:
@@ -43,6 +45,8 @@ def build_feature_frame(
     popularity = train_interaction_counts.astype(np.float32)
 
     def column_or_zeros(name: str) -> pd.Series:
+        # Missing retrieval evidence means this source did not return the
+        # candidate; zero represents absence rather than an imputed score.
         return candidates.get(name, pd.Series(0, index=candidates.index))
 
     for name in schema.feature_names:

@@ -183,6 +183,8 @@ class BundleRecommender:
             )
             for source, retriever in retrievers.items()
         }
+        # Fusion is retrieval-only: the ranker can reorder these candidates,
+        # but it cannot recover a relevant movie omitted at this stage.
         fused_candidates = fuse_reciprocal_ranks(
             source_rows, self.rank_constant, self.candidate_limit
         )
@@ -192,6 +194,8 @@ class BundleRecommender:
         features = np.zeros(
             (len(candidate_ids), len(self.feature_names)), dtype=np.float32
         )
+        # Drive columns from the versioned feature names rather than positional
+        # assumptions so serving remains aligned with training.
         for row, item_id in enumerate(candidate_ids):
             for column, name in enumerate(self.feature_names):
                 if name == "retrieval_source_count":
