@@ -1,8 +1,6 @@
+from typing import Any
+
 from configs.settings import settings
-from features.builder import FeatureBuilder
-from pipeline.pipeline import RecommendationPipeline
-from ranking.inference.lgbm import LGBMRanker
-from retrieval.inference.recall import RecallService
 from serving.pipeline import BundleRecommendationPipeline
 from serving.recommender import BundleRecommender
 
@@ -28,7 +26,7 @@ def get_movie_store() -> MovieStore:
     return _movie_store
 
 
-def get_pipeline() -> RecommendationPipeline:
+def get_pipeline() -> Any:
     global _pipeline
     if _pipeline is not None:
         return _pipeline
@@ -46,6 +44,13 @@ def get_pipeline() -> RecommendationPipeline:
             )
             log.info("Lifecycle: Bundle-backed pipeline fully initialized.")
             return _pipeline
+
+        # Legacy fallback remains available for local migration only. Import it
+        # lazily so bundle-backed startup does not load the old stack.
+        from features.builder import FeatureBuilder
+        from pipeline.pipeline import RecommendationPipeline
+        from ranking.inference.lgbm import LGBMRanker
+        from retrieval.inference.recall import RecallService
 
         # 2. Feature Builder (Stateless)
         feature_builder = FeatureBuilder()
