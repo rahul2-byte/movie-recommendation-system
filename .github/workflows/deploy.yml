@@ -16,6 +16,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.8.17"
+
+      - name: Install locked dependencies
+        run: uv sync --frozen
+
+      - name: Run quality gates
+        run: |
+          uv run --frozen ruff check backend
+          PYTHONPATH=backend uv run --frozen pytest backend/tests/unit -q
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
