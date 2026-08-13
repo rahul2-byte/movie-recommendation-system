@@ -9,7 +9,7 @@ working algorithms or changing recommendation behavior.
 ## Canonical boundaries
 
 ```text
-api -> common.lifecycle -> serving -> common.services
+api -> application.lifecycle -> serving -> infrastructure.metadata
 data_pipeline -> training -> serving.model_bundle
 evaluation -> metrics/baselines/fusion/runners
 ```

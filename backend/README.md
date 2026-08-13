@@ -14,7 +14,7 @@ bundle is loaded from `MODEL_BUNDLE_DIR`; startup fails if it is unset.
 Directories:
 
 - `api/`: HTTP boundary.
-- `common/`: runtime settings, metadata clients, enrichment, and lifecycle.
+- `common/`: shared settings, external clients, enrichment, and logging.
 - `infrastructure/metadata/`: operational movie metadata repository and
   external metadata boundary.
 - `configs/`: canonical pipeline configuration.
