@@ -96,13 +96,11 @@ Backend responsibility: serve recommendation and movie APIs with production-safe
   - `movies.py`: movie search and movie detail APIs.
   - `recommend.py`: recommendation generation endpoint and click logging endpoint.
 - `common/`: shared runtime services.
-  - `lifecycle.py`: lazy initialization for MovieStore and RecommendationPipeline.
+  - `lifecycle.py`: lazy initialization for the bundle-backed pipeline.
   - `services/movie_store.py`: metadata access + TMDB/IMDb fallbacks.
-  - `storage/repositories.py`: DynamoDB and S3 artifact repository access.
-- `pipeline/pipeline.py`: end-to-end recommendation orchestration (recall -> features -> rank).
-- `retrieval/`: candidate generation logic (ALS, two-tower, TF-IDF, content-based, recall service).
-- `ranking/`: ranking inference logic (LightGBM ranker).
-- `features/`: runtime feature construction for ranking.
+- `serving/`: immutable bundle loading, four-retriever fusion, and ranking.
+- `data_pipeline/`: immutable preparation, temporal splits, and ranking data.
+- `evaluation/`: reproducible offline metrics and baselines.
 - `configs/`: environment and system configuration (paths, buckets, service limits).
 - `training/` and `scripts/`: offline data prep, model training, and utility jobs.
 - `Dockerfile.lambda`: production container image build for Lambda.
@@ -128,8 +126,8 @@ Frontend responsibility: provide a polished movie discovery UI and call backend 
 
 1. Frontend calls backend using `NEXT_PUBLIC_API_BASE`.
 2. Backend receives request on `/api/v1/...`.
-3. Lazy lifecycle initializes store/pipeline when first needed.
-4. Pipeline fetches candidates, builds features, ranks results.
+3. Lifecycle loads the validated immutable model bundle.
+4. Bundle retrievers generate candidates, the ranker scores them, and MovieStore enriches results.
 5. Response is returned and rendered in UI.
 
 ## Deployment snapshot

@@ -1,5 +1,3 @@
-from typing import Any
-
 from configs.settings import settings
 from serving.pipeline import BundleRecommendationPipeline
 from serving.recommender import BundleRecommender
@@ -26,7 +24,7 @@ def get_movie_store() -> MovieStore:
     return _movie_store
 
 
-def get_pipeline() -> Any:
+def get_pipeline() -> BundleRecommendationPipeline:
     global _pipeline
     if _pipeline is not None:
         return _pipeline
@@ -45,29 +43,4 @@ def get_pipeline() -> Any:
             log.info("Lifecycle: Bundle-backed pipeline fully initialized.")
             return _pipeline
 
-        # Legacy fallback remains available for local migration only. Import it
-        # lazily so bundle-backed startup does not load the old stack.
-        from features.builder import FeatureBuilder
-        from pipeline.pipeline import RecommendationPipeline
-        from ranking.inference.lgbm import LGBMRanker
-        from retrieval.inference.recall import RecallService
-
-        # 2. Feature Builder (Stateless)
-        feature_builder = FeatureBuilder()
-
-        # 3. Recall Service (Lazy Init)
-        recall_service = RecallService()
-
-        # 4. Ranker
-        ranker = LGBMRanker()
-
-        # 5. Pipeline
-        _pipeline = RecommendationPipeline(
-            recall_service=recall_service,
-            feature_builder=feature_builder,
-            ranker=ranker,
-            movie_store=store,
-        )
-        log.info("Lifecycle: Pipeline fully initialized.")
-
-    return _pipeline
+        raise RuntimeError("MODEL_BUNDLE_DIR is required for recommendation serving")

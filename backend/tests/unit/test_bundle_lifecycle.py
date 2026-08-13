@@ -1,3 +1,4 @@
+import pytest
 from common import lifecycle
 
 
@@ -32,3 +33,12 @@ def test_lifecycle_uses_bundle_pipeline_when_bundle_dir_is_configured(monkeypatc
         "recommender": "recommender",
         "movie_store": store,
     }
+
+
+def test_lifecycle_requires_bundle_configuration(monkeypatch):
+    monkeypatch.setattr(lifecycle.settings, "MODEL_BUNDLE_DIR", "")
+    monkeypatch.setattr(lifecycle, "_movie_store", object())
+    monkeypatch.setattr(lifecycle, "_pipeline", None)
+
+    with pytest.raises(RuntimeError, match="MODEL_BUNDLE_DIR is required"):
+        lifecycle.get_pipeline()
