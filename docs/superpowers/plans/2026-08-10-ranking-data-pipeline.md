@@ -25,8 +25,7 @@
 
 ## Current Unsafe Paths to Retire from the Authoritative Workflow
 
-- `backend/training/ranking/train_ranker_v2.py` constructs a `GroupShuffleSplit` over a precomputed file. It is not temporal and therefore is not acceptable for this pipeline.
-- `backend/training/ranking/train_ranker.py` downloads an assumed S3 dataset and also performs grouped random splitting. It is not an authoritative local training entry point.
+- The former `train_ranker_v2.py` and `train_ranker.py` entry points used non-temporal/grouped random splits and were removed; they were not authoritative local training entry points.
 - `backend/features/generate_training_features.py` expects obsolete `ranking_dataset.parquet` fields and calls the current `FeatureBuilder` with an incompatible interface.
 - `backend/ranking/inference/lgbm.py` silently fills missing features and falls back to unranked candidates on a feature mismatch. It must not be connected to a new artifact until a versioned feature-schema contract exists.
 
