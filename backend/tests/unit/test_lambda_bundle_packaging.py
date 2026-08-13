@@ -8,6 +8,7 @@ def test_lambda_image_and_sam_template_configure_the_model_bundle_contract():
     dockerfile = (ROOT / "backend" / "Dockerfile.lambda").read_text()
     template = (ROOT / "template.yaml").read_text()
     workflow = (ROOT / ".github" / "workflows" / "deploy.yml").read_text()
+    preflight = (ROOT / "backend" / "scripts" / "lambda_preflight.sh").read_text()
 
     assert "ARG MODEL_BUNDLE_PATH" in dockerfile
     for package in (
@@ -30,3 +31,6 @@ def test_lambda_image_and_sam_template_configure_the_model_bundle_contract():
     assert "MODEL_BUNDLE_PATH: backend/model_bundle/movielens-32m-4retriever-ranker-v1" in workflow
     assert 'test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"' in workflow
     assert "--build-arg MODEL_BUNDLE_PATH=$MODEL_BUNDLE_PATH" in workflow
+    assert 'MODEL_BUNDLE_PATH="${MODEL_BUNDLE_PATH:-backend/model_bundle/movielens-32m-4retriever-ranker-v1}"' in preflight
+    assert 'test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"' in preflight
+    assert "--build-arg MODEL_BUNDLE_PATH=$MODEL_BUNDLE_PATH" in preflight
