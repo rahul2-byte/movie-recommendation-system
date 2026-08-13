@@ -25,3 +25,9 @@ fallback metadata provider when a record is unavailable locally.
 The CI workflow enforces the static quality gates. Docker and SAM require the
 network-enabled release environment because dependency installation occurs in
 the image builder stage.
+
+## Generated local state
+
+Local MLflow SQLite state and enriched JSON exports are generated during
+development and are not release inputs. The data pipeline recreates them when
+needed; production serving uses the immutable model bundle instead.

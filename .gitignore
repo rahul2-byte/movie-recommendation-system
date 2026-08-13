@@ -55,6 +55,8 @@ logs/
 outputs/
 wandb/
 mlruns/
+backend/mlflow.db
+backend/data/raw/movies_enriched.json
 
 # =========================
 # OS / IDE
