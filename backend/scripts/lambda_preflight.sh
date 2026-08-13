@@ -19,6 +19,13 @@ S3_ARTIFACT_BUCKET="${S3_ARTIFACT_BUCKET:-}"
 ENVIRONMENT="${ENVIRONMENT:-PROD}"
 MODEL_BUNDLE_PATH="${MODEL_BUNDLE_PATH:-backend/model_bundle/movielens-32m-4retriever-ranker-v1}"
 
+cd "$ROOT_DIR"
+
+if ! test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"; then
+  echo "ERROR: Model bundle manifest not found: $MODEL_BUNDLE_PATH/bundle_manifest.json" >&2
+  exit 1
+fi
+
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
     echo "ERROR: Required command '$1' is not installed." >&2
@@ -33,13 +40,6 @@ trap cleanup EXIT
 
 require_cmd docker
 require_cmd curl
-
-cd "$ROOT_DIR"
-
-if ! test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"; then
-  echo "ERROR: Model bundle manifest not found: $MODEL_BUNDLE_PATH/bundle_manifest.json" >&2
-  exit 1
-fi
 
 echo "[1/4] Building Lambda image from backend/Dockerfile.lambda..."
 docker build --no-cache --progress=plain \

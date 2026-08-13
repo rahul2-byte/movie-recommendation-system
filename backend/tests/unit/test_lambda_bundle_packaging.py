@@ -34,3 +34,4 @@ def test_lambda_image_and_sam_template_configure_the_model_bundle_contract():
     assert 'MODEL_BUNDLE_PATH="${MODEL_BUNDLE_PATH:-backend/model_bundle/movielens-32m-4retriever-ranker-v1}"' in preflight
     assert 'test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"' in preflight
     assert "--build-arg MODEL_BUNDLE_PATH=$MODEL_BUNDLE_PATH" in preflight
+    assert preflight.index('test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"') < preflight.index("trap cleanup EXIT")
