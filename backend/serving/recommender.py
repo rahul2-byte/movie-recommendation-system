@@ -11,6 +11,7 @@ import joblib
 import lightgbm as lgb
 import numpy as np
 
+from serving.candidate_fusion import collect_source_candidates, fuse_reciprocal_ranks
 from serving.model_bundle import ModelBundle, ModelBundleError, load_model_bundle
 
 _SOURCES = ("als", "item_graph", "two_tower", "content")
@@ -27,31 +28,6 @@ _SUPPORTED_FEATURES = {
     "candidate_train_interaction_count",
     "candidate_train_log_interaction_count",
 }
-
-
-def _collect_source_candidates(
-    retriever: Any, seed_tmdb_ids: list[int], top_k: int
-) -> dict[int, int]:
-    """Collect candidates using the offline seed-support rank semantics."""
-    evidence: dict[int, list[int]] = {}
-    seed_set = set(seed_tmdb_ids)
-    for seed_tmdb_id in seed_tmdb_ids:
-        seen: set[int] = set()
-        rank = 0
-        for candidate_id, _ in retriever.retrieve_one(seed_tmdb_id, top_k):
-            candidate_id = int(candidate_id)
-            if candidate_id <= 0 or candidate_id in seed_set or candidate_id in seen:
-                continue
-            seen.add(candidate_id)
-            rank += 1
-            evidence.setdefault(candidate_id, []).append(rank)
-            if rank == top_k:
-                break
-    ordered = sorted(
-        evidence,
-        key=lambda item_id: (-len(evidence[item_id]), min(evidence[item_id]), item_id),
-    )[:top_k]
-    return {item_id: rank for rank, item_id in enumerate(ordered, start=1)}
 
 
 def _content_text(field: str, value: object) -> str:
@@ -200,27 +176,17 @@ class BundleRecommender:
             "content": self._content_retriever(seed_metadata),
         }
         source_rows = {
-            source: _collect_source_candidates(
+            source: collect_source_candidates(
                 retriever,
                 seeds,
                 int(getattr(retriever, "manifest", {}).get("per_seed_candidates", 200)),
             )
             for source, retriever in retrievers.items()
         }
-        candidate_ids = sorted(
-            {item_id for rows in source_rows.values() for item_id in rows}
+        fused_candidates = fuse_reciprocal_ranks(
+            source_rows, self.rank_constant, self.candidate_limit
         )
-        rrf_scores = {
-            item_id: sum(
-                1.0 / (self.rank_constant + rank)
-                for rows in source_rows.values()
-                if (rank := rows.get(item_id))
-            )
-            for item_id in candidate_ids
-        }
-        candidate_ids = sorted(
-            candidate_ids, key=lambda item_id: (-rrf_scores[item_id], item_id)
-        )[: self.candidate_limit]
+        candidate_ids = [item_id for item_id, _ in fused_candidates]
         if not candidate_ids:
             return []
         features = np.zeros(

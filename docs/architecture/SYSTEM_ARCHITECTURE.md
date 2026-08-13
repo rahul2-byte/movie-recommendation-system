@@ -15,8 +15,7 @@ Frontend
           -> serving.recommender
             -> ALS, item graph, two-tower, content retrievers
             -> rank fusion and LightGBM ranking
-          -> common.services.movie_store
-            -> infrastructure.metadata.MovieStore
+          -> infrastructure.metadata.MovieStore
               -> DynamoDB/catalog metadata
               -> TMDB fallback metadata
         -> API response
