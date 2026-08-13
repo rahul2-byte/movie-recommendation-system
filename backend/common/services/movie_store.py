@@ -8,6 +8,9 @@ from typing import Any, Protocol
 from configs.settings import TMDB_IMAGE_BASE, TMDB_POSTER_SIZE
 
 from common.clients.tmdb import get_tmdb_client
+from common.logger import get_logger
+
+log = get_logger(__name__)
 
 
 class TMDBMovieClient(Protocol):
@@ -105,8 +108,23 @@ class MovieStore:
         return await self.get(tmdb_id)
 
     async def get_many(self, tmdb_ids: list[int]) -> list[dict[str, Any]]:
-        movies = await asyncio.gather(*(self.get(tmdb_id) for tmdb_id in tmdb_ids))
-        return [movie for movie in movies if movie is not None]
+        """Fetch metadata while allowing individual optional lookups to fail.
+
+        Recommendation retrieval can still produce useful candidates when one
+        metadata request is unavailable, so failed records are omitted rather
+        than aborting the entire batch.
+        """
+        responses = await asyncio.gather(
+            *(self.get(tmdb_id) for tmdb_id in tmdb_ids), return_exceptions=True
+        )
+        movies: list[dict[str, Any]] = []
+        for tmdb_id, response in zip(tmdb_ids, responses, strict=True):
+            if isinstance(response, Exception):
+                log.warning("Movie metadata lookup failed", tmdb_id=tmdb_id)
+                continue
+            if response is not None:
+                movies.append(response)
+        return movies
 
     async def get_many_by_tmdb_ids(self, tmdb_ids: list[int]) -> list[dict[str, Any]]:
         return await self.get_many(tmdb_ids)

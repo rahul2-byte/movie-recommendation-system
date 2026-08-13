@@ -19,3 +19,6 @@ settings are loaded explicitly from the YAML files listed above.
 YAML keys describe offline pipeline contracts. Environment settings remain
 uppercase because they mirror deployment variables. The supported runtime
 requires `MODEL_BUNDLE_DIR` to point to an immutable model bundle.
+
+Runtime model artifacts are never downloaded from S3. The Lambda image contains
+the validated bundle; DynamoDB and TMDB are used only for movie metadata.

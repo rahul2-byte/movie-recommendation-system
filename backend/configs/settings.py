@@ -42,7 +42,6 @@ class Settings(BaseSettings):
 
     AWS_REGION: str = "ap-south-1"
     DYNAMODB_TABLE_NAME: str = "Movies"
-    S3_ARTIFACT_BUCKET: str = "movie-artifacts"
     AWS_ACCESS_KEY_ID: str = "dummy"
     AWS_SECRET_ACCESS_KEY: str = "dummy"
     AWS_ENDPOINT_URL: str = ""
@@ -111,7 +110,6 @@ except Exception as e:
             self.IMDB_RATE_LIMIT = 20
             self.AWS_REGION = "ap-south-1"
             self.DYNAMODB_TABLE_NAME = "Movies"
-            self.S3_ARTIFACT_BUCKET = "movie-artifacts"
             self.AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "dummy")
             self.AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "dummy")
             self.AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL", "")
@@ -144,7 +142,6 @@ IMDB_BASE_URL = settings.IMDB_BASE_URL
 IMDB_RATE_LIMIT = settings.IMDB_RATE_LIMIT
 AWS_REGION = settings.AWS_REGION
 DYNAMODB_TABLE_NAME = settings.DYNAMODB_TABLE_NAME
-S3_ARTIFACT_BUCKET = settings.S3_ARTIFACT_BUCKET
 AWS_ACCESS_KEY_ID = settings.AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY = settings.AWS_SECRET_ACCESS_KEY
 AWS_ENDPOINT_URL = settings.AWS_ENDPOINT_URL
@@ -163,14 +160,14 @@ if ENVIRONMENT == "LOCAL":
     INDICES_PATH = PROJECT_ROOT / "artifacts/indices"
     MODELS_PATH = PROJECT_ROOT / "artifacts/models"
 else:
-    DATA_BASE_PATH = f"s3://{S3_ARTIFACT_BUCKET}"
     MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "/tmp/mlruns")
-    INDICES_PATH = f"{DATA_BASE_PATH}/artifacts/indices"
-    MODELS_PATH = f"{DATA_BASE_PATH}/artifacts/models"
+    DATA_BASE_PATH = PROJECT_ROOT / settings.LOCAL_DATA_PATH
+    INDICES_PATH = PROJECT_ROOT / "artifacts/indices"
+    MODELS_PATH = PROJECT_ROOT / "artifacts/models"
 
-PROCESSED_DATA_PATH = f"{DATA_BASE_PATH}/processed"
-RAW_DATA_PATH = f"{DATA_BASE_PATH}/raw"
-INTERMEDIATE_DIR = Path(f"{DATA_BASE_PATH}/intermediate")
+PROCESSED_DATA_PATH = Path(DATA_BASE_PATH) / "processed"
+RAW_DATA_PATH = Path(DATA_BASE_PATH) / "raw"
+INTERMEDIATE_DIR = Path(DATA_BASE_PATH) / "intermediate"
 LINKS_CSV = Path(f"{RAW_DATA_PATH}/links.csv")
 RATINGS_PATH = f"{PROCESSED_DATA_PATH}/ratings.parquet"
 MOVIES_METADATA_PATH = f"{PROCESSED_DATA_PATH}/movies_enriched.parquet"

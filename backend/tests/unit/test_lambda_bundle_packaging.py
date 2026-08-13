@@ -29,6 +29,9 @@ def test_lambda_image_and_sam_template_configure_the_model_bundle_contract():
     )
     assert 'ENV MODEL_BUNDLE_DIR="/var/task/model_bundle"' in dockerfile
     assert "MODEL_BUNDLE_DIR: /var/task/model_bundle" in template
+    assert "S3BucketName:" not in template
+    assert "S3ReadPolicy" not in template
+    assert "S3_ARTIFACT_BUCKET" not in template
     assert (
         "MODEL_BUNDLE_PATH: backend/model_bundle/movielens-32m-4retriever-ranker-v1"
         in workflow
@@ -38,7 +41,9 @@ def test_lambda_image_and_sam_template_configure_the_model_bundle_contract():
     assert "astral-sh/setup-uv@v5" in workflow
     assert "uv sync --frozen" in workflow
     assert "uv run --frozen ruff check backend" in workflow
-    assert "uv run --frozen pytest backend/tests/unit -q" in workflow
+    assert "PYTHONPATH=backend uv run --frozen pytest -q" in workflow
+    assert "S3BucketName=" not in workflow
+    assert "S3_ARTIFACT_BUCKET" not in preflight
     assert (
         'MODEL_BUNDLE_PATH="${MODEL_BUNDLE_PATH:-backend/model_bundle/movielens-32m-4retriever-ranker-v1}"'
         in preflight

@@ -24,9 +24,8 @@ second model-training pipeline.
 2. Establish terminology in `docs/architecture/GLOSSARY.md`.
 3. Rename ambiguous private locals and add focused public docstrings.
 4. Remove confirmed orphan modules and stale lint exceptions.
-5. Rename `build_content_retriever.py` only if its import migration is demonstrated to be
-   low-risk; otherwise retain the stable path and document its dual TF-IDF and
-   metadata-content responsibility.
+5. Keep `build_content_retriever.py` as the shared TF-IDF and metadata-content
+   trainer; the misleading legacy filename has been removed.
 6. Re-run repository-wide path, import, test, and runtime checks.
 
 ## Non-goals

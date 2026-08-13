@@ -29,6 +29,13 @@ class FakeTMDBClient:
         return {"results": [{"id": 603, "title": "Example"}]}
 
 
+class PartiallyFailingTMDBClient(FakeTMDBClient):
+    async def fetch_movie_full(self, tmdb_id: int):
+        if tmdb_id == 680:
+            raise RuntimeError("TMDB unavailable")
+        return await super().fetch_movie_full(tmdb_id)
+
+
 def test_movie_store_uses_tmdb_for_metadata_and_search():
     store = MovieStore(tmdb_client=FakeTMDBClient())
 
@@ -44,3 +51,11 @@ def test_movie_store_uses_tmdb_for_metadata_and_search():
     assert [entry["tmdbId"] for entry in movies] == [603, 680]
     assert search == [{"tmdbId": 603, "movieId": 603, "title": "Example"}]
     assert not hasattr(store, "repository")
+
+
+def test_movie_store_skips_failed_optional_metadata_in_batch():
+    store = MovieStore(tmdb_client=PartiallyFailingTMDBClient())
+
+    movies = asyncio.run(store.get_many([603, 680]))
+
+    assert [movie["tmdbId"] for movie in movies] == [603]
