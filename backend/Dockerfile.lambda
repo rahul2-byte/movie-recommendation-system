@@ -22,16 +22,16 @@ COPY --from=builder /build/.venv ${LAMBDA_TASK_ROOT}/.venv
 COPY --from=builder /build/runtime-lib ${LAMBDA_TASK_ROOT}/lib
 
 # Copy ONLY production application code
-COPY main.py ${LAMBDA_TASK_ROOT}/
-COPY api/ ${LAMBDA_TASK_ROOT}/api/
-COPY common/ ${LAMBDA_TASK_ROOT}/common/
-COPY configs/ ${LAMBDA_TASK_ROOT}/configs/
-COPY features/ ${LAMBDA_TASK_ROOT}/features/
-COPY logger/ ${LAMBDA_TASK_ROOT}/logger/
-COPY pipeline/ ${LAMBDA_TASK_ROOT}/pipeline/
-COPY ranking/ ${LAMBDA_TASK_ROOT}/ranking/
-COPY retrieval/ ${LAMBDA_TASK_ROOT}/retrieval/
-COPY serving/ ${LAMBDA_TASK_ROOT}/serving/
+COPY backend/main.py ${LAMBDA_TASK_ROOT}/
+COPY backend/api/ ${LAMBDA_TASK_ROOT}/api/
+COPY backend/common/ ${LAMBDA_TASK_ROOT}/common/
+COPY backend/configs/ ${LAMBDA_TASK_ROOT}/configs/
+COPY backend/features/ ${LAMBDA_TASK_ROOT}/features/
+COPY backend/logger/ ${LAMBDA_TASK_ROOT}/logger/
+COPY backend/pipeline/ ${LAMBDA_TASK_ROOT}/pipeline/
+COPY backend/ranking/ ${LAMBDA_TASK_ROOT}/ranking/
+COPY backend/retrieval/ ${LAMBDA_TASK_ROOT}/retrieval/
+COPY backend/serving/ ${LAMBDA_TASK_ROOT}/serving/
 COPY ${MODEL_BUNDLE_PATH}/ ${LAMBDA_TASK_ROOT}/model_bundle/
 
 # Set production environment variables
