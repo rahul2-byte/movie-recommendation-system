@@ -5,8 +5,9 @@ Transforms raw API responses from TMDB and IMDb into a unified
 MovieData model.
 """
 
+from data_pipeline.movie_models import MovieData
+
 from common.logger import get_logger
-from common.models.movie import MovieData
 
 logger = get_logger(__name__)
 

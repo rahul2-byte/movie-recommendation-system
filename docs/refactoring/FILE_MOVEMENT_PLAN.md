@@ -13,6 +13,7 @@ moved until every listed consumer is migrated and the verification gate passes.
 | `backend/common/types.py:Candidate` | `backend/retrieval/contracts.py:RetrievalCandidate` | Retrieval candidate contract | migrated: integration contract test | High |
 | `backend/serving/recommender.py` | `backend/serving/recommender.py` + `backend/serving/candidate_fusion.py` | Candidate collection/fusion is pure serving-domain logic; bundle loading, feature assembly, and ranker inference remain together | bundle recommender tests, serving pipeline | Low |
 | `backend/common/services/tmdb_catalog_service.py` | `backend/infrastructure/metadata/catalog_service.py` | TMDB catalog reads are an external metadata adapter used by the catalog API | `backend/api/v1/catalog.py` | Low |
+| `backend/common/models/movie.py` | `backend/data_pipeline/movie_models.py` | Enriched movie records and their Parquet schema are data-pipeline contracts, not shared runtime models | enrichment service and Parquet writer | Medium |
 | `backend/data_pipeline/ranking.py` | keep as one pipeline module for now | Ranking-data preparation, candidate generation, held-out partitions, and feature materialization share schemas, hashing, resumability, and Parquet helpers | data-pipeline CLI and integration tests | Medium; split only when separate CLI/test ownership emerges |
 
 ## Deliberately not moving

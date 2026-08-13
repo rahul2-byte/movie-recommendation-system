@@ -11,9 +11,9 @@ from typing import Any
 import pyarrow as pa
 import pyarrow.parquet as pq
 from configs.settings import INTERMEDIATE_DIR
+from data_pipeline.movie_models import MOVIE_SCHEMA
 
 from common.logger import get_logger
-from common.models.movie import MOVIE_SCHEMA
 
 logger = get_logger(__name__)
 

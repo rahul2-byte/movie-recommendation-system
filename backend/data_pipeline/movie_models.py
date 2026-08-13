@@ -1,6 +1,4 @@
-"""
-Data models for movie data structures.
-"""
+"""Typed movie records and their Parquet schema for enrichment outputs."""
 
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
