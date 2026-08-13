@@ -67,46 +67,6 @@ else:
 END
 
 # Check if data needs ingestion (optional)
-if [ "${SKIP_INGESTION:-1}" = "1" ]; then
-    echo "Skipping ingestion (SKIP_INGESTION=1)."
-else
-    echo "Checking if data ingestion is needed..."
-    python3 <<END
-import boto3
-import os
-import sys
-
-endpoint_url = os.environ.get('AWS_ENDPOINT_URL', 'http://0.0.0.0:8000')
-region_name = os.environ.get('AWS_REGION', 'us-east-1')
-table_name = os.environ.get('DYNAMODB_TABLE_NAME', 'Movies')
-
-dynamodb = boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
-table = dynamodb.Table(table_name)
-
-if table.item_count == 0:
-    print("Table is empty. Starting ingestion...")
-    # Add project root to path
-    sys.path.append(os.getcwd())
-    
-    # We must set the env var for the script to pick it up
-    os.environ["DYNAMODB_ENDPOINT_URL"] = endpoint_url
-    
-    import subprocess
-    source_path = "artifacts/native/search_index.parquet"
-    if not os.path.exists(source_path):
-         print(f"Warning: Source file {source_path} not found. Skipping ingestion.")
-    else:
-         result = subprocess.run(
-             ["python3", "scripts/ingest_data.py", "--skip-processing"],
-             check=False
-         )
-         if result.returncode != 0:
-             print(f"Ingestion failed with exit code {result.returncode}.")
-else:
-    print(f"Table has {table.item_count} items. Skipping ingestion.")
-END
-fi
-
 # Start the application
 echo "Starting FastAPI server..."
 # Use uvicorn directly.

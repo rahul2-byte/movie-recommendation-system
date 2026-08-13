@@ -59,9 +59,6 @@ ignore = ["E501"]
 "backend/logger/services/mlflow_logger.py" = ["E402"]
 "backend/main.py" = ["E402"]
 "backend/scripts/data_enrichment/enrich_movies.py" = ["E402"]
-"backend/scripts/finalize_metadata.py" = ["E402"]
-"backend/scripts/prepare_data.py" = ["E402"]
-"backend/scripts/run_tests.py" = ["E402"]
 
 [tool.uv.sources]
 torch = { index = "pytorch-cpu" }
