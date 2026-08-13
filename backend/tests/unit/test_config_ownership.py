@@ -15,6 +15,6 @@ def test_canonical_config_family_and_legacy_boundary_are_explicit():
     ):
         assert (configs / name).is_file()
 
-    assert (configs / "system.yml").is_file()
-    assert (configs / "features.yml").is_file()
+    assert not (configs / "system.yml").exists()
+    assert not (configs / "features.yml").exists()
     assert not (configs / "ranker.yml").exists()

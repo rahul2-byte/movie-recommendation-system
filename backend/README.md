@@ -15,10 +15,10 @@ Directories:
 
 - `api/`: HTTP boundary.
 - `common/`: runtime settings, metadata clients, enrichment, and lifecycle.
-- `configs/`: canonical pipeline configuration and documented legacy inputs.
+- `configs/`: canonical pipeline configuration.
 - `data_pipeline/`: immutable preparation, temporal splits, and ranking data.
 - `training/`: retrieval and ranking trainers.
 - `evaluation/`: offline metrics and baselines.
 - `serving/`: bundle loading, fusion, ranking, and release smoke checks.
-- `features/native/` and `training/*/native/`: unsupported native experiment
-  sources; binaries are build outputs and are not committed.
+- Native training and feature experiment paths were removed; Python CLIs are
+  the only supported training implementation.

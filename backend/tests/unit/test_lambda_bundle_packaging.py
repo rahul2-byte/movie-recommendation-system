@@ -15,14 +15,13 @@ def test_lambda_image_and_sam_template_configure_the_model_bundle_contract():
         "api/",
         "common/",
         "configs/",
-        "features/",
         "logger/",
-        "pipeline/",
-        "ranking/",
         "retrieval/",
         "serving/",
     ):
         assert f"COPY backend/{package}" in dockerfile
+    for retired in ("features/", "pipeline/", "ranking/"):
+        assert f"COPY backend/{retired}" not in dockerfile
     assert "COPY ${MODEL_BUNDLE_PATH}/ ${LAMBDA_TASK_ROOT}/model_bundle/" in dockerfile
     assert "RUN test -f ${LAMBDA_TASK_ROOT}/model_bundle/bundle_manifest.json" in dockerfile
     assert 'ENV MODEL_BUNDLE_DIR="/var/task/model_bundle"' in dockerfile

@@ -3,7 +3,13 @@
 **Audit date:** 2026-08-13  
 **Repository:** `movie-recommendation-system`  
 **Branch/worktree:** `chore/local-uv-bootstrap` (worktree contains an in-progress migration)  
-**Audit mode:** read-only; no source, configuration, dependency, deployment, or documentation files were changed during the audit. This report is the only new audit deliverable.
+**Initial audit mode:** read-only. Cleanup changes are recorded separately in
+the post-cleanup section below.
+
+> **Status note:** Sections below preserve the original forensic evidence. The
+> current state after approved cleanup is recorded in **Post-cleanup
+> verification** at the end of this document and supersedes historical counts
+> and deletion recommendations.
 
 ## Executive audit
 
@@ -668,17 +674,46 @@ The audit can answer the requested questions:
 
 1. **Canonical runtime:** `backend/main.py` → bundle-backed lifecycle → `backend/serving/`.
 2. **Canonical data pipeline:** `backend/data_pipeline/` immutable versions and ranking data.
+
 3. **Canonical model training:** `training.retrieval.cli` and `training.ranking.cli`.
 4. **Production artifacts:** model trainers publish manifests; `serving.model_bundle` assembles and hashes one release.
 5. **Artifact loading:** `serving.model_bundle`/`serving.recommender`.
-6. **Active deployment:** GitHub Actions → `backend/Dockerfile.lambda` → SAM, but the packaging contract is currently broken/incomplete for the bundle path.
-7. **Genuinely unused code:** no unconditional deletion was proven; broken/orphan candidates are listed with gates.
-8. **Historical implementations:** native scripts/binaries, S3 retrievers/ranker, old data/ranking trainers, and old wrappers.
-9. **Overlaps:** runtime retrieval/ranking, data/features/ranking, native/Python training, config families, schemas, and deployment contracts.
+6. **Active deployment:** GitHub Actions → `backend/Dockerfile.lambda` → SAM, with the bundle-only packaging contract verified by tests.
+7. **Genuinely unused code:** native sources, legacy YAML, and the CSV ranker trainer were removed after consumer tracing.
+8. **Historical implementations:** S3 retrievers/ranker, old data/ranking trainers, and old wrappers.
+9. **Overlaps:** runtime retrieval/ranking, data/features/ranking, schemas, and deployment contracts.
 10. **Broken vs dead:** six broken paths are explicitly separated from deletion recommendations.
 11. **Dependencies/config:** no dependency is proven unused; scope and ownership cleanup is required.
 12. **Documentation:** evaluation, bundle, README, and route docs contain identified drift.
 13. **Future evaluation architecture:** keep immutable data, four retrievers, feature schema, ranker, bundle validation, evaluation, smoke, benchmark, and tests.
 14. **Safe cleanup order:** contracts → generated hygiene → broken entrypoints → runtime consolidation → training/dependency cleanup → docs/naming.
 
-Per the requested stop condition, this report does not delete, move, rename, refactor, or rewrite any repository source, configuration, deployment, test, or documentation file other than creating this audit report.
+Per the requested stop condition, the initial audit did not delete, move, rename,
+refactor, or rewrite repository files.
+
+## Post-cleanup verification — 2026-08-13
+
+The legacy script/native-header cleanup removed obsolete orchestration files.
+The Lambda image contract was then corrected: `backend/Dockerfile.lambda` now
+copies only tracked runtime paths and the immutable model bundle. It no longer
+copies the retired `pipeline/`, `ranking/`, or native `features/` trees.
+
+Evidence:
+
+- `backend/tests/unit/test_lambda_dockerfile.py` failed against the stale copy
+  contract and passes after the correction.
+- Full test suite: 106 passed.
+- Native sources under `backend/features/native/` and
+  `backend/training/*/native/` are now removed; no native source or Makefile
+  remains in the supported tree.
+
+Current cleanup summary:
+
+```text
+Native source trees: removed
+Legacy system/features YAML: removed
+Legacy CSV ranker trainer: removed
+Lambda retired COPY paths: removed
+Full tests: 106 passed
+Ruff: passed
+```
