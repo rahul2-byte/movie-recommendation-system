@@ -26,8 +26,8 @@ sys.path.insert(0, str(BACKEND_ROOT))
 from common.clients.imdb import IMDBClient
 from common.clients.tmdb import TMDBClient
 from common.logger import get_logger, log_separator
-from common.services.enrichment import EnrichmentService
 from configs.settings import BATCH_SIZE, INTERMEDIATE_DIR, LINKS_CSV
+from data_pipeline.enrichment.service import EnrichmentService
 from data_pipeline.storage.checkpoint import CheckpointManager
 from data_pipeline.storage.dataset_merger import merge_dataset
 from data_pipeline.storage.parquet_writer import ParquetWriter

@@ -8,18 +8,18 @@ and result persistence.
 import asyncio
 
 import pandas as pd
+from common.clients.imdb import IMDBClient
+from common.clients.tmdb import TMDBClient
+from common.logger import get_logger
 from configs.settings import (
     CHECKPOINT_INTERVAL,
     LINKS_CSV,
 )
+
+from data_pipeline.enrichment.fields import extract_movie_fields
 from data_pipeline.movie_models import MovieData
 from data_pipeline.storage.checkpoint import CheckpointData, CheckpointManager
 from data_pipeline.storage.parquet_writer import ParquetWriter
-
-from common.clients.imdb import IMDBClient
-from common.clients.tmdb import TMDBClient
-from common.logger import get_logger
-from common.services.field_extractor import extract_movie_fields
 
 logger = get_logger(__name__)
 
