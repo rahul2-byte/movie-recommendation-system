@@ -1,9 +1,3 @@
-"""Services package for business logic."""
+"""Application services used by the API and offline enrichment commands."""
 
-# from common.services.enrichment import EnrichmentService
-# from common.services.field_extractor import extract_movie_fields
-
-__all__ = [
-    # "EnrichmentService",
-    # "extract_movie_fields",
-]
+__all__: list[str] = []

@@ -24,7 +24,11 @@ class _MovieStore(Protocol):
 
 
 class BundleRecommendationPipeline:
-    """Fetch TMDB metadata around a compact local model bundle."""
+    """Generate recommendations and enrich them from the metadata store.
+
+    Retrieval and ranking stay local to the immutable bundle. Seed movies are
+    never returned as recommendations.
+    """
 
     def __init__(self, recommender: _Recommender, movie_store: _MovieStore):
         self.recommender = recommender
@@ -33,6 +37,7 @@ class BundleRecommendationPipeline:
     async def recommend(
         self, query: Query, top_n: int = 20, request_id: str | None = None
     ) -> list[dict[str, Any]]:
+        """Return up to ``top_n`` ranked, metadata-enriched movie records."""
         seeds = list(dict.fromkeys(query.seed_tmdb_ids))
         seed_movies = await self.movie_store.get_many_by_tmdb_ids(seeds)
         seed_metadata = {int(movie["tmdbId"]): movie for movie in seed_movies}

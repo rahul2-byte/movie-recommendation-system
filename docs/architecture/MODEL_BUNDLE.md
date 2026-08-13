@@ -22,7 +22,7 @@ The builder refuses overwrites, records payload hashes, and stores compact
 validation must reject any missing, corrupt, incompatible, or mixed-version
 bundle before a recommendation request is served.
 
-The current release gate is intentionally incomplete until the content-aware
-`ranking-features-v2` candidates, ranker, and end-to-end serving tests are
-generated. Do not use this bundle builder to promote the existing three-source
-ranker.
+The current validated release includes the content-aware `ranking-features-v2`
+candidate contract, the LightGBM ranker, and the four-retriever end-to-end
+serving path. Promote a bundle only after the manifest, API smoke test, and
+latency benchmark pass.

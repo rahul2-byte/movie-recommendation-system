@@ -1,5 +1,10 @@
 # Project Audit
 
+> **Historical baseline:** This document records the read-only audit performed
+> on 2026-08-09. It preserves evidence and counts from that repository state.
+> Current implementation and cleanup status are documented in
+> `docs/audit/LEGACY_CODE_AUDIT.md` and the architecture documents.
+
 ## Audit scope and evidence boundary
 
 - Audit date: 2026-08-09
@@ -527,10 +532,11 @@ MovieLens 32M download/environment bootstrap. It removes setup ambiguity and ena
 the actual dataset and pipeline checks required by every later phase. No metric,
 latency, reliability, production, or business-impact claim is currently supported.
 
-## Legacy training code: retained, but not approved for use
+## Legacy training code: historical audit record
 
-The native/C++ training stack and the older duplicate Python training wrappers are
-retained temporarily as reference material only. They are **not supported entry
+The native/C++ training stack and the older duplicate Python training wrappers
+were retained temporarily as reference material during this audit. They are
+**not supported entry
 points** for data transformation, model training, artifact creation, evaluation,
 or deployment.
 
@@ -552,8 +558,8 @@ Do not run:
 - `backend/scripts/finalize_artifacts.py`
 - `backend/scripts/compress_content_model.py`
 
-The replacement will be one Python-only pipeline built from the validated
-TMDB-keyed Parquet datasets and temporal split contract. These files will remain
-in the repository until that replacement has successfully completed its
-deterministic fixture tests, artifact-generation test, and full training/evaluation
-workflow. Only then may they be removed in a separate, reviewable deletion change.
+The replacement is now the Python-only pipeline built from the validated
+TMDB-keyed Parquet datasets and temporal split contract. It has completed
+deterministic fixture tests, artifact generation, full training/evaluation,
+bundle validation, and serving smoke tests. The deletion recommendations in
+this historical section are superseded; do not restore those paths.

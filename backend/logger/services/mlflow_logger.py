@@ -23,6 +23,7 @@ METRIC_BUFFER = {
     "impressions": 0,
 }
 
+
 # -------------------------------
 # Logging hooks
 # -------------------------------
@@ -85,11 +86,14 @@ def flush_to_mlflow() -> None:
                 "p95_latency_ms", float(np.percentile(METRIC_BUFFER["latency_ms"], 95))
             )
             mlflow.log_metric(
-                "ctr_10", METRIC_BUFFER["clicked"] / max(1, METRIC_BUFFER["impressions"])
+                "ctr_10",
+                METRIC_BUFFER["clicked"] / max(1, METRIC_BUFFER["impressions"]),
             )
             mlflow.log_dict(REQUEST_BUFFER[:TRACE_SAMPLE_SIZE], "sample_traces.json")
     except Exception:
-        log.warning("MLflow telemetry flush failed; retaining buffered telemetry", exc_info=True)
+        log.warning(
+            "MLflow telemetry flush failed; retaining buffered telemetry", exc_info=True
+        )
         return
 
     # ---- reset buffers ----

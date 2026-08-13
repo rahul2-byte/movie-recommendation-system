@@ -30,7 +30,7 @@ def collect_seed_candidates(
         dict.fromkeys(int(seed_id) for seed_id in seed_tmdb_ids if int(seed_id) > 0)
     )
     seed_set = set(seeds)
-    result: list[SeedCandidate] = []
+    candidate_records: list[SeedCandidate] = []
     for seed_id in seeds:
         seen: set[int] = set()
         rank = 0
@@ -40,12 +40,12 @@ def collect_seed_candidates(
                 continue
             seen.add(candidate_id)
             rank += 1
-            result.append(
+            candidate_records.append(
                 SeedCandidate(seed_id, candidate_id, source, float(score), rank)
             )
             if rank == top_k:
                 break
-    return result
+    return candidate_records
 
 
 def order_candidate_ids(evidence: Iterable[SeedCandidate]) -> list[int]:

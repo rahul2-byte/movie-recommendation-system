@@ -26,7 +26,8 @@ The script creates/reconciles `.venv` from `uv.lock`, installs the frontend from
 dataset into `backend/data/raw/`. It does not start services, process data, train
 models, upload artifacts, or contact AWS.
 
-Native C++ training dependencies remain deferred; UV covers Python packages only.
+The supported training path is Python-based and produces the immutable bundle
+consumed by local serving and Lambda. Native training experiments are retired.
 
 ## Python formatting and linting
 
@@ -60,7 +61,7 @@ flowchart LR
   G --> B[FastAPI Backend on AWS Lambda]
 
   B --> D[(DynamoDB<br/>movie metadata)]
-  B --> S[(S3<br/>model artifacts)]
+  B --> S[(Immutable model bundle<br/>baked into image)]
   B --> T[TMDB API]
   B --> O[OMDb/IMDb API]
 
@@ -102,7 +103,8 @@ Backend responsibility: serve recommendation and movie APIs with production-safe
 - `data_pipeline/`: immutable preparation, temporal splits, and ranking data.
 - `evaluation/`: reproducible offline metrics and baselines.
 - `configs/`: environment and system configuration (paths, buckets, service limits).
-- `training/` and `scripts/`: offline data prep, model training, and utility jobs.
+- `training/`: canonical offline model training.
+- `scripts/data_enrichment/`: supported source-data conversion and enrichment jobs.
 - `Dockerfile.lambda`: production container image build for Lambda.
 
 ### Frontend folder (`frontend/`)
@@ -136,7 +138,7 @@ Frontend responsibility: provide a polished movie discovery UI and call backend 
 - Backend: FastAPI packaged as Docker image, deployed to AWS Lambda through SAM.
 - API edge: API Gateway.
 - Metadata store: DynamoDB.
-- Model/data artifacts: S3.
+- Model artifacts: immutable bundle baked into the local/Lambda image.
 
 ## Simple explanation
 

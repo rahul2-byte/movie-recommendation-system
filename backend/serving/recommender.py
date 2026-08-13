@@ -29,14 +29,16 @@ _SUPPORTED_FEATURES = {
 }
 
 
-def _source_candidates(retriever: Any, seeds: list[int], top_k: int) -> dict[int, int]:
-    """Match offline source ranking: seed support, then best source rank."""
+def _collect_source_candidates(
+    retriever: Any, seed_tmdb_ids: list[int], top_k: int
+) -> dict[int, int]:
+    """Collect candidates using the offline seed-support rank semantics."""
     evidence: dict[int, list[int]] = {}
-    seed_set = set(seeds)
-    for seed in seeds:
+    seed_set = set(seed_tmdb_ids)
+    for seed_tmdb_id in seed_tmdb_ids:
         seen: set[int] = set()
         rank = 0
-        for candidate_id, _ in retriever.retrieve_one(seed, top_k):
+        for candidate_id, _ in retriever.retrieve_one(seed_tmdb_id, top_k):
             candidate_id = int(candidate_id)
             if candidate_id <= 0 or candidate_id in seed_set or candidate_id in seen:
                 continue
@@ -198,7 +200,7 @@ class BundleRecommender:
             "content": self._content_retriever(seed_metadata),
         }
         source_rows = {
-            source: _source_candidates(
+            source: _collect_source_candidates(
                 retriever,
                 seeds,
                 int(getattr(retriever, "manifest", {}).get("per_seed_candidates", 200)),

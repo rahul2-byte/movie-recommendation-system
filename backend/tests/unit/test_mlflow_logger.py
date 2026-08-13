@@ -29,7 +29,12 @@ def test_importing_main_does_not_configure_mlflow(monkeypatch):
     monkeypatch.setattr(mlflow, "set_tracking_uri", fail)
     monkeypatch.setattr(mlflow, "get_experiment_by_name", fail)
     monkeypatch.setattr(mlflow, "create_experiment", fail)
-    for module in ("main", "api.v1.recommend", "logger.services.mlflow_logger", "logger.services.mlflow_utils"):
+    for module in (
+        "main",
+        "api.v1.recommend",
+        "logger.services.mlflow_logger",
+        "logger.services.mlflow_utils",
+    ):
         sys.modules.pop(module, None)
 
     importlib.import_module("main")
@@ -59,7 +64,11 @@ def test_logging_hooks_keep_telemetry_in_memory_when_mlflow_setup_fails(monkeypa
 
 def test_failed_flush_preserves_buffered_telemetry(monkeypatch):
     monkeypatch.setattr(mlflow, "set_tracking_uri", lambda *args, **kwargs: None)
-    monkeypatch.setattr(mlflow, "get_experiment_by_name", lambda *args, **kwargs: SimpleNamespace(experiment_id="1"))
+    monkeypatch.setattr(
+        mlflow,
+        "get_experiment_by_name",
+        lambda *args, **kwargs: SimpleNamespace(experiment_id="1"),
+    )
     logger = _fresh_logger()
     _reset_buffers(logger)
     logger.log_recommendation({"request_id": "request-1"}, 17)
@@ -77,7 +86,11 @@ def test_failed_flush_preserves_buffered_telemetry(monkeypatch):
 
 def test_successful_flush_clears_buffers(monkeypatch):
     monkeypatch.setattr(mlflow, "set_tracking_uri", lambda *args, **kwargs: None)
-    monkeypatch.setattr(mlflow, "get_experiment_by_name", lambda *args, **kwargs: SimpleNamespace(experiment_id="1"))
+    monkeypatch.setattr(
+        mlflow,
+        "get_experiment_by_name",
+        lambda *args, **kwargs: SimpleNamespace(experiment_id="1"),
+    )
     logger = _fresh_logger()
     _reset_buffers(logger)
     for name in ("set_tag", "log_param", "log_metric", "log_dict"):

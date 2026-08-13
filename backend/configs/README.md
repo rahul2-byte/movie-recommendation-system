@@ -15,3 +15,7 @@ pipeline:
 Legacy compatibility configuration was removed with the retired S3/native
 fallback stack. Runtime settings live in `settings.py`; offline pipeline
 settings are loaded explicitly from the YAML files listed above.
+
+YAML keys describe offline pipeline contracts. Environment settings remain
+uppercase because they mirror deployment variables. The supported runtime
+requires `MODEL_BUNDLE_DIR` to point to an immutable model bundle.

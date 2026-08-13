@@ -19,11 +19,12 @@ class RecommendRequest(BaseModel):
 
 
 class MovieOut(BaseModel):
+    """Movie metadata returned by the recommendation and catalog APIs."""
+
     tmdbId: int
     title: str
     year: int | None
     genres: list[str]
-    tmdbId: int | None
     posterUrl: str | None
     rating: float | None
     score: float | None = None

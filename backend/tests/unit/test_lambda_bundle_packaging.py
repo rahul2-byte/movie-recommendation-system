@@ -23,17 +23,28 @@ def test_lambda_image_and_sam_template_configure_the_model_bundle_contract():
     for retired in ("features/", "pipeline/", "ranking/"):
         assert f"COPY backend/{retired}" not in dockerfile
     assert "COPY ${MODEL_BUNDLE_PATH}/ ${LAMBDA_TASK_ROOT}/model_bundle/" in dockerfile
-    assert "RUN test -f ${LAMBDA_TASK_ROOT}/model_bundle/bundle_manifest.json" in dockerfile
+    assert (
+        "RUN test -f ${LAMBDA_TASK_ROOT}/model_bundle/bundle_manifest.json"
+        in dockerfile
+    )
     assert 'ENV MODEL_BUNDLE_DIR="/var/task/model_bundle"' in dockerfile
     assert "MODEL_BUNDLE_DIR: /var/task/model_bundle" in template
-    assert "MODEL_BUNDLE_PATH: backend/model_bundle/movielens-32m-4retriever-ranker-v1" in workflow
+    assert (
+        "MODEL_BUNDLE_PATH: backend/model_bundle/movielens-32m-4retriever-ranker-v1"
+        in workflow
+    )
     assert 'test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"' in workflow
     assert "--build-arg MODEL_BUNDLE_PATH=$MODEL_BUNDLE_PATH" in workflow
     assert "astral-sh/setup-uv@v5" in workflow
     assert "uv sync --frozen" in workflow
     assert "uv run --frozen ruff check backend" in workflow
     assert "uv run --frozen pytest backend/tests/unit -q" in workflow
-    assert 'MODEL_BUNDLE_PATH="${MODEL_BUNDLE_PATH:-backend/model_bundle/movielens-32m-4retriever-ranker-v1}"' in preflight
+    assert (
+        'MODEL_BUNDLE_PATH="${MODEL_BUNDLE_PATH:-backend/model_bundle/movielens-32m-4retriever-ranker-v1}"'
+        in preflight
+    )
     assert 'test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"' in preflight
     assert "--build-arg MODEL_BUNDLE_PATH=$MODEL_BUNDLE_PATH" in preflight
-    assert preflight.index('test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"') < preflight.index("trap cleanup EXIT")
+    assert preflight.index(
+        'test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"'
+    ) < preflight.index("trap cleanup EXIT")
