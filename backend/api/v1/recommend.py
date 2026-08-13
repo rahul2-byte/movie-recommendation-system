@@ -2,14 +2,15 @@ import logging
 import time
 import uuid
 
-from fastapi import APIRouter, HTTPException, Request
-from api.schemas.recommend import RecommendRequest, RecommendResponse
 from common.types import Query
+from fastapi import APIRouter, HTTPException, Request
+from logger.services.mlflow_logger import log_click, log_recommendation
 
-from logger.services.mlflow_logger import log_recommendation, log_click
+from api.schemas.recommend import RecommendRequest, RecommendResponse
 
 router = APIRouter(prefix="/recommend", tags=["recommend"])
 log = logging.getLogger(__name__)
+
 
 @router.post("", response_model=RecommendResponse)
 async def recommend_movies(request: Request, payload: RecommendRequest):
@@ -19,18 +20,19 @@ async def recommend_movies(request: Request, payload: RecommendRequest):
     log.info(
         "recommend.request.start request_id=%s seeds=%s limit=%s moods=%s",
         request_id,
-        payload.seed_movie_ids,
+        payload.seed_tmdb_ids,
         payload.limit or 20,
         payload.moods,
     )
 
     try:
         from common.lifecycle import get_pipeline
+
         pipeline = get_pipeline()
-        
+
         # We await the async recommend method
         results = await pipeline.recommend(
-            query=Query(seed_movie_ids=payload.seed_movie_ids),
+            query=Query(seed_tmdb_ids=payload.seed_tmdb_ids),
             top_n=payload.limit or 20,
             request_id=request_id,
         )
@@ -67,7 +69,8 @@ async def recommend_movies(request: Request, payload: RecommendRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Recommendation failed. request_id={request_id}",
-        )
+        ) from e
+
 
 @router.post("/click")
 def movie_clicked():

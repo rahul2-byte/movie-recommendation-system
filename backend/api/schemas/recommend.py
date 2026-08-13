@@ -1,34 +1,28 @@
-from typing import List
+from typing import Annotated
+
 from pydantic import BaseModel, Field
 
-from api.domain.moods import MOOD
+TMDBId = Annotated[int, Field(gt=0)]
 
 
 class RecommendRequest(BaseModel):
     # Canonical input
-    seed_movie_ids: List[int] = Field(
-        min_length=1,
-        max_length=5,
-        description="User-selected seed movies"
+    seed_tmdb_ids: list[TMDBId] = Field(
+        min_length=1, max_length=5, description="User-selected seed movies"
     )
 
-    moods: List[str] = Field(
-        default_factory=list,
-        description="Optional mood signals"
-    )
+    moods: list[str] = Field(default_factory=list, description="Optional mood signals")
 
     limit: int = Field(
-        default=99,
-        le=150,
-        description="Number of recommendations"
+        default=99, ge=1, le=150, description="Number of recommendations"
     )
 
 
 class MovieOut(BaseModel):
-    movieId: int
+    tmdbId: int
     title: str
     year: int | None
-    genres: List[str]
+    genres: list[str]
     tmdbId: int | None
     posterUrl: str | None
     rating: float | None
@@ -36,4 +30,4 @@ class MovieOut(BaseModel):
 
 
 class RecommendResponse(BaseModel):
-    recommendations: List[MovieOut]
+    recommendations: list[MovieOut]

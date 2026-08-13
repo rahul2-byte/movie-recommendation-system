@@ -1,0 +1,3 @@
+tracking:
+  local_store_dir: ../artifacts/mlflow
+  data_pipeline_experiment_name: data_pipeline

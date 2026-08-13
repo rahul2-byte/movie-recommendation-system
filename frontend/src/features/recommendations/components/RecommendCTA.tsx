@@ -17,11 +17,11 @@ export function RecommendCTA({ onDone }: { onDone: () => void }) {
   function handleClick() {
     if (!isReady) return
 
-    const seedMovieIds = selectedMovies.map((movie) => movie.movieId)
+    const seedTmdbIds = selectedMovies.map((movie) => movie.tmdbId)
 
     mutate(
       {
-        seed_movie_ids: seedMovieIds,
+        seed_tmdb_ids: seedTmdbIds,
         moods: [],
         limit: 20,
       },

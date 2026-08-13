@@ -5,9 +5,8 @@ import { RecommendedMovie } from "@/features/recommendations/types"
 /* ---------- TYPES ---------- */
 
 export type SelectedMovie = {
-  movieId: number
+  tmdbId: number
   title: string
-  tmdbId: number | null
   posterUrl?: string | null
 }
 
@@ -28,7 +27,7 @@ type RecommendationState = {
 
   /* movie actions */
   addMovie: (m: SelectedMovie) => void
-  removeMovie: (id: number) => void
+  removeMovie: (tmdbId: number) => void
   clearMovies: () => void
 
   /* recommendation actions */
@@ -70,7 +69,7 @@ export const useRecommendationStore = create<RecommendationState>()(
         set((state) => {
           if (
             state.selectedMovies.length >= 5 ||
-            state.selectedMovies.some((m) => m.movieId === movie.movieId)
+            state.selectedMovies.some((m) => m.tmdbId === movie.tmdbId)
           ) {
             return state
           }
@@ -80,7 +79,7 @@ export const useRecommendationStore = create<RecommendationState>()(
       removeMovie: (id) =>
         set((state) => ({
           selectedMovies: state.selectedMovies.filter(
-            (m) => m.movieId !== id
+            (m) => m.tmdbId !== id
           ),
         })),
 

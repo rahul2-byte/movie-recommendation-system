@@ -6,8 +6,9 @@ Provides decorators and functions for handling transient failures.
 
 import asyncio
 import random
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable, Tuple, Type, TypeVar
+from typing import TypeVar
 
 from aiohttp import ClientResponseError
 from configs.settings import (
@@ -24,12 +25,16 @@ logger = get_logger(__name__)
 T = TypeVar("T")
 
 # Exceptions that should trigger retries (transient errors)
-RETRYABLE_EXCEPTIONS: Tuple[Type[Exception], ...] = (
+RETRYABLE_EXCEPTIONS: tuple[type[Exception], ...] = (
     ConnectionError,
     TimeoutError,
     asyncio.TimeoutError,
     ClientResponseError,
 )
+
+
+def _is_retryable_response(error: ClientResponseError) -> bool:
+    return error.status in {408, 429} or error.status >= 500
 
 
 def calculate_backoff_delay(
@@ -60,7 +65,7 @@ async def retry_async(
     func: Callable[..., T],
     *args,
     max_retries: int = MAX_RETRIES,
-    retryable_exceptions: Tuple[Type[Exception], ...] = RETRYABLE_EXCEPTIONS,
+    retryable_exceptions: tuple[type[Exception], ...] = RETRYABLE_EXCEPTIONS,
     **kwargs,
 ) -> T:
     """
@@ -86,6 +91,9 @@ async def retry_async(
             return await func(*args, **kwargs)
         except retryable_exceptions as e:
             last_exception = e
+
+            if isinstance(e, ClientResponseError) and not _is_retryable_response(e):
+                raise
 
             if attempt == max_retries - 1:
                 logger.error(
@@ -115,7 +123,7 @@ async def retry_async(
 
 def retry_async_decorator(
     max_retries: int = MAX_RETRIES,
-    retryable_exceptions: Tuple[Type[Exception], ...] = RETRYABLE_EXCEPTIONS,
+    retryable_exceptions: tuple[type[Exception], ...] = RETRYABLE_EXCEPTIONS,
 ):
     """
     Decorator for async functions with automatic retry logic.
@@ -148,4 +156,3 @@ def retry_async_decorator(
         return wrapper
 
     return decorator
-

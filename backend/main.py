@@ -6,6 +6,7 @@ from api.v1.catalog import router as catalog_router
 from api.v1.movies import router as movies_router
 from api.v1.recommend import router as recommend_router
 from common.config import config
+from common.lifecycle import get_pipeline
 from common.logger import get_logger
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,6 +47,8 @@ def ping():
 
 @app.on_event("startup")
 def startup():
+    if str(config.settings.MODEL_BUNDLE_DIR).strip():
+        get_pipeline()
     # Only start essential lightweight background tasks
     # Heavy model/data loading is now LAZY (occurs on first request)
     start_background_tasks()

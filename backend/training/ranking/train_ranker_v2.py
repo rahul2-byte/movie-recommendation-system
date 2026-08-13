@@ -1,12 +1,9 @@
 # backend/training/ranking/train_ranker_v2.py
 import logging
-import os
 from pathlib import Path
 
 import lightgbm as lgb
-import numpy as np
 import pandas as pd
-from common.config import config
 from sklearn.model_selection import GroupShuffleSplit
 
 logging.basicConfig(

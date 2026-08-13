@@ -17,8 +17,8 @@ export default function SetupPage() {
    const { mutate, isPending } = useRecommendations()
    
    const handleRecommend = () => {
-       const seedMovieIds = selectedMovies.map(m => m.movieId)
-       mutate({ seed_movie_ids: seedMovieIds, moods: selectedGenres as Mood[], limit: 20 })
+       const seedTmdbIds = selectedMovies.map(m => m.tmdbId)
+       mutate({ seed_tmdb_ids: seedTmdbIds, moods: selectedGenres as Mood[], limit: 20 })
    }
 
    const isReady = selectedMovies.length === 5

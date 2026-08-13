@@ -1,10 +1,11 @@
 from pathlib import Path
-import yaml
+
 import pandas as pd
+import yaml
 
 
 def load_schema(schema_path: Path) -> dict:
-    with open(schema_path, "r") as f:
+    with open(schema_path) as f:
         return yaml.safe_load(f)["columns"]
 
 
@@ -17,15 +18,11 @@ def validate_dataframe_schema(
 
     if expected_cols != actual_cols:
         raise ValueError(
-            f"Schema mismatch\n"
-            f"Expected: {expected_cols}\n"
-            f"Actual: {actual_cols}"
+            f"Schema mismatch\nExpected: {expected_cols}\nActual: {actual_cols}"
         )
 
     for col, dtype in schema.items():
         try:
             df[col] = df[col].astype(dtype)
         except Exception as exc:
-            raise TypeError(
-                f"Failed casting column '{col}' to {dtype}"
-            ) from exc
+            raise TypeError(f"Failed casting column '{col}' to {dtype}") from exc

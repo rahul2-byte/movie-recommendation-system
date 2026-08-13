@@ -6,14 +6,14 @@ from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+from configs.settings import INTERMEDIATE_DIR
 
 from common.logger import get_logger
 from common.models.movie import MOVIE_SCHEMA
-from configs.settings import INTERMEDIATE_DIR
 
 logger = get_logger(__name__)
 
@@ -22,11 +22,11 @@ class ParquetWriter:
     def __init__(self, output_dir: Path = INTERMEDIATE_DIR, batch_size: int = 1000):
         self.output_dir = output_dir
         self.batch_size = batch_size
-        self.buffer: List[Dict[str, Any]] = []
+        self.buffer: list[dict[str, Any]] = []
         self.file_index = 0
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def _to_record(self, movie_data: Any) -> Dict[str, Any]:
+    def _to_record(self, movie_data: Any) -> dict[str, Any]:
         if movie_data is None:
             return {}
         if is_dataclass(movie_data):
@@ -58,4 +58,3 @@ class ParquetWriter:
 
     def close(self) -> None:
         self.flush()
-

@@ -3,8 +3,6 @@
 Main FastAPI application to serve movie recommendations.
 """
 
-from typing import List
-
 from common.services.movie_store import MovieStore
 from common.types import Candidate, Query
 from data_io.data_loader import (
@@ -48,11 +46,11 @@ app.include_router(catalog_router)
 
 # --- Models ---
 class RecommendRequest(BaseModel):
-    seed_movie_ids: List[int]
+    seed_movie_ids: list[int]
 
 
 class RecommendResponse(BaseModel):
-    recommendations: List[Candidate]
+    recommendations: list[Candidate]
 
 
 # --- Application Startup ---
@@ -141,7 +139,7 @@ async def recommend(request: RecommendRequest):
         # A generic error handler to catch issues during inference
         log.error(f"ERROR:    An error occurred during recommendation: {e}")
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Internal server error.")
+        raise HTTPException(status_code=500, detail="Internal server error.") from e
 
 
 @app.get("/health")

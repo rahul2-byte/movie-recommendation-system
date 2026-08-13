@@ -1,8 +1,9 @@
 # services/mlflow_logger.py
 
+from datetime import datetime
+
 import mlflow
 import numpy as np
-from datetime import datetime
 from common.config import config
 
 # Access settings from global config
@@ -29,9 +30,8 @@ METRIC_BUFFER = {
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 # Resolve experiment ID from name (random ID handled by MLflow)
-ONLINE_EXP_ID = get_or_create_experiment(
-    MLFLOW_EXPERIMENTS["online"]
-)
+ONLINE_EXP_ID = get_or_create_experiment(MLFLOW_EXPERIMENTS["online"])
+
 
 # -------------------------------
 # Logging hooks
@@ -91,9 +91,7 @@ def flush_to_mlflow() -> None:
             float(np.percentile(METRIC_BUFFER["latency_ms"], 95)),
         )
 
-        ctr = METRIC_BUFFER["clicked"] / max(
-            1, METRIC_BUFFER["impressions"]
-        )
+        ctr = METRIC_BUFFER["clicked"] / max(1, METRIC_BUFFER["impressions"])
         mlflow.log_metric("ctr_10", ctr)
 
         # ---- sampled traces only ----

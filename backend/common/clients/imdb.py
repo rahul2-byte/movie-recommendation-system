@@ -1,5 +1,4 @@
 import asyncio
-from typing import Dict, Optional
 
 from configs.settings import (
     IMDB_API_KEY,
@@ -19,7 +18,7 @@ class IMDBClient(BaseAPIClient):
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(IMDBClient, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
@@ -30,7 +29,7 @@ class IMDBClient(BaseAPIClient):
         self.api_key = IMDB_API_KEY
         self._initialized = True
 
-    async def fetch_rating(self, imdb_id: Optional[str]) -> Dict:
+    async def fetch_rating(self, imdb_id: str | None) -> dict:
         if not imdb_id:
             return {}
         params = {"apikey": self.api_key, "i": imdb_id}

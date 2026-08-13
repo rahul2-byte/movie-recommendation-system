@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import mlflow
 
@@ -22,19 +22,19 @@ class MlflowClient:
             f"MlflowClient: Tracking URI: {self.tracking_uri}, Experiment: {self.experiment_name}"
         )
 
-    def start_run(self, run_name: Optional[str] = None):
+    def start_run(self, run_name: str | None = None):
         return mlflow.start_run(run_name=run_name)
 
     def log_param(self, key: str, value: Any):
         mlflow.log_param(key, value)
 
-    def log_params(self, params: Dict[str, Any]):
+    def log_params(self, params: dict[str, Any]):
         mlflow.log_params(params)
 
-    def log_metric(self, key: str, value: float, step: Optional[int] = None):
+    def log_metric(self, key: str, value: float, step: int | None = None):
         mlflow.log_metric(key, value, step=step)
 
-    def log_metrics(self, metrics: Dict[str, float], step: Optional[int] = None):
+    def log_metrics(self, metrics: dict[str, float], step: int | None = None):
         mlflow.log_metrics(metrics, step=step)
 
     def log_model(self, model: Any, artifact_path: str):
@@ -45,4 +45,3 @@ class MlflowClient:
             mlflow.pytorch.log_model(model, artifact_path)
         else:
             mlflow.sklearn.log_model(model, artifact_path)
-

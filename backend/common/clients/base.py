@@ -6,9 +6,8 @@ Provides shared functionality for all API clients.
 
 import asyncio
 import time
-from typing import Dict, Optional
 
-from aiohttp import ClientResponse, ClientSession, ClientTimeout, TCPConnector
+from aiohttp import ClientSession, ClientTimeout, TCPConnector
 from configs.settings import MAX_CONCURRENT_REQUESTS, REQUEST_TIMEOUT
 
 from common.clients.retry import retry_async
@@ -88,7 +87,7 @@ class BaseAPIClient:
         """
         self.rate_limiter = RateLimiter(rate_limit)
         self.semaphore = asyncio.Semaphore(max_concurrent)
-        self._session: Optional[ClientSession] = None
+        self._session: ClientSession | None = None
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -140,9 +139,9 @@ class BaseAPIClient:
     async def _get(
         self,
         url: str,
-        params: Optional[Dict] = None,
-        headers: Optional[Dict] = None,
-    ) -> Dict:
+        params: dict | None = None,
+        headers: dict | None = None,
+    ) -> dict:
         """
         Perform rate-limited GET request with retry logic.
 
@@ -160,7 +159,7 @@ class BaseAPIClient:
         async with self.semaphore:
             await self.rate_limiter.acquire()
 
-            async def _request() -> Dict:
+            async def _request() -> dict:
                 async with self.session.get(
                     url,
                     params=params,
@@ -170,4 +169,3 @@ class BaseAPIClient:
                     return await response.json()
 
             return await retry_async(_request)
-

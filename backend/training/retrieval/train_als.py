@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pandas as pd
 from common.config import config
 from common.logger import get_logger
 from retrieval.models.als import ALSBuilder
@@ -49,4 +48,3 @@ def train_als_model():
 
 if __name__ == "__main__":
     train_als_model()
-

@@ -1,11 +1,9 @@
-import asyncio
 import time
-from typing import Any, Dict, List
+from typing import Any
 
-import pandas as pd
 from common.logger import get_logger
 from common.services.movie_store import MovieStore
-from common.types import Candidate, Query
+from common.types import Query
 from features.builder import FeatureBuilder
 from ranking.inference.lgbm import LGBMRanker
 from retrieval.inference.recall import RecallService
@@ -28,7 +26,7 @@ class RecommendationPipeline:
 
     async def recommend(
         self, query: Query, top_n: int = 20, request_id: str | None = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Full recommendation pipeline: Recall -> Metadata Fetch -> Feature Engineering -> Ranking.
         """
@@ -37,19 +35,21 @@ class RecommendationPipeline:
         log.info(
             "pipeline.start request_id={} seed_count={} top_n={} seeds={}",
             req,
-            len(query.seed_movie_ids),
+            len(query.seed_tmdb_ids),
             top_n,
-            query.seed_movie_ids,
+            query.seed_tmdb_ids,
         )
 
         # 0. Fetch Seed Metadata (Batch from DB)
         try:
             s0 = time.perf_counter()
-            seeds_meta = await self.movie_store.get_many(query.seed_movie_ids)
+            seeds_meta = await self.movie_store.get_many_by_tmdb_ids(
+                query.seed_tmdb_ids
+            )
             log.info(
                 "pipeline.step.seed_fetch request_id={} requested={} found={} duration_ms={}",
                 req,
-                len(query.seed_movie_ids),
+                len(query.seed_tmdb_ids),
                 len(seeds_meta),
                 int((time.perf_counter() - s0) * 1000),
             )
@@ -57,21 +57,23 @@ class RecommendationPipeline:
                 log.warning(
                     "pipeline.no_seeds_found request_id={} seeds={}",
                     req,
-                    query.seed_movie_ids,
+                    query.seed_tmdb_ids,
                 )
                 return []
         except Exception:
             log.exception(
                 "pipeline.seed_fetch_failed request_id={} seeds={}",
                 req,
-                query.seed_movie_ids,
+                query.seed_tmdb_ids,
             )
             raise
-             
+
         # 1. Recall: Get candidates from multiple sources
         try:
             s1 = time.perf_counter()
-            candidates = await self.recall_service.recall(query, top_k=500, request_id=req)
+            candidates = await self.recall_service.recall(
+                query, top_k=500, request_id=req
+            )
             log.info(
                 "pipeline.step.recall request_id={} candidates={} duration_ms={}",
                 req,
@@ -88,16 +90,18 @@ class RecommendationPipeline:
         # 2. Fetch Candidate Metadata (Batch from DB)
         try:
             s2 = time.perf_counter()
-            candidate_ids = [c.movie_id for c in candidates]
-            candidates_meta_list = await self.movie_store.get_many(candidate_ids)
-            meta_map = {m["movieId"]: m for m in candidates_meta_list}
+            candidate_ids = [c.tmdb_id for c in candidates]
+            candidates_meta_list = await self.movie_store.get_many_by_tmdb_ids(
+                candidate_ids
+            )
+            meta_map = {m["tmdbId"]: m for m in candidates_meta_list}
 
             valid_candidates = []
             valid_meta = []
             for c in candidates:
-                if c.movie_id in meta_map:
+                if c.tmdb_id in meta_map:
                     valid_candidates.append(c)
-                    valid_meta.append(meta_map[c.movie_id])
+                    valid_meta.append(meta_map[c.tmdb_id])
 
             log.info(
                 "pipeline.step.candidate_meta request_id={} requested={} fetched={} valid={} duration_ms={}",
@@ -153,12 +157,12 @@ class RecommendationPipeline:
         # The candidates are already enriched via 'valid_meta' (conceptually).
         # But 'ranked_candidates' are Candidate objects.
         # We need to join them back with the metadata we already fetched.
-        
+
         final_results = []
         for c in ranked_candidates[:top_n]:
             # Reuse the metadata we fetched in Step 2!
             # No need to fetch again.
-            movie_meta = meta_map.get(c.movie_id)
+            movie_meta = meta_map.get(c.tmdb_id)
             if movie_meta:
                 result = movie_meta.copy()
                 result["score"] = c.rank_score

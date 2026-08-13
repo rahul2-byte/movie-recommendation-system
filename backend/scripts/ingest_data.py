@@ -3,7 +3,7 @@ import os
 import sys
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import boto3
 import numpy as np
@@ -37,11 +37,11 @@ def convert_float_to_decimal(obj: Any) -> Any:
     return obj
 
 
-def clean_item(item: Dict[str, Any]) -> Dict[str, Any]:
+def clean_item(item: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in item.items() if v is not None and v != ""}
 
 
-def sanitize_item(row: pd.Series) -> Dict[str, Any] | None:
+def sanitize_item(row: pd.Series) -> dict[str, Any] | None:
     data = row.to_dict()
     item = {}
 
@@ -69,7 +69,14 @@ def sanitize_item(row: pd.Series) -> Dict[str, Any] | None:
         if pd.isna(v) or v == "":
             continue
 
-        if k in ["vote_count", "release_year", "year", "runtime_minutes", "imdb_votes", "collection_id"]:
+        if k in [
+            "vote_count",
+            "release_year",
+            "year",
+            "runtime_minutes",
+            "imdb_votes",
+            "collection_id",
+        ]:
             try:
                 item[k] = int(v)
             except Exception:
@@ -164,7 +171,7 @@ def process_data() -> pd.DataFrame:
         "raw": base_path / "movies.parquet",
     }
 
-    for name, path in files.items():
+    for path in files.values():
         if not path.exists():
             raise FileNotFoundError(f"Missing required file: {path}")
 
@@ -217,15 +224,15 @@ def upload_to_dynamodb(
     region_name: str,
     endpoint_url: str | None = None,
     create_table_if_missing: bool = True,
-    aws_profile: Optional[str] = None,
-    aws_access_key_id: Optional[str] = None,
-    aws_secret_access_key: Optional[str] = None,
-    aws_session_token: Optional[str] = None,
+    aws_profile: str | None = None,
+    aws_access_key_id: str | None = None,
+    aws_secret_access_key: str | None = None,
+    aws_session_token: str | None = None,
 ):
     log.info(f"Loading data from {file_path}...")
     df = pd.read_parquet(file_path)
 
-    session_kwargs: Dict[str, Any] = {}
+    session_kwargs: dict[str, Any] = {}
     if aws_profile:
         session_kwargs["profile_name"] = aws_profile
     session = boto3.Session(**session_kwargs)

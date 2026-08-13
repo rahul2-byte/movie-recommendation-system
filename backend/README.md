@@ -162,14 +162,18 @@ In Lambda, `Mangum` bridges API Gateway events to FastAPI.
 
 ## Local development
 
-From `backend/`:
+From the repository root:
 
 ```bash
-pip install -r requirements.txt
-uvicorn main:app --reload
+uv sync --frozen
+PYTHONPATH=backend uv run --frozen uvicorn main:app --reload
 ```
 
 Default local API target is typically `http://localhost:8000`.
+
+`uv` manages the repository's Python dependencies from the root `pyproject.toml`
+and `uv.lock`; native C++ training libraries are intentionally not included in this
+environment setup.
 
 ## Folder map (backend)
 

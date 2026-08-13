@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-import os
-import sys
-import json
-import hashlib
 import argparse
+import hashlib
+import json
+import os
 import subprocess
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
@@ -111,7 +111,7 @@ def main():
     version_id = f"{timestamp}_{commit_hash[:7]}"
     s3_prefix = "artifacts/models"
 
-    logger.info(f"Starting upload process...")
+    logger.info("Starting upload process...")
     logger.info(f"Upload prefix: {s3_prefix}")
     logger.info(f"Bucket: {args.bucket}")
     logger.info(f"Local Dir: {ARTIFACTS_DIR}")

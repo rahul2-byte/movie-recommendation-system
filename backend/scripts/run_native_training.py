@@ -1,7 +1,7 @@
-import subprocess
 import logging
-import sys
 import os
+import subprocess
+import sys
 from pathlib import Path
 
 # Add backend to path to allow imports
@@ -9,15 +9,13 @@ from pathlib import Path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-
 from common.config import config
 
-
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 log = logging.getLogger(__name__)
-
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -30,22 +28,19 @@ BIN_DIR = TRAINING_DIR / "bin"
 ARTIFACTS_DIR = PROJECT_ROOT / "artifacts" / "native"
 
 
-
-
-
 def run_command(cmd, cwd=None, env=None):
     if cwd is None:
         cwd = str(PROJECT_ROOT)
-    
+
     # Ensure PYTHONPATH is set so sub-scripts find 'common'
     if env is None:
         env = os.environ.copy()
-    
+
     if "PYTHONPATH" not in env:
         env["PYTHONPATH"] = str(PROJECT_ROOT)
     else:
         env["PYTHONPATH"] = f"{PROJECT_ROOT}:{env['PYTHONPATH']}"
-    
+
     # Force single-threaded BLAS to avoid OpenMP conflict in Two-Tower training
     env["OPENBLAS_NUM_THREADS"] = "1"
     env["MKL_NUM_THREADS"] = "1"
@@ -55,6 +50,7 @@ def run_command(cmd, cwd=None, env=None):
     log.info(f"Executing: {cmd} in {cwd}")
     subprocess.run(cmd, shell=True, check=True, cwd=cwd, env=env)
 
+
 def main():
     log.info("--- [C++] Starting Central Native Training Pipeline ---")
     ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -62,11 +58,10 @@ def main():
     # Resolve paths from config for C++ args
     data_root = PROJECT_ROOT / str(config.system.data_root)
     raw_dir = data_root / "raw"
-    
+
     movies_csv = str(raw_dir / "movies.csv")
     ratings_csv = str(raw_dir / "ratings.csv")
     tags_csv = str(raw_dir / "tags.csv")
-    seq_csv = str((PROJECT_ROOT / str(config.system.training_sequences_path)).with_suffix(".csv"))
     out_dir = str(PROJECT_ROOT / "artifacts" / "native") + "/"
 
     # 1. Compilation
@@ -76,7 +71,9 @@ def main():
     # 2. Train ALS (Retrieval)
     if not (ARTIFACTS_DIR / "als_item_embeddings.bin").exists():
         log.info("Step 2/7: Training ALS model (Collaborative Filtering)...")
-        als_cmd = f"python3 training/retrieval/native/als_bridge.py | {BIN_DIR}/train_als"
+        als_cmd = (
+            f"python3 training/retrieval/native/als_bridge.py | {BIN_DIR}/train_als"
+        )
         run_command(als_cmd)
     else:
         log.info("Step 2/7: ALS artifacts found, skipping.")
@@ -85,7 +82,9 @@ def main():
     if not (ARTIFACTS_DIR / "content_embeddings.bin").exists():
         log.info("Step 3/7: Training Content-Based model (Dense Metadata)...")
         # Args: movies_path, ratings_path, tags_path, output_dir
-        run_command(f"{BIN_DIR}/train_content {movies_csv} {ratings_csv} {tags_csv} {out_dir}")
+        run_command(
+            f"{BIN_DIR}/train_content {movies_csv} {ratings_csv} {tags_csv} {out_dir}"
+        )
     else:
         log.info("Step 3/7: Content-Based artifacts found, skipping.")
 
@@ -126,7 +125,7 @@ def main():
     MODELS_DIR = BACKEND_DIR / "artifacts" / "models"
     RETRIEVAL_DIR = MODELS_DIR / "retrieval"
     RANKING_DIR = MODELS_DIR / "ranking"
-    
+
     RETRIEVAL_DIR.mkdir(parents=True, exist_ok=True)
     RANKING_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -142,14 +141,14 @@ def main():
         "als_movie_ids.txt": "als_ids.txt",
         "content_movie_ids.txt": "content_ids.txt",
         "tfidf_movie_ids.txt": "tfidf_ids.txt",
-        "tfidf_vocab.txt": "tfidf_vocab.txt"
+        "tfidf_vocab.txt": "tfidf_vocab.txt",
     }
 
     for src_name, dst_name in artifacts_map.items():
         src = ARTIFACTS_DIR / src_name
         if src.exists():
             shutil.copy2(src, RETRIEVAL_DIR / dst_name)
-    
+
     # Ranking
     src_ranker = MODELS_DIR / "ranker" / "lgbm_lambdarank.txt"
     if src_ranker.exists():
@@ -163,6 +162,7 @@ def main():
     run_command("python3 scripts/finalize_artifacts.py")
 
     log.info("--- [C++] Central Native Training Pipeline Complete! ---")
+
 
 if __name__ == "__main__":
     main()

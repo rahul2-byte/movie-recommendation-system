@@ -13,7 +13,9 @@ sys.path.insert(0, str(BACKEND_ROOT))
 
 from common.config import config
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
+)
 log = logging.getLogger("run_tests")
 
 

@@ -36,8 +36,6 @@ def dump_features_csr(movies_df, tags_df, output_dir):
             genre_set.update([g.lower() for g in g_list if g])
 
     genre_vocab = {g: i for i, g in enumerate(sorted(genre_set))}
-    genre_offset = 0
-
     # Tags
     tag_counts = tags_df["tag"].str.lower().value_counts()
     top_tags = tag_counts.head(10000).index.tolist()

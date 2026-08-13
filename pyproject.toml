@@ -1,0 +1,73 @@
+[project]
+name = "movie-recommendation-system"
+version = "0.1.0"
+description = "Movie recommendation API, offline training, and evaluation project"
+readme = "README.md"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "aiohttp",
+    "boto3",
+    "dotmap",
+    "faiss-cpu==1.7.4",
+    "fastapi",
+    "implicit",
+    "joblib",
+    "lightgbm==3.3.5",
+    "loguru",
+    "mangum",
+    "mlflow",
+    "numpy<2",
+    "pandas",
+    "pyarrow==12.0.1",
+    "pydantic",
+    "pydantic-settings",
+    "python-dotenv",
+    "pyyaml",
+    "scikit-learn",
+    "scipy",
+    "torch==2.5.1+cpu",
+    "uvicorn",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["backend"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"backend/api/main.py" = ["E402"]
+"backend/features/native/dump_binary_data.py" = ["E402"]
+"backend/features/native/run_ranker_gen.py" = ["E402"]
+"backend/features/native/run_sequences.py" = ["E402"]
+"backend/logger/services/mlflow_logger.py" = ["E402"]
+"backend/main.py" = ["E402"]
+"backend/scripts/data_enrichment/enrich_movies.py" = ["E402"]
+"backend/scripts/finalize_metadata.py" = ["E402"]
+"backend/scripts/prepare_data.py" = ["E402"]
+"backend/scripts/run_tests.py" = ["E402"]
+"backend/scripts/verify_models.py" = ["E402"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

@@ -1,7 +1,6 @@
-import os
 import json
+import os
 from pathlib import Path
-from typing import Dict, List
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -17,8 +16,9 @@ class Settings(BaseSettings):
 
     LOCAL_DATA_PATH: str = "data"
     LOCAL_MLRUNS_PATH: str = "mlruns"
+    MODEL_BUNDLE_DIR: str = ""
 
-    ALLOWED_ORIGINS: str | List[str] = [
+    ALLOWED_ORIGINS: str | list[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     IMDB_BASE_URL: str = "http://www.omdbapi.com/"
     IMDB_RATE_LIMIT: int = 20
-    
+
     AWS_REGION: str = "ap-south-1"
     DYNAMODB_TABLE_NAME: str = "Movies"
     S3_ARTIFACT_BUCKET: str = "movie-artifacts"
@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     LOG_FORMAT_JSON: bool = True
     TRACE_SAMPLE_SIZE: int = 2
 
-    MLFLOW_EXPERIMENTS: Dict[str, str] = {
+    MLFLOW_EXPERIMENTS: dict[str, str] = {
         "offline": "recommender_offline_eval",
         "online": "recommender_online_inference",
     }
@@ -98,6 +98,7 @@ except Exception as e:
             self.ALLOWED_ORIGINS = ["*"]
             self.LOCAL_DATA_PATH = "data"
             self.LOCAL_MLRUNS_PATH = "mlruns"
+            self.MODEL_BUNDLE_DIR = os.getenv("MODEL_BUNDLE_DIR", "")
             self.BATCH_SIZE = 100
             self.TOP_N_TAGS = 10000
             self.CHECKPOINT_INTERVAL = 100
@@ -150,6 +151,7 @@ AWS_ENDPOINT_URL = settings.AWS_ENDPOINT_URL
 LOG_FORMAT_JSON = settings.LOG_FORMAT_JSON
 TRACE_SAMPLE_SIZE = settings.TRACE_SAMPLE_SIZE
 MLFLOW_EXPERIMENTS = settings.MLFLOW_EXPERIMENTS
+MODEL_BUNDLE_DIR = settings.MODEL_BUNDLE_DIR
 
 # Derived Paths
 if ENVIRONMENT == "LOCAL":
@@ -162,9 +164,7 @@ if ENVIRONMENT == "LOCAL":
     MODELS_PATH = PROJECT_ROOT / "artifacts/models"
 else:
     DATA_BASE_PATH = f"s3://{S3_ARTIFACT_BUCKET}"
-    MLFLOW_TRACKING_URI = os.getenv(
-        "MLFLOW_TRACKING_URI", "/tmp/mlruns"
-    )
+    MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "/tmp/mlruns")
     INDICES_PATH = f"{DATA_BASE_PATH}/artifacts/indices"
     MODELS_PATH = f"{DATA_BASE_PATH}/artifacts/models"
 

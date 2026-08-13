@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pandas as pd
 from common.config import config
 from common.logger import get_logger
 from retrieval.models.content_based import ContentBasedBuilder

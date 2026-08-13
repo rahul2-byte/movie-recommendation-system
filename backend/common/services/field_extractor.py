@@ -5,8 +5,6 @@ Transforms raw API responses from TMDB and IMDb into a unified
 MovieData model.
 """
 
-from typing import Dict, List, Optional
-
 from common.logger import get_logger
 from common.models.movie import MovieData
 
@@ -15,8 +13,8 @@ logger = get_logger(__name__)
 
 def extract_movie_fields(
     movie_id: int,
-    tmdb_data: Dict,
-    imdb_data: Optional[Dict] = None,
+    tmdb_data: dict,
+    imdb_data: dict | None = None,
 ) -> MovieData:
     """
     Extract and normalize fields from API responses.

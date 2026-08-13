@@ -39,7 +39,7 @@ echo "[1/4] Building Lambda image from backend/Dockerfile.lambda..."
 docker build --no-cache --progress=plain \
   -t "$IMAGE_NAME" \
   -f backend/Dockerfile.lambda \
-  backend/
+  .
 
 echo "[2/4] Starting Lambda container..."
 RUN_ARGS=(

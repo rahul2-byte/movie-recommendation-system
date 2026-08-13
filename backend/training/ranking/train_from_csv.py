@@ -55,7 +55,7 @@ def train():
     )
 
     model.save_model(str(model_dir / "lgbm_lambdarank.txt"))
-    log.info(f"✨ Model saved successfully! ✨")
+    log.info("✨ Model saved successfully! ✨")
 
 
 if __name__ == "__main__":

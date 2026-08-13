@@ -1,74 +1,126 @@
-import asyncio
-import logging
-from typing import Dict, List, Optional, Any
-from common.storage.repositories import DynamoDBMovieRepository
-from common.clients.imdb import get_imdb_client
-from common.clients.tmdb import get_tmdb_client
-from configs.settings import AWS_REGION, DYNAMODB_TABLE_NAME
+"""TMDB-backed movie metadata for the operational TMDB-ID contract."""
 
-log = logging.getLogger(__name__)
+from __future__ import annotations
+
+import asyncio
+from typing import Any, Protocol
+
+from configs.settings import TMDB_IMAGE_BASE, TMDB_POSTER_SIZE
+
+from common.clients.tmdb import get_tmdb_client
+
+
+class TMDBMovieClient(Protocol):
+    async def fetch_movie_full(self, tmdb_id: int) -> dict[str, Any]: ...
+
+    async def fetch_path(
+        self, path: str, params: dict[str, Any] | None = None
+    ) -> dict[str, Any]: ...
+
+
+def _image_url(path: object, size: str) -> str | None:
+    return f"{TMDB_IMAGE_BASE}/{size}{path}" if isinstance(path, str) and path else None
+
+
+def _normalize_movie(movie: dict[str, Any]) -> dict[str, Any] | None:
+    tmdb_id = movie.get("id")
+    if not isinstance(tmdb_id, int) or tmdb_id <= 0:
+        return None
+    credits = movie.get("credits") if isinstance(movie.get("credits"), dict) else {}
+    keywords = movie.get("keywords") if isinstance(movie.get("keywords"), dict) else {}
+    release_date = movie.get("release_date")
+    year = (
+        int(release_date[:4])
+        if isinstance(release_date, str) and len(release_date) >= 4
+        else None
+    )
+    return {
+        "movieId": tmdb_id,
+        "tmdbId": tmdb_id,
+        "title": movie.get("title") or movie.get("original_title"),
+        "year": year,
+        "genres": [
+            genre["name"]
+            for genre in movie.get("genres", [])
+            if isinstance(genre, dict) and isinstance(genre.get("name"), str)
+        ],
+        "keywords": [
+            keyword["name"]
+            for keyword in keywords.get("keywords", [])
+            if isinstance(keyword, dict) and isinstance(keyword.get("name"), str)
+        ],
+        "top_cast": [
+            member["name"]
+            for member in credits.get("cast", [])[:5]
+            if isinstance(member, dict) and isinstance(member.get("name"), str)
+        ],
+        "director": next(
+            (
+                member["name"]
+                for member in credits.get("crew", [])
+                if isinstance(member, dict)
+                and member.get("job") == "Director"
+                and isinstance(member.get("name"), str)
+            ),
+            None,
+        ),
+        "posterUrl": _image_url(movie.get("poster_path"), TMDB_POSTER_SIZE),
+        "backdropUrl": _image_url(movie.get("backdrop_path"), "original"),
+        "overview": movie.get("overview"),
+        "tagline": movie.get("tagline"),
+        "releaseDate": release_date,
+        "runtime": movie.get("runtime"),
+        "runtime_minutes": movie.get("runtime"),
+        "rating": movie.get("vote_average"),
+        "voteAverage": movie.get("vote_average"),
+        "voteCountTmdb": movie.get("vote_count"),
+        "popularity": movie.get("popularity"),
+        "language": movie.get("original_language"),
+        "country": next(
+            (
+                country["name"]
+                for country in movie.get("production_countries", [])
+                if isinstance(country, dict) and isinstance(country.get("name"), str)
+            ),
+            None,
+        ),
+        "collection_name": (
+            movie["belongs_to_collection"].get("name")
+            if isinstance(movie.get("belongs_to_collection"), dict)
+            else None
+        ),
+    }
+
 
 class MovieStore:
-    def __init__(self):
-        log.info("Initializing MovieStore (Repository Pattern)...")
-        # Injected dependencies
-        self.repository = DynamoDBMovieRepository(
-            table_name=DYNAMODB_TABLE_NAME, 
-            region_name=AWS_REGION
-        )
-        self.tmdb_client = get_tmdb_client()
-        self.imdb_client = get_imdb_client()
+    """Fetch operational movie metadata from TMDB without a local replica."""
 
-    async def get(self, movie_id: int) -> Optional[Dict[str, Any]]:
-        """Delegate to Repository."""
-        return await self.repository.get_movie(movie_id)
+    def __init__(self, tmdb_client: TMDBMovieClient | None = None):
+        self.tmdb_client = tmdb_client or get_tmdb_client()
 
-    async def get_by_tmdb_id(self, tmdb_id: int) -> Optional[Dict[str, Any]]:
-        """
-        GSI Lookups are currently not exposed on the generic Repository interface,
-        but we can add a specific method or keep it here if it's very specific.
-        For now, let's keep the logic close to the Repository if possible, 
-        or implement it directly here if it's a 'Service' logic.
-        
-        However, to be clean, let's move GSI query to the Repository.
-        """
-        # We need to add get_by_tmdb_id to the Repository or use the internal table
-        # For simplicity in this refactor, we'll access the repository's table directly 
-        # or expand the repository. Let's expand the repository (best practice).
-        # But since I cannot edit the file I just wrote in the same turn easily without 
-        # overwriting, I will implement it here using the repository's resource 
-        # or (better) assume I will update the repository interface in a future step if needed.
-        
-        # Actually, let's just use the underlying table from the repository if we must,
-        # OR (better) acknowledge that 'MovieStore' IS the high-level service 
-        # and 'DynamoDBMovieRepository' is the low-level data access.
-        
-        # Since I didn't add 'get_by_tmdb_id' to the repository in the previous step,
-        # I will implement it here using the repository's internal table object
-        # which is accessible (Python doesn't enforce private).
-        # This is a pragmatic tradeoff to avoid another file write right now.
-        
-        try:
-            import boto3
-            response = await asyncio.to_thread(
-                self.repository._table.query,
-                IndexName="TmdbIndex",
-                KeyConditionExpression=boto3.dynamodb.conditions.Key("tmdbId").eq(int(tmdb_id)),
-                Limit=1
-            )
-            items = response.get("Items", [])
-            if not items:
-                return None
-            return self.repository._format_item(items[0])
-        except Exception as e:
-            log.error(f"Error fetching movie by TMDB ID {tmdb_id}: {e}")
-            return None
+    async def get(self, tmdb_id: int) -> dict[str, Any] | None:
+        return _normalize_movie(await self.tmdb_client.fetch_movie_full(int(tmdb_id)))
 
-    async def get_many(self, movie_ids: List[int]) -> List[Dict[str, Any]]:
-        """Delegate to Repository."""
-        return await self.repository.get_movies(movie_ids)
+    async def get_by_tmdb_id(self, tmdb_id: int) -> dict[str, Any] | None:
+        return await self.get(tmdb_id)
 
-    async def search(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
-        """Delegate to Repository (DynamoDB Scan/GSI)."""
-        return await self.repository.search_movies(query, limit)
+    async def get_many(self, tmdb_ids: list[int]) -> list[dict[str, Any]]:
+        movies = await asyncio.gather(*(self.get(tmdb_id) for tmdb_id in tmdb_ids))
+        return [movie for movie in movies if movie is not None]
 
+    async def get_many_by_tmdb_ids(self, tmdb_ids: list[int]) -> list[dict[str, Any]]:
+        return await self.get_many(tmdb_ids)
+
+    async def search(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
+        data = await self.tmdb_client.fetch_path("/search/movie", {"query": query})
+        return [
+            {
+                "tmdbId": movie["id"],
+                "movieId": movie["id"],
+                "title": movie.get("title"),
+            }
+            for movie in data.get("results", [])[:limit]
+            if isinstance(movie, dict)
+            and isinstance(movie.get("id"), int)
+            and movie["id"] > 0
+        ]

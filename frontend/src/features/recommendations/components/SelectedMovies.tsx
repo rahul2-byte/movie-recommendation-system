@@ -27,17 +27,23 @@ export function SelectedMovies() {
           <AnimatePresence>
             {selectedMovies.map((movie, index) => (
               <m.div
-                key={movie.movieId}
+                key={movie.tmdbId}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 layout
               >
                 <MovieCard 
-                  movie={movie as any} 
+                  movie={{
+                    ...movie,
+                    movieId: movie.tmdbId,
+                    year: null,
+                    genres: [],
+                    posterUrl: movie.posterUrl ?? null,
+                  }}
                   selected={true} 
                   index={index}
-                  onClick={() => removeMovie(movie.movieId)}
+                  onClick={() => removeMovie(movie.tmdbId)}
                 />
               </m.div>
             ))}

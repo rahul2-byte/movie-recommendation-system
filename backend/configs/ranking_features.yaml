@@ -1,0 +1,15 @@
+schema_version: ranking-features-v2
+compression: zstd
+compression_level: 3
+features:
+  - retrieval_source_count
+  - retrieval_als_rank
+  - retrieval_als_score_normalized
+  - retrieval_item_graph_rank
+  - retrieval_item_graph_score_normalized
+  - retrieval_two_tower_rank
+  - retrieval_two_tower_score_normalized
+  - retrieval_content_rank
+  - retrieval_content_score_normalized
+  - candidate_train_interaction_count
+  - candidate_train_log_interaction_count

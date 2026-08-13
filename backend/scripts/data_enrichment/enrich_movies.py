@@ -23,7 +23,6 @@ load_dotenv(dotenv_path=env_path)
 BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(BACKEND_ROOT))
 
-from configs.settings import BATCH_SIZE, INTERMEDIATE_DIR, LINKS_CSV
 from common.clients.imdb import IMDBClient
 from common.clients.tmdb import TMDBClient
 from common.logger import get_logger, log_separator
@@ -31,6 +30,7 @@ from common.services.enrichment import EnrichmentService
 from common.storage.checkpoint import CheckpointManager
 from common.storage.dataset_merger import merge_dataset
 from common.storage.parquet_writer import ParquetWriter
+from configs.settings import BATCH_SIZE, INTERMEDIATE_DIR, LINKS_CSV
 
 logger = get_logger(__name__)
 
@@ -177,7 +177,7 @@ async def retry_failed_movies_only(batch_size: int = BATCH_SIZE) -> None:
         )
 
         # Convert to list of tuples
-        movies = list(zip(failed_df["movieId"], failed_df["tmdbId"]))
+        movies = list(zip(failed_df["movieId"], failed_df["tmdbId"], strict=True))
 
         # Process in batches
         total_successful = 0
@@ -221,8 +221,8 @@ async def retry_failed_movies_only(batch_size: int = BATCH_SIZE) -> None:
         logger.info("=" * 60)
 
         if total_successful > 0:
-            logger.info(f"New data written to intermediate parquet files")
-            logger.info(f"Run 'python main.py --merge' to update final dataset")
+            logger.info("New data written to intermediate parquet files")
+            logger.info("Run 'python main.py --merge' to update final dataset")
 
     finally:
         await tmdb_client.close()

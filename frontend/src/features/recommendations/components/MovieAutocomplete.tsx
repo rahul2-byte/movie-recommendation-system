@@ -26,17 +26,14 @@ export function MovieAutocomplete() {
   }, [results])
 
   const toggleMovie = (movie: any) => {
-    // Backend returns movieId (or movie_id). 
-    // We should be consistent. Our store uses movieId.
-    const mid = movie.movieId
-    const isSelected = selectedMovies.some((m) => m.movieId === mid)
+    const tmdbId = movie.tmdbId
+    const isSelected = selectedMovies.some((m) => m.tmdbId === tmdbId)
     if (isSelected) {
-      removeMovie(mid)
+      removeMovie(tmdbId)
     } else if (canAddMore) {
       addMovie({
-        movieId: mid,
+        tmdbId,
         title: movie.title,
-        tmdbId: movie.tmdbId,
         posterUrl: movie.posterUrl,
       })
     }
@@ -73,12 +70,12 @@ export function MovieAutocomplete() {
                 className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6"
               >
                 {filteredResults.map((movie, index) => {
-                  const mid = movie.movieId
-                  const isSelected = selectedMovies.some((m) => m.movieId === mid)
+                  const tmdbId = movie.tmdbId
+                  const isSelected = selectedMovies.some((m) => m.tmdbId === tmdbId)
                   return (
                     <MovieCard
-                      key={mid}
-                      movie={{...movie, movieId: mid}}
+                      key={tmdbId}
+                      movie={movie}
                       index={index}
                       selected={isSelected}
                       onClick={() => toggleMovie(movie)}

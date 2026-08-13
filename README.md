@@ -11,6 +11,33 @@ Users pick a few movies they already like, and the system returns personalized r
 - Blends offline-trained ML artifacts with online API enrichment and production deployment.
 - Exposes a clean frontend (Next.js) and backend API (FastAPI on AWS Lambda).
 
+## Local setup
+
+Prerequisites: `uv`, Node.js/npm, `curl`, `unzip`, and either `md5sum` or `md5`.
+
+From the repository root, run:
+
+```bash
+./start.sh
+```
+
+The script creates/reconciles `.venv` from `uv.lock`, installs the frontend from
+`frontend/package-lock.json`, and downloads plus verifies the fixed MovieLens 32M
+dataset into `backend/data/raw/`. It does not start services, process data, train
+models, upload artifacts, or contact AWS.
+
+Native C++ training dependencies remain deferred; UV covers Python packages only.
+
+## Python formatting and linting
+
+Ruff is the authoritative Python formatter and linter. It is installed with
+the locked development dependencies. Run it after Python changes:
+
+```bash
+uv run --frozen ruff format backend
+uv run --frozen ruff check backend
+```
+
 ## How recommendations are generated
 
 At runtime, the backend executes a pipeline:
@@ -54,7 +81,7 @@ flowchart LR
 - `README.md`: high-level project explanation.
 - `template.yaml`: AWS SAM infrastructure template (API Gateway + Lambda deployment).
 - `docker-compose.yml`: local multi-service orchestration.
-- `environment.yml`: Python environment spec for reproducible setup.
+- `pyproject.toml` and `uv.lock`: authoritative Python dependency declaration and lock.
 - `.github/workflows/deploy.yml`: CI/CD workflow for backend image build and SAM deploy.
 - `backend/`: all API, ML inference, data pipelines, and deployment code for server side.
 - `frontend/`: user-facing web application.

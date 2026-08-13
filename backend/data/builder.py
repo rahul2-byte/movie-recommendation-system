@@ -14,7 +14,6 @@ Methodology:
 """
 
 import logging
-import os
 
 import numpy as np
 import pandas as pd
@@ -42,7 +41,7 @@ def build_ranking_dataset(
     Main function to generate and save the query-centric ranking dataset.
     This version is optimized to process data in chunks to manage memory usage.
     """
-    log.info(f"Starting dataset building process.")
+    log.info("Starting dataset building process.")
     log.info(f"Loading ratings from {ratings_path}...")
     ratings = pd.read_parquet(
         ratings_path, columns=["userId", "movieId", "rating", "timestamp"]

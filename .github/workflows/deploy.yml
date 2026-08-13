@@ -42,7 +42,7 @@ jobs:
             --sbom=false \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
             -f backend/Dockerfile.lambda \
-            backend/ \
+            . \
             --push
 
       - name: Verify image exists in ECR

@@ -1,6 +1,5 @@
 import asyncio
 import time
-from typing import Dict, List, Tuple
 
 from common.logger import get_logger
 from common.types import Candidate, Query
@@ -16,7 +15,7 @@ log = get_logger(__name__)
 
 class RecallService:
     def __init__(self):
-        self.retrievers: List[BaseRetriever] = []
+        self.retrievers: list[BaseRetriever] = []
         self._initialized = False
         self._lock = asyncio.Lock()
 
@@ -68,8 +67,8 @@ class RecallService:
 
     async def recall(
         self, query: Query, top_k: int = 500, request_id: str = "n/a"
-    ) -> List[Candidate]:
-        if not query.seed_movie_ids:
+    ) -> list[Candidate]:
+        if not query.seed_tmdb_ids:
             return []
         await self._ensure_initialized()
         total_start = time.perf_counter()
@@ -77,7 +76,7 @@ class RecallService:
             "recall.start request_id={} top_k={} seeds={}",
             request_id,
             top_k,
-            query.seed_movie_ids,
+            query.seed_tmdb_ids,
         )
         results = await asyncio.gather(
             *[
@@ -85,14 +84,14 @@ class RecallService:
                 for r in self.retrievers
             ]
         )
-        merged: Dict[int, Candidate] = {}
+        merged: dict[int, Candidate] = {}
         for retriever_output in results:
-            for mid, score, source in retriever_output:
-                if mid in query.seed_movie_ids:
+            for tmdb_id, score, source in retriever_output:
+                if tmdb_id in query.seed_tmdb_ids:
                     continue
-                if mid not in merged:
-                    merged[mid] = Candidate(movie_id=mid)
-                c = merged[mid]
+                if tmdb_id not in merged:
+                    merged[tmdb_id] = Candidate(tmdb_id=tmdb_id)
+                c = merged[tmdb_id]
                 if source not in c.sources:
                     c.sources.append(source)
                 c.scores[source] = score
@@ -100,7 +99,7 @@ class RecallService:
         final = [
             c
             for c in merged.values()
-            if c.movie_id not in query.seed_movie_ids and c.movie_id != 0
+            if c.tmdb_id not in query.seed_tmdb_ids and c.tmdb_id != 0
         ]
         final.sort(key=lambda c: c.score, reverse=True)
         log.info(

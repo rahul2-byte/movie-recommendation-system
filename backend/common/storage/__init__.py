@@ -1,4 +1,4 @@
-from .checkpoint import CheckpointManager, CheckpointData
+from .checkpoint import CheckpointData, CheckpointManager
 from .parquet_writer import ParquetWriter
 from .repositories import DynamoDBMovieRepository, S3ArtifactRepository
 

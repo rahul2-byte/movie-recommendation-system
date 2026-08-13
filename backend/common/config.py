@@ -15,7 +15,7 @@ class ConfigLoader:
     def _load_configs(self):
         # Load all .yml files in the config directory
         for yml_file in self.config_dir.glob("*.yml"):
-            with open(yml_file, "r") as f:
+            with open(yml_file) as f:
                 data = yaml.safe_load(f)
                 if data:
                     # Use the filename (without extension) as the key

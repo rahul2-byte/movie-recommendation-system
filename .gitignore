@@ -26,6 +26,7 @@ ENV/
 data/raw/
 data/processed/
 data/interim/
+backend/data/versions/
 *.csv
 *.parquet
 *.feather
@@ -39,6 +40,7 @@ data/interim/
 # Model Artifacts
 # =========================
 artifacts/
+backend/model_bundle/
 checkpoints/
 *.pt
 *.pth

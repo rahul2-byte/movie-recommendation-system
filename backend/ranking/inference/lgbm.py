@@ -1,13 +1,13 @@
-from typing import List
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
-from common.logger import get_logger
-from common.types import Candidate
 from common.config import config
+from common.logger import get_logger
 from common.storage.repositories import S3ArtifactRepository
+from common.types import Candidate
 
 log = get_logger(__name__)
+
 
 class LGBMRanker:
     """
@@ -18,15 +18,15 @@ class LGBMRanker:
     def __init__(self):
         # Initialize S3 Repository
         self.s3_repo = S3ArtifactRepository()
-        
+
         # Download Model
         model_key = config.system.model_registry.ranker.model_key
         model_path = self.s3_repo.download_artifact(model_key)
-        
+
         # Load Model
         self.model = lgb.Booster(model_file=str(model_path))
         self.feature_names = config.features.ranker_features
-        
+
         log.info(
             f"LGBMRanker: Loaded model from {model_path} with {self.model.num_feature()} features."
         )
@@ -34,10 +34,10 @@ class LGBMRanker:
 
     def rank(
         self,
-        candidates: List[Candidate],
+        candidates: list[Candidate],
         features_df: pd.DataFrame,
         limit: int = 100,
-    ) -> List[Candidate]:
+    ) -> list[Candidate]:
         """
         Ranks candidates using the provided features.
         """
@@ -80,7 +80,7 @@ class LGBMRanker:
 
         # Attach scores to candidates
         # We assume the order in features_df matches the order of candidates
-        for c, s in zip(candidates, scores):
+        for c, s in zip(candidates, scores, strict=True):
             c.rank_score = float(s)
 
         # Sort by rank_score descending

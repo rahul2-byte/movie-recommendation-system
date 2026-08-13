@@ -1,6 +1,7 @@
 # background/tasks.py
 from logger.services.mlflow_logger import flush_to_mlflow
 
+
 def start_background_tasks():
     import threading
     import time

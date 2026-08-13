@@ -30,8 +30,8 @@ export default function RecommendationsPage() {
   }
 
   const handleRefresh = () => {
-    const seedMovieIds = selectedMovies.map(m => m.movieId)
-    mutate({ seed_movie_ids: seedMovieIds, moods: selectedGenres as any, limit: 20 })
+    const seedTmdbIds = selectedMovies.map(m => m.tmdbId)
+    mutate({ seed_tmdb_ids: seedTmdbIds, moods: selectedGenres as any, limit: 20 })
   }
 
   if (error) {
@@ -87,7 +87,7 @@ export default function RecommendationsPage() {
           <RecommendationsGrid movies={recommendations} onSelect={handleMovieClick} />
 
           <MovieDetailModal
-            movieId={selectedMovie?.movieId ?? null}
+            movieId={null}
             tmdbId={selectedMovie?.tmdbId ?? null}
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}

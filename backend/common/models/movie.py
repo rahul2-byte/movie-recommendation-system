@@ -4,7 +4,7 @@ Data models for movie data structures.
 
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, get_args, get_origin
+from typing import Any, Union, get_args, get_origin
 
 import pyarrow as pa
 import yaml
@@ -15,30 +15,30 @@ class MovieData:
     """Dataclass to hold enriched movie data."""
 
     movie_id: int
-    tmdb_id: Optional[int]
-    imdb_id: Optional[str]
-    title: Optional[str]
-    overview: Optional[str]
-    genres: List[str]
-    keywords: List[str]
-    top_cast: List[str]
-    director: Optional[str]
-    runtime_minutes: Optional[int]
-    release_year: Optional[int]
-    release_date: Optional[str]
-    popularity_score: Optional[float]
-    vote_count: Optional[int]
-    vote_average: Optional[float]
-    imdb_rating: Optional[float]
-    imdb_votes: Optional[int]
-    poster_path: Optional[str]
-    backdrop_path: Optional[str]
-    language: Optional[str]
-    country: Optional[str]
-    collection_id: Optional[int]
-    collection_name: Optional[str]
+    tmdb_id: int | None
+    imdb_id: str | None
+    title: str | None
+    overview: str | None
+    genres: list[str]
+    keywords: list[str]
+    top_cast: list[str]
+    director: str | None
+    runtime_minutes: int | None
+    release_year: int | None
+    release_date: str | None
+    popularity_score: float | None
+    vote_count: int | None
+    vote_average: float | None
+    imdb_rating: float | None
+    imdb_votes: int | None
+    poster_path: str | None
+    backdrop_path: str | None
+    language: str | None
+    country: str | None
+    collection_id: int | None
+    collection_name: str | None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert dataclass to dictionary."""
         return asdict(self)
 
@@ -75,7 +75,7 @@ def get_pyarrow_schema() -> pa.Schema:
                     origin = get_origin(field_type)
                     args = get_args(field_type)
 
-        if origin is list or origin is List:
+        if origin is list or origin is list:
             pa_type = pa.list_(pa.string())
         else:
             pa_type = type_mapping.get(field_type, pa.string())
@@ -97,7 +97,7 @@ def load_schema_version() -> dict:
         Path(__file__).resolve().parent.parent.parent
         / "configs/schemas/schema_versions.yaml"
     )
-    with open(schema_config_path, "r") as f:
+    with open(schema_config_path) as f:
         schema_config = yaml.safe_load(f)
 
     current_version_str = schema_config["current_version"]

@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pandas as pd
 from common.config import config
 from common.logger import get_logger
 from configs.settings import TOP_N_TAGS
@@ -66,4 +65,3 @@ def train_two_tower_model():
 
 if __name__ == "__main__":
     train_two_tower_model()
-

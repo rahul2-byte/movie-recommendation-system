@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any
 
 from configs.settings import (
     TMDB_ACCESS_TOKEN,
@@ -25,7 +25,7 @@ class TMDBClient(BaseAPIClient):
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(TMDBClient, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
@@ -40,7 +40,7 @@ class TMDBClient(BaseAPIClient):
         }
         self._initialized = True
 
-    async def fetch_movie_full(self, tmdb_id: int) -> Dict[str, Any]:
+    async def fetch_movie_full(self, tmdb_id: int) -> dict[str, Any]:
         """Fetches full movie details with credits and keywords."""
         cache_key = f"movie_{tmdb_id}"
         if cache_key in self._cache:
@@ -61,9 +61,7 @@ class TMDBClient(BaseAPIClient):
             log.error(f"TMDB Client: Error fetching movie {tmdb_id}: {str(e)}")
             return {}
 
-    async def fetch_path(
-        self, path: str, params: Optional[Dict] = None
-    ) -> Dict[str, Any]:
+    async def fetch_path(self, path: str, params: dict | None = None) -> dict[str, Any]:
         """Generic fetch for any TMDB path with caching for common paths."""
         url = f"{self.base_url}{path}"
         # Cache catalog requests for 5 minutes (via local lifecycle check if we wanted,

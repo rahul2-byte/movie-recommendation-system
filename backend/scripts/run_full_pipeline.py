@@ -1,14 +1,17 @@
-import subprocess
-import logging
-import sys
-import os
 import argparse
+import logging
+import os
+import subprocess
+import sys
 from pathlib import Path
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 log = logging.getLogger(__name__)
 
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
+
 
 def run_command(cmd, description):
     log.info(f"--- Starting: {description} ---")
@@ -17,22 +20,25 @@ def run_command(cmd, description):
         env = os.environ.copy()
         # Add backend to path for imports
         env["PYTHONPATH"] = str(BACKEND_ROOT)
-        
-        result = subprocess.run(
-            cmd, 
-            shell=True, 
-            check=True, 
+
+        subprocess.run(
+            cmd,
+            shell=True,
+            check=True,
             cwd=str(BACKEND_ROOT),
             env=env,
-            capture_output=False
+            capture_output=False,
         )
         log.info(f"--- Completed: {description} ---\n")
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         log.error(f"!!! Failed: {description} !!!")
         sys.exit(1)
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Run full training/inference prep pipeline.")
+    parser = argparse.ArgumentParser(
+        description="Run full training/inference prep pipeline."
+    )
     parser.add_argument(
         "--compress-content-model",
         action="store_true",
@@ -59,6 +65,7 @@ def main():
         )
 
     log.info("All pipeline steps completed successfully!")
+
 
 if __name__ == "__main__":
     main()

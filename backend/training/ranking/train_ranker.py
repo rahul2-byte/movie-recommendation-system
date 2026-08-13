@@ -6,7 +6,7 @@ Uses pre-calculated features from S3.
 
 import logging
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import lightgbm as lgb
 import pandas as pd
@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
-def _sanitize_metric_names(metrics: Dict[str, Any]) -> Dict[str, Any]:
+def _sanitize_metric_names(metrics: dict[str, Any]) -> dict[str, Any]:
     sanitized_metrics = {}
     for key, value in metrics.items():
         sanitized_key = key.replace("@", "_at_").replace("/", "_")
@@ -29,11 +29,11 @@ def _sanitize_metric_names(metrics: Dict[str, Any]) -> Dict[str, Any]:
 
 def train_ranker():
     log.info("Loading configuration...")
-    
+
     # Initialize S3 Repository
     s3_repo = S3ArtifactRepository()
-    dataset_key = "datasets/ranking/training.parquet" # Assumed key
-    
+    dataset_key = "datasets/ranking/training.parquet"  # Assumed key
+
     try:
         log.info(f"Downloading training dataset from S3 ({dataset_key})...")
         dataset_path = s3_repo.download_artifact(dataset_key)
@@ -101,7 +101,7 @@ def train_ranker():
 
         # Train Model
         log.info("Training LightGBM ranker...")
-        params: Dict[str, Any] = dict(config.ranker.model_params)
+        params: dict[str, Any] = dict(config.ranker.model_params)
         mlflow_client.log_params(params)
 
         model = lgb.LGBMRanker(**params)

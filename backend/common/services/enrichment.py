@@ -6,7 +6,6 @@ and result persistence.
 """
 
 import asyncio
-from typing import List, Optional, Tuple
 
 import pandas as pd
 from configs.settings import (
@@ -57,7 +56,7 @@ class EnrichmentService:
         self,
         movie_id: int,
         tmdb_id: int,
-    ) -> Optional[MovieData]:
+    ) -> MovieData | None:
         """
         Enrich a single movie by fetching data from APIs.
 
@@ -105,8 +104,8 @@ class EnrichmentService:
 
     async def enrich_batch(
         self,
-        movies: List[Tuple[int, int]],
-    ) -> Tuple[List[MovieData], List[int]]:
+        movies: list[tuple[int, int]],
+    ) -> tuple[list[MovieData], list[int]]:
         """
         Enrich a batch of movies concurrently.
 
@@ -123,7 +122,7 @@ class EnrichmentService:
         successful = []
         failed = []
 
-        for (movie_id, _), result in zip(movies, results):
+        for (movie_id, _), result in zip(movies, results, strict=True):
             if result is not None:
                 successful.append(result)
             else:
@@ -209,7 +208,7 @@ class EnrichmentService:
             return
 
         # Convert to list of tuples
-        movies = list(zip(movies_df["movieId"], movies_df["tmdbId"]))
+        movies = list(zip(movies_df["movieId"], movies_df["tmdbId"], strict=True))
         total_movies = len(movies)
 
         # Process movies
