@@ -62,7 +62,6 @@ ignore = ["E501"]
 "backend/scripts/finalize_metadata.py" = ["E402"]
 "backend/scripts/prepare_data.py" = ["E402"]
 "backend/scripts/run_tests.py" = ["E402"]
-"backend/scripts/verify_models.py" = ["E402"]
 
 [tool.uv.sources]
 torch = { index = "pytorch-cpu" }
