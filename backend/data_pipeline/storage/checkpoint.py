@@ -11,9 +11,8 @@ import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from configs.settings import CHECKPOINT_FILE, FAILED_MOVIES_FILE
-
 from common.logger import get_logger
+from configs.settings import CHECKPOINT_FILE, FAILED_MOVIES_FILE
 
 logger = get_logger(__name__)
 

@@ -13,13 +13,13 @@ from configs.settings import (
     LINKS_CSV,
 )
 from data_pipeline.movie_models import MovieData
+from data_pipeline.storage.checkpoint import CheckpointData, CheckpointManager
+from data_pipeline.storage.parquet_writer import ParquetWriter
 
 from common.clients.imdb import IMDBClient
 from common.clients.tmdb import TMDBClient
 from common.logger import get_logger
 from common.services.field_extractor import extract_movie_fields
-from common.storage.checkpoint import CheckpointData, CheckpointManager
-from common.storage.parquet_writer import ParquetWriter
 
 logger = get_logger(__name__)
 

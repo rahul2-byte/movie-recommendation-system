@@ -11,12 +11,11 @@ from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+from common.logger import get_logger
 from configs.settings import (
     INTERMEDIATE_DIR,
     MOVIES_METADATA_PATH,
 )
-
-from common.logger import get_logger
 
 logger = get_logger(__name__)
 
