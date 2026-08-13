@@ -5,6 +5,7 @@ WORKDIR /build
 COPY --from=ghcr.io/astral-sh/uv:0.11.6 /uv /uvx /bin/
 
 COPY pyproject.toml uv.lock ./
+RUN yum install -y gcc gcc-c++ make && yum clean all
 RUN uv sync --frozen --no-dev --no-install-project
 RUN mkdir -p /build/runtime-lib && \
     cp $(ls /build/.venv/lib/python3.10/site-packages/scikit_learn.libs/libgomp*.so* 2>/dev/null | head -n 1) /build/runtime-lib/libgomp.so.1 || \
