@@ -39,3 +39,15 @@ The repository-wide verification gate is Ruff, pytest, API import, bundle
 smoke, frontend production build, `sam validate`, and Docker Lambda build and
 startup. Results are recorded separately when tooling or network access is
 unavailable.
+
+## Verification results (2026-08-14)
+
+- Ruff: passed.
+- Backend tests: `110 passed`.
+- API import: passed.
+- Frontend `npm run build`: passed; static generation logged expected warnings
+  because the local backend was not running.
+- `sam validate`: not run because the SAM CLI is unavailable in this environment.
+- Docker Lambda build: attempted with host networking; blocked while Amazon
+  Linux attempted to resolve its package mirror. This is an environment
+  network blocker, not a source verification pass.
