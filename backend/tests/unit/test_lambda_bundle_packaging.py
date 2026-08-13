@@ -37,6 +37,17 @@ def test_lambda_image_and_sam_template_configure_the_model_bundle_contract():
         in workflow
     )
     assert 'test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"' in workflow
+    for required_file in (
+        "ranker/manifest.json",
+        "ranker/model.txt",
+        "ranker/feature_schema.json",
+        "retrievers/als/manifest.json",
+        "retrievers/item_graph/manifest.json",
+        "retrievers/two_tower/manifest.json",
+        "retrievers/content/manifest.json",
+    ):
+        assert required_file in workflow
+        assert required_file in preflight
     assert "--build-arg MODEL_BUNDLE_PATH=$MODEL_BUNDLE_PATH" in workflow
     assert "astral-sh/setup-uv@v5" in workflow
     assert "uv sync --frozen" in workflow

@@ -24,6 +24,19 @@ if ! test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"; then
   echo "ERROR: Model bundle manifest not found: $MODEL_BUNDLE_PATH/bundle_manifest.json" >&2
   exit 1
 fi
+for required_file in \
+  ranker/manifest.json \
+  ranker/model.txt \
+  ranker/feature_schema.json \
+  retrievers/als/manifest.json \
+  retrievers/item_graph/manifest.json \
+  retrievers/two_tower/manifest.json \
+  retrievers/content/manifest.json; do
+  if ! test -f "$MODEL_BUNDLE_PATH/$required_file"; then
+    echo "ERROR: Required model bundle file not found: $MODEL_BUNDLE_PATH/$required_file" >&2
+    exit 1
+  fi
+done
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then

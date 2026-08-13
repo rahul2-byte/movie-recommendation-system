@@ -52,6 +52,16 @@ jobs:
           MODEL_BUNDLE_PATH: backend/model_bundle/movielens-32m-4retriever-ranker-v1
         run: |
           test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"
+          for required_file in \
+            ranker/manifest.json \
+            ranker/model.txt \
+            ranker/feature_schema.json \
+            retrievers/als/manifest.json \
+            retrievers/item_graph/manifest.json \
+            retrievers/two_tower/manifest.json \
+            retrievers/content/manifest.json; do
+            test -f "$MODEL_BUNDLE_PATH/$required_file"
+          done
           docker buildx build \
             --platform linux/amd64 \
             --provenance=false \
