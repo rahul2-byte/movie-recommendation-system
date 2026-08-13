@@ -10,7 +10,7 @@ feature, and model manifests.
 Frontend
   -> backend/main.py
     -> api/v1 routes
-      -> common.lifecycle
+      -> application.lifecycle
         -> serving.pipeline
           -> serving.recommender
             -> ALS, item graph, two-tower, content retrievers
@@ -46,7 +46,7 @@ MovieLens/TMDB-enriched raw data
 | Domain | Canonical owner | Must not own |
 | --- | --- | --- |
 | HTTP transport | `backend/api/` | retrieval mathematics or data preparation |
-| Request orchestration | `backend/common/lifecycle.py` and `backend/serving/pipeline.py` | model training |
+| Request orchestration | `backend/application/lifecycle.py` and `backend/serving/pipeline.py` | model training |
 | Metadata access | `backend/common/services/movie_store.py` | candidate scoring |
 | Dataset preparation | `backend/data_pipeline/` | HTTP or AWS deployment |
 | Retrieval training | `backend/training/retrieval/` | request handling |

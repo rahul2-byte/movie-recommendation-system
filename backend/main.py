@@ -5,8 +5,8 @@ load_dotenv()
 from api.v1.catalog import router as catalog_router
 from api.v1.movies import router as movies_router
 from api.v1.recommend import router as recommend_router
+from application.lifecycle import get_pipeline
 from common.config import config
-from common.lifecycle import get_pipeline
 from common.logger import get_logger
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware

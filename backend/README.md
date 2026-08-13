@@ -3,7 +3,7 @@
 The backend serves recommendations from one immutable model bundle:
 
 ```text
-FastAPI/Lambda -> api/v1 -> common.lifecycle -> serving.BundleRecommender
+FastAPI/Lambda -> api/v1 -> application.lifecycle -> serving.BundleRecommender
              -> four retrievers + LightGBM ranker -> MovieStore/TMDB metadata
 ```
 

@@ -1,6 +1,6 @@
 from typing import Any
 
-from common.lifecycle import get_movie_store
+from application.lifecycle import get_movie_store
 from fastapi import APIRouter, HTTPException, Query, Request
 
 router = APIRouter(prefix="/movies", tags=["Movies"])

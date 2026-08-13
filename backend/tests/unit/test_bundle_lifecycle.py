@@ -1,5 +1,5 @@
 import pytest
-from common import lifecycle
+from application import lifecycle
 
 
 def test_lifecycle_uses_bundle_pipeline_when_bundle_dir_is_configured(monkeypatch):

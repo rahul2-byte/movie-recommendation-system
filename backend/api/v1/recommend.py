@@ -26,7 +26,7 @@ async def recommend_movies(request: Request, payload: RecommendRequest):
     )
 
     try:
-        from common.lifecycle import get_pipeline
+        from application.lifecycle import get_pipeline
 
         pipeline = get_pipeline()
 
