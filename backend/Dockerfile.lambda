@@ -25,6 +25,7 @@ COPY --from=builder /build/runtime-lib ${LAMBDA_TASK_ROOT}/lib
 # Copy ONLY production application code
 COPY backend/main.py ${LAMBDA_TASK_ROOT}/
 COPY backend/api/ ${LAMBDA_TASK_ROOT}/api/
+COPY backend/application/ ${LAMBDA_TASK_ROOT}/application/
 COPY backend/common/ ${LAMBDA_TASK_ROOT}/common/
 COPY backend/infrastructure/ ${LAMBDA_TASK_ROOT}/infrastructure/
 COPY backend/configs/ ${LAMBDA_TASK_ROOT}/configs/

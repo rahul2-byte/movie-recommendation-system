@@ -11,6 +11,7 @@ def test_lambda_image_copies_only_tracked_runtime_paths():
     for path in (
         "main.py",
         "api/",
+        "application/",
         "common/",
         "infrastructure/",
         "configs/",
