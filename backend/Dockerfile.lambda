@@ -26,6 +26,7 @@ COPY --from=builder /build/runtime-lib ${LAMBDA_TASK_ROOT}/lib
 COPY backend/main.py ${LAMBDA_TASK_ROOT}/
 COPY backend/api/ ${LAMBDA_TASK_ROOT}/api/
 COPY backend/common/ ${LAMBDA_TASK_ROOT}/common/
+COPY backend/infrastructure/ ${LAMBDA_TASK_ROOT}/infrastructure/
 COPY backend/configs/ ${LAMBDA_TASK_ROOT}/configs/
 COPY backend/logger/ ${LAMBDA_TASK_ROOT}/logger/
 COPY backend/retrieval/ ${LAMBDA_TASK_ROOT}/retrieval/

@@ -1,6 +1,6 @@
 from common.logger import get_logger
-from common.services.movie_store import MovieStore
 from configs.settings import settings
+from infrastructure.metadata.movie_store import MovieStore
 from serving.pipeline import BundleRecommendationPipeline
 from serving.recommender import BundleRecommender
 

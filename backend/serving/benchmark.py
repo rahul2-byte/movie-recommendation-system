@@ -13,7 +13,7 @@ from typing import Any
 from urllib.request import Request, urlopen
 
 import numpy as np
-from common.services.movie_store import MovieStore
+from infrastructure.metadata.movie_store import MovieStore
 
 from serving.recommender import BundleRecommender
 from serving.smoke import validate_recommendation_response

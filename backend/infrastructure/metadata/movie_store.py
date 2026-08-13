@@ -5,10 +5,9 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Protocol
 
-from configs.settings import TMDB_IMAGE_BASE, TMDB_POSTER_SIZE
-
 from common.clients.tmdb import get_tmdb_client
 from common.logger import get_logger
+from configs.settings import TMDB_IMAGE_BASE, TMDB_POSTER_SIZE
 
 log = get_logger(__name__)
 

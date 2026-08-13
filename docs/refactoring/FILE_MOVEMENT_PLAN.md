@@ -8,7 +8,7 @@ moved until every listed consumer is migrated and the verification gate passes.
 | Current path | Target path | Responsibility | Known consumers | Risk |
 | --- | --- | --- | --- | --- |
 | `backend/common/lifecycle.py` | `backend/application/lifecycle.py` | Application startup and singleton pipeline wiring | migrated: `backend/main.py`, lifecycle tests, bundle startup tests | Medium |
-| `backend/common/services/movie_store.py` | `backend/infrastructure/metadata/movie_store.py` | TMDB/catalog metadata access | API movie/catalog routes, lifecycle, serving benchmark, movie-store tests | Medium |
+| `backend/common/services/movie_store.py` | `backend/infrastructure/metadata/movie_store.py` | TMDB/catalog metadata access | migrated: lifecycle, serving benchmark, movie-store tests | Medium |
 | `backend/common/types.py:Query` | `backend/application/contracts.py:RecommendationQuery` | Request-domain query contract | API recommendation route, serving pipeline, tests | Medium |
 | `backend/common/types.py:Candidate` | `backend/retrieval/contracts.py:RetrievalCandidate` | Retrieval candidate contract | integration contract test only today; requires consumer audit | High |
 | `backend/serving/recommender.py` | keep initially; split internally later | Candidate collection, fusion, feature assembly, ranker inference | bundle recommender tests, serving pipeline | Medium |

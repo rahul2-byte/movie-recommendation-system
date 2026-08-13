@@ -16,8 +16,9 @@ Frontend
             -> ALS, item graph, two-tower, content retrievers
             -> rank fusion and LightGBM ranking
           -> common.services.movie_store
-            -> DynamoDB/catalog metadata
-            -> TMDB fallback metadata
+            -> infrastructure.metadata.MovieStore
+              -> DynamoDB/catalog metadata
+              -> TMDB fallback metadata
         -> API response
 ```
 
@@ -47,7 +48,7 @@ MovieLens/TMDB-enriched raw data
 | --- | --- | --- |
 | HTTP transport | `backend/api/` | retrieval mathematics or data preparation |
 | Request orchestration | `backend/application/lifecycle.py` and `backend/serving/pipeline.py` | model training |
-| Metadata access | `backend/common/services/movie_store.py` | candidate scoring |
+| Metadata access | `backend/infrastructure/metadata/movie_store.py` | candidate scoring |
 | Dataset preparation | `backend/data_pipeline/` | HTTP or AWS deployment |
 | Retrieval training | `backend/training/retrieval/` | request handling |
 | Ranking training | `backend/training/ranking/` | metadata network calls |

@@ -12,6 +12,7 @@ def test_lambda_image_copies_only_tracked_runtime_paths():
         "main.py",
         "api/",
         "common/",
+        "infrastructure/",
         "configs/",
         "logger/",
         "retrieval/",

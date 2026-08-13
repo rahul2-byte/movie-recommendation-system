@@ -1,6 +1,6 @@
 import asyncio
 
-from common.services.movie_store import MovieStore
+from infrastructure.metadata.movie_store import MovieStore
 
 
 class FakeTMDBClient:

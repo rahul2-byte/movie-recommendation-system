@@ -15,6 +15,8 @@ Directories:
 
 - `api/`: HTTP boundary.
 - `common/`: runtime settings, metadata clients, enrichment, and lifecycle.
+- `infrastructure/metadata/`: operational movie metadata repository and
+  external metadata boundary.
 - `configs/`: canonical pipeline configuration.
 - `data_pipeline/`: immutable preparation, temporal splits, and ranking data.
 - `training/`: retrieval and ranking trainers.
