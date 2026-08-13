@@ -24,18 +24,22 @@ from training.ranking.pipeline import (
 
 
 def _default_config(name: str) -> Path:
+    """Return a default ranking-training config path."""
     return Path(__file__).resolve().parents[2] / "configs" / name
 
 
 def _run_id() -> str:
+    """Create a UTC run identifier for ranker artifacts."""
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _packing_output_dir(root: Path, feature_dir: Path) -> Path:
+    """Derive a cache path from the immutable feature parquet hash."""
     return root / sha256(feature_dir / "ranking_features.parquet")[:12]
 
 
 def _pack_with_progress(feature_dir: Path, output_dir: Path, label: str):
+    """Pack features while keeping progress off machine-readable stdout."""
     source = pq.ParquetFile(feature_dir / "ranking_features.parquet")
     progress = TerminalProgress(
         f"ranker {label} packing", source.metadata.num_row_groups
@@ -48,6 +52,7 @@ def _pack_with_progress(feature_dir: Path, output_dir: Path, label: str):
 
 
 def _metric_values(metrics: dict[str, dict[str, float]]) -> dict[str, float]:
+    """Flatten nested model metrics for MLflow logging."""
     return {
         f"{ordering}_{name}": value
         for ordering, values in metrics.items()
@@ -56,6 +61,7 @@ def _metric_values(metrics: dict[str, dict[str, float]]) -> dict[str, float]:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the ranker training and final-evaluation CLI parser."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--train-feature-dir", type=Path)
     parser.add_argument("--validation-feature-dir", type=Path)
@@ -81,6 +87,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    """Train a LambdaRank artifact or evaluate one on untouched test data."""
     args = build_parser().parse_args()
     config = load_ranking_training_config(args.config)
     if args.test_feature_dir or args.ranker_artifact:

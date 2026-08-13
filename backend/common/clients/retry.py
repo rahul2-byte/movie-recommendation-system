@@ -34,6 +34,7 @@ RETRYABLE_EXCEPTIONS: tuple[type[Exception], ...] = (
 
 
 def _is_retryable_response(error: ClientResponseError) -> bool:
+    """Return whether a provider response represents a transient failure."""
     return error.status in {408, 429} or error.status >= 500
 
 
@@ -143,8 +144,10 @@ def retry_async_decorator(
     """
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        """Wrap one async callable with the configured retry policy."""
         @wraps(func)
         async def wrapper(*args, **kwargs) -> T:
+            """Delegate invocation while preserving the original callable API."""
             return await retry_async(
                 func,
                 *args,

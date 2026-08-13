@@ -13,35 +13,46 @@ import yaml
 
 @dataclass(frozen=True)
 class TrackingConfig:
+    """Local MLflow store and default experiment for one pipeline."""
     local_store_dir: Path
     experiment_name: str
 
 
 class StageRun:
+    """Small typed facade for logging one data-pipeline stage."""
+
     def __init__(self, run_id: str):
+        """Bind the facade to an active MLflow run identifier."""
         self.run_id = run_id
 
     def log_counts(self, counts: dict[str, int]) -> None:
+        """Log integer counters as MLflow metrics."""
         mlflow.log_metrics({key: float(value) for key, value in counts.items()})
 
     def log_metrics(self, metrics: dict[str, float]) -> None:
+        """Log floating-point stage metrics."""
         mlflow.log_metrics(metrics)
 
     def log_params(self, params: dict[str, str]) -> None:
+        """Log resolved configuration parameters."""
         mlflow.log_params(params)
 
     def log_dataset_version(self, dataset_version: str) -> None:
+        """Record the immutable dataset identity on the run."""
         mlflow.set_tag("dataset_version", dataset_version)
         mlflow.log_param("resolved_dataset_version", dataset_version)
 
     def log_manifest(self, path: Path) -> None:
+        """Store a stage manifest under the run's manifest artifacts."""
         mlflow.log_artifact(str(path), artifact_path="manifests")
 
     def log_artifact(self, path: Path, artifact_path: str = "artifacts") -> None:
+        """Store one file under a caller-selected artifact subdirectory."""
         mlflow.log_artifact(str(path), artifact_path=artifact_path)
 
 
 def load_tracking_config(path: Path) -> TrackingConfig:
+    """Load the local MLflow settings needed by explicit ETL commands."""
     path = path.resolve()
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
     tracking = payload.get("tracking") if isinstance(payload, dict) else None
@@ -69,6 +80,7 @@ def tracked_run(
     dataset_version: str,
     experiment_name: str | None = None,
 ) -> Iterator[StageRun]:
+    """Create an MLflow stage run and expose typed logging helpers."""
     config.local_store_dir.mkdir(parents=True, exist_ok=True)
     database = config.local_store_dir / "mlflow.db"
     mlflow.set_tracking_uri(f"sqlite:///{database}")

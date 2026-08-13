@@ -11,6 +11,7 @@ from data_pipeline.config import DataPipelineConfig
 
 
 def canonical_json(value: Any) -> str:
+    """Serialize manifest content deterministically for hashing."""
     return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
 
 
@@ -26,6 +27,7 @@ def _current_implementation_fingerprint() -> str:
 
 
 def implementation_fingerprint() -> str:
+    """Hash ETL implementation files that affect derived dataset contents."""
     return _current_implementation_fingerprint()
 
 
@@ -35,6 +37,7 @@ def dataset_version_id(
     *,
     implementation_fingerprint: str | None = None,
 ) -> str:
+    """Create a content-addressed dataset version identifier."""
     payload = {
         "config": config.version_payload(),
         "source_hashes": source_hashes,
@@ -46,6 +49,7 @@ def dataset_version_id(
 
 
 def sha256(path: Path) -> str:
+    """Return the SHA-256 digest of a file's bytes."""
     digest = hashlib.sha256()
     with path.open("rb") as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
@@ -54,6 +58,7 @@ def sha256(path: Path) -> str:
 
 
 def write_json(path: Path, value: dict[str, Any]) -> None:
+    """Write a manifest atomically so interrupted jobs cannot publish partial state."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
     temporary.write_text(

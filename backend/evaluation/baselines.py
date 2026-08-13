@@ -14,10 +14,12 @@ class PopularityRecommender:
     """Global item popularity calculated from training interactions only."""
 
     def __init__(self, ordered_tmdb_ids: list[int]):
+        """Store the deterministic popularity ordering learned from training."""
         self._ordered_tmdb_ids = ordered_tmdb_ids
 
     @classmethod
     def fit(cls, train_path: Path) -> PopularityRecommender:
+        """Fit global item popularity from training interactions only."""
         counts: Counter[int] = Counter()
         source = pq.ParquetFile(train_path)
         if "tmdb_id" not in source.schema_arrow.names:
@@ -36,6 +38,7 @@ class PopularityRecommender:
         )
 
     def recommend(self, seed_tmdb_ids: list[int], top_k: int) -> list[int]:
+        """Return popular items while excluding selected seed movies."""
         if top_k < 1:
             raise ValueError("top_k must be positive")
         return sanitize_recommendations(

@@ -20,6 +20,7 @@ from threadpoolctl import threadpool_limits
 
 @dataclass(frozen=True)
 class AlsTrainingConfig:
+    """Validated hyperparameters and paths for one ALS training run."""
     dataset_version: str
     output_dir: Path
     factors: int
@@ -34,6 +35,7 @@ class AlsTrainingConfig:
 
 
 def load_als_training_config(path: Path) -> AlsTrainingConfig:
+    """Load and validate the ALS section of the retrieval config."""
     path = path.resolve()
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
     values = payload.get("als") if isinstance(payload, dict) else None
@@ -99,6 +101,7 @@ def load_als_training_config(path: Path) -> AlsTrainingConfig:
 
 
 def _sha256(path: Path) -> str:
+    """Hash a training input for artifact reproducibility metadata."""
     digest = hashlib.sha256()
     with path.open("rb") as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
@@ -109,6 +112,7 @@ def _sha256(path: Path) -> str:
 def _load_interactions(
     path: Path, batch_size: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Read required interaction columns in bounded parquet batches."""
     source = pq.ParquetFile(path)
     columns = ("user_id", "tmdb_id", "rating")
     missing = set(columns) - set(source.schema_arrow.names)
@@ -131,6 +135,7 @@ def _load_interactions(
 def _build_user_items(
     users: np.ndarray, items: np.ndarray, ratings: np.ndarray
 ) -> tuple[csr_matrix, np.ndarray, np.ndarray]:
+    """Build the sparse user-item matrix consumed by implicit ALS."""
     if np.any(users <= 0) or np.any(items <= 0) or np.any(~np.isfinite(ratings)):
         raise ValueError(
             "ALS interactions contain invalid user, item, or rating values"
@@ -149,6 +154,7 @@ def _build_user_items(
 
 @dataclass(frozen=True)
 class AlsArtifact:
+    """Trained ALS embeddings, FAISS index, mappings, and manifest."""
     output_dir: Path
     embeddings: np.ndarray
     index: faiss.Index
@@ -158,6 +164,8 @@ class AlsArtifact:
 
     @classmethod
     def load(cls, output_dir: Path) -> AlsArtifact:
+        """Load and validate serialized ALS state."""
+        """Load and validate an immutable ALS artifact directory."""
         output_dir = output_dir.resolve()
         required = (
             "item_embeddings.npy",
@@ -200,6 +208,7 @@ class AlsArtifact:
         )
 
     def retrieve_one(self, seed_tmdb_id: int, top_k: int) -> list[tuple[int, float]]:
+        """Retrieve nearest ALS items for one seed movie."""
         if top_k < 1:
             raise ValueError("top_k must be positive")
         position = self.tmdb_id_to_idx.get(int(seed_tmdb_id))
@@ -215,6 +224,7 @@ class AlsArtifact:
         ]
 
     def recommend(self, seed_tmdb_ids: Iterable[int], top_k: int) -> list[int]:
+        """Fuse per-seed ALS candidates into a deterministic list."""
         per_seed_candidates = max(top_k, int(self.manifest["per_seed_candidates"]))
         evidence = collect_seed_candidates(
             seed_tmdb_ids,
@@ -250,6 +260,7 @@ def train_als(
         raise ValueError("dataset_version must be non-empty")
 
     def report(completed: int, stage: str) -> None:
+        """Report training progress for the requested stage."""
         if progress_callback is not None:
             progress_callback(completed, stage)
 

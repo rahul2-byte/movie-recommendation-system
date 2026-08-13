@@ -37,14 +37,17 @@ from training.retrieval.build_two_tower import (
 
 
 def _default_config(name: str) -> Path:
+    """Return the default retrieval config path."""
     return Path(__file__).resolve().parent.parent.parent / "configs" / name
 
 
 def _run_id() -> str:
+    """Create a UTC run identifier for retrieval artifacts."""
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _git_sha() -> str | None:
+    """Return the current Git revision when available."""
     result = subprocess.run(
         ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=False
     )
@@ -52,6 +55,7 @@ def _git_sha() -> str | None:
 
 
 def _metric_values(summary: dict[str, object]) -> dict[str, float]:
+    """Flatten evaluation metrics for telemetry logging."""
     metrics = {
         "query_count": float(summary["query_count"]),
         "failures": float(summary["failures"]),
@@ -78,6 +82,7 @@ def _resolve_content_lineage_path(
 
 
 def main() -> None:
+    """Dispatch canonical retrieval training and optional evaluation."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "model", choices=("tfidf", "content", "als", "two_tower", "item_graph")
@@ -240,6 +245,7 @@ def main() -> None:
     cache_progress: TerminalProgress | None = None
 
     def report_cache(completed: int, total: int) -> None:
+        """Render seed-cache progress on stderr."""
         nonlocal cache_progress
         if total == 0:
             return

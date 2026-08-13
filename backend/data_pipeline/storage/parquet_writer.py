@@ -19,7 +19,10 @@ logger = get_logger(__name__)
 
 
 class ParquetWriter:
+    """Buffer enriched movie records and flush them as typed parquet batches."""
+
     def __init__(self, output_dir: Path = INTERMEDIATE_DIR, batch_size: int = 1000):
+        """Create a writer for a directory of numbered output batches."""
         self.output_dir = output_dir
         self.batch_size = batch_size
         self.buffer: list[dict[str, Any]] = []
@@ -27,6 +30,7 @@ class ParquetWriter:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def _to_record(self, movie_data: Any) -> dict[str, Any]:
+        """Normalize dataclasses, mappings, and model objects to one record."""
         if movie_data is None:
             return {}
         if is_dataclass(movie_data):
@@ -38,6 +42,7 @@ class ParquetWriter:
         raise TypeError(f"Unsupported movie record type: {type(movie_data)}")
 
     def add(self, movie_data: Any) -> None:
+        """Buffer one record and flush when the configured batch is full."""
         record = self._to_record(movie_data)
         if not record:
             return
@@ -46,6 +51,7 @@ class ParquetWriter:
             self.flush()
 
     def flush(self) -> None:
+        """Write buffered records using the canonical movie schema."""
         if not self.buffer:
             return
 
@@ -57,4 +63,5 @@ class ParquetWriter:
         self.buffer.clear()
 
     def close(self) -> None:
+        """Flush the final partial batch."""
         self.flush()

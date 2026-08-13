@@ -1,3 +1,5 @@
+"""Application logging setup shared by runtime and offline pipelines."""
+
 import os
 import sys
 
@@ -5,6 +7,7 @@ from loguru import logger
 
 
 def setup_logging():
+    """Configure process logging according to environment settings."""
     # Remove default handler
     logger.remove()
 
@@ -28,8 +31,10 @@ setup_logging()
 
 
 def get_logger(name: str):
+    """Return a logger with the repository's configured context."""
     return logger.bind(name=name)
 
 
 def log_separator(log_instance, char: str = "=", length: int = 60):
+    """Emit a visually distinct section marker for long-running jobs."""
     log_instance.info(char * length)

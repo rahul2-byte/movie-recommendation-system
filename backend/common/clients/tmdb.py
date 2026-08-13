@@ -1,3 +1,5 @@
+"""TMDB API client and shared singleton used by serving and enrichment."""
+
 import asyncio
 from typing import Any
 
@@ -24,11 +26,13 @@ class TMDBClient(BaseAPIClient):
     _cache = {}  # Simple in-memory cache for the Lambda lifecycle
 
     def __new__(cls):
+        """Return the process-local client singleton."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
+        """Initialize the client once from the configured access token."""
         # Only initialize once
         if hasattr(self, "_initialized"):
             return
@@ -72,4 +76,5 @@ class TMDBClient(BaseAPIClient):
 
 # Global helper to get the singleton client
 def get_tmdb_client() -> TMDBClient:
+    """Return the shared TMDB client."""
     return TMDBClient()

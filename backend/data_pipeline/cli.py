@@ -32,12 +32,14 @@ from data_pipeline.validate import validate_dataset
 
 
 def _default_config(name: str) -> Path:
+    """Return the checked-in default YAML path for a pipeline command."""
     return Path(__file__).resolve().parent.parent / "configs" / name
 
 
 def _resolve_version(
     config: DataPipelineConfig, requested: str | None, *, complete: bool
 ) -> str:
+    """Resolve an explicit version or the latest complete dataset version."""
     if requested:
         return requested
     candidates = []
@@ -56,6 +58,7 @@ def _resolve_version(
 
 
 def main() -> None:
+    """Dispatch data preparation, splitting, and validation commands."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s level=%(levelname)s %(message)s",

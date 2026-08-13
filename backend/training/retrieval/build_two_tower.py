@@ -20,6 +20,7 @@ from torch.nn import functional as functional
 
 @dataclass(frozen=True)
 class TwoTowerTrainingConfig:
+    """Validated hyperparameters and paths for two-tower training."""
     dataset_version: str
     output_dir: Path
     embedding_dim: int
@@ -33,6 +34,7 @@ class TwoTowerTrainingConfig:
 
 
 def load_two_tower_training_config(path: Path) -> TwoTowerTrainingConfig:
+    """Load and validate the two-tower retrieval configuration."""
     path = path.resolve()
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
     values = payload.get("two_tower") if isinstance(payload, dict) else None
@@ -93,6 +95,7 @@ def load_two_tower_training_config(path: Path) -> TwoTowerTrainingConfig:
 
 
 def _sha256(path: Path) -> str:
+    """Hash a training input for artifact reproducibility metadata."""
     digest = hashlib.sha256()
     with path.open("rb") as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
@@ -103,6 +106,7 @@ def _sha256(path: Path) -> str:
 def _load_pairs(
     train_path: Path, max_pairs_per_user: int
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Create bounded adjacent positive item pairs from user histories."""
     required = ("user_id", "tmdb_id", "timestamp")
     events = pd.read_parquet(train_path, columns=list(required))
     missing = set(required) - set(events.columns)
@@ -139,6 +143,7 @@ def _load_pairs(
 
 @dataclass(frozen=True)
 class TwoTowerArtifact:
+    """Trained item embeddings, FAISS index, mapping, and manifest."""
     output_dir: Path
     embeddings: np.ndarray
     index: faiss.Index
@@ -148,6 +153,7 @@ class TwoTowerArtifact:
 
     @classmethod
     def load(cls, output_dir: Path) -> TwoTowerArtifact:
+        """Load and validate serialized two-tower state."""
         output_dir = output_dir.resolve()
         required = (
             "item_embeddings.npy",
@@ -192,6 +198,7 @@ class TwoTowerArtifact:
         )
 
     def retrieve_one(self, seed_tmdb_id: int, top_k: int) -> list[tuple[int, float]]:
+        """Retrieve neural embedding neighbors for one seed movie."""
         if top_k < 1:
             raise ValueError("top_k must be positive")
         position = self.tmdb_id_to_idx.get(int(seed_tmdb_id))
@@ -207,6 +214,7 @@ class TwoTowerArtifact:
         ]
 
     def recommend(self, seed_tmdb_ids: Iterable[int], top_k: int) -> list[int]:
+        """Fuse per-seed neural candidates into a deterministic list."""
         evidence = collect_seed_candidates(
             seed_tmdb_ids,
             retrieve_one=self.retrieve_one,
@@ -227,6 +235,7 @@ def _fit_embeddings(
     random_seed: int,
     progress_callback: Callable[[int, str], None] | None,
 ) -> np.ndarray:
+    """Train the compact item embedding model and return item vectors."""
     torch.manual_seed(random_seed)
     rng = np.random.default_rng(random_seed)
     query = nn.Embedding(item_count, embedding_dim)
@@ -297,6 +306,7 @@ def train_two_tower(
         raise ValueError("dataset_version must be non-empty")
 
     def report(completed: int, stage: str) -> None:
+        """Report two-tower training progress for one stage."""
         if progress_callback is not None:
             progress_callback(completed, stage)
 

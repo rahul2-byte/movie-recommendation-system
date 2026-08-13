@@ -1,3 +1,5 @@
+"""Lazy application singletons for the bundle-backed recommendation service."""
+
 from common.logger import get_logger
 from configs.settings import settings
 from infrastructure.metadata.movie_store import MovieStore
@@ -11,6 +13,7 @@ _movie_store = None
 
 
 def get_movie_store() -> MovieStore:
+    """Create or return the process-local metadata store."""
     global _movie_store
     if _movie_store is not None:
         return _movie_store
@@ -25,6 +28,7 @@ def get_movie_store() -> MovieStore:
 
 
 def get_pipeline() -> BundleRecommendationPipeline:
+    """Create or return the validated bundle-backed recommendation pipeline."""
     global _pipeline
     if _pipeline is not None:
         return _pipeline

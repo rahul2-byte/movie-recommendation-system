@@ -8,19 +8,27 @@ from application.contracts import RecommendationQuery
 
 
 class _Recommender(Protocol):
+    """Minimal recommender contract required by application orchestration."""
+
     def recommend(
         self,
         seed_tmdb_ids: list[int],
         seed_metadata: dict[int, dict[str, Any]],
         *,
         top_n: int,
-    ) -> list[tuple[int, float]]: ...
+    ) -> list[tuple[int, float]]:
+        """Return ranked candidate IDs and scores for the seed set."""
+        ...
 
 
 class _MovieStore(Protocol):
+    """Minimal metadata contract required after model ranking."""
+
     async def get_many_by_tmdb_ids(
         self, tmdb_ids: list[int]
-    ) -> list[dict[str, Any]]: ...
+    ) -> list[dict[str, Any]]:
+        """Load display metadata for a batch of TMDB IDs."""
+        ...
 
 
 class BundleRecommendationPipeline:
@@ -31,6 +39,7 @@ class BundleRecommendationPipeline:
     """
 
     def __init__(self, recommender: _Recommender, movie_store: _MovieStore):
+        """Bind model-ranking and metadata-enrichment dependencies."""
         self.recommender = recommender
         self.movie_store = movie_store
 

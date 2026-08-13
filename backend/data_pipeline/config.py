@@ -14,12 +14,14 @@ class ConfigError(ValueError):
 
 
 def _mapping(value: Any, name: str) -> dict[str, Any]:
+    """Require a YAML section to be a mapping before reading its fields."""
     if not isinstance(value, dict):
         raise ConfigError(f"{name} must be a mapping")
     return value
 
 
 def _path(config_dir: Path, value: Any, name: str) -> Path:
+    """Resolve a required config path relative to its YAML file."""
     if not isinstance(value, str) or not value:
         raise ConfigError(f"{name} must be a non-empty path")
     return (config_dir / value).resolve()
@@ -27,6 +29,7 @@ def _path(config_dir: Path, value: Any, name: str) -> Path:
 
 @dataclass(frozen=True)
 class DatasetConfig:
+    """Input locations and schema identity for one dataset version."""
     name: str
     schema_version: str
     raw_dir: Path
@@ -36,6 +39,7 @@ class DatasetConfig:
 
 @dataclass(frozen=True)
 class PrepareConfig:
+    """Compression and bucketing controls for preparation outputs."""
     compression: str
     compression_level: int
     user_bucket_count: int
@@ -43,6 +47,7 @@ class PrepareConfig:
 
 @dataclass(frozen=True)
 class SplitConfig:
+    """Temporal split rules that define train/validation/test boundaries."""
     strategy: str
     train_fraction: float
     validation_fraction: float
@@ -53,11 +58,13 @@ class SplitConfig:
 
     @property
     def test_fraction(self) -> float:
+        """Return the fraction left for the test partition."""
         return 1.0 - self.train_fraction - self.validation_fraction
 
 
 @dataclass(frozen=True)
 class DataPipelineConfig:
+    """Fully resolved, validated configuration for offline data processing."""
     path: Path
     dataset: DatasetConfig
     prepare: PrepareConfig
@@ -65,6 +72,7 @@ class DataPipelineConfig:
     raw: dict[str, Any]
 
     def version_payload(self) -> dict[str, Any]:
+        """Return path-normalized config data used in dataset fingerprints."""
         payload = asdict(self)
         payload.pop("path", None)
         for section in payload.values():
@@ -76,6 +84,7 @@ class DataPipelineConfig:
 
 
 def load_config(path: Path) -> DataPipelineConfig:
+    """Load YAML and reject settings that cannot produce a valid split."""
     path = path.resolve()
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))

@@ -21,6 +21,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 @dataclass(frozen=True)
 class TfidfTrainingConfig:
+    """Validated vectorizer settings for text-based retrieval."""
     dataset_version: str
     output_dir: Path
     text_fields: tuple[str, ...]
@@ -34,6 +35,7 @@ class TfidfTrainingConfig:
 
 
 def _load_training_config(path: Path, section: str) -> TfidfTrainingConfig:
+    """Load one named retrieval section from YAML."""
     path = path.resolve()
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
     values = payload.get(section) if isinstance(payload, dict) else None
@@ -98,14 +100,17 @@ def _load_training_config(path: Path, section: str) -> TfidfTrainingConfig:
 
 
 def load_tfidf_training_config(path: Path) -> TfidfTrainingConfig:
+    """Load legacy TF-IDF configuration for compatibility tooling."""
     return _load_training_config(path, "tfidf")
 
 
 def load_content_training_config(path: Path) -> TfidfTrainingConfig:
+    """Load the canonical content-retriever configuration."""
     return _load_training_config(path, "content")
 
 
 def _sha256(path: Path) -> str:
+    """Hash a catalog input for reproducibility metadata."""
     digest = hashlib.sha256()
     with path.open("rb") as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
@@ -114,6 +119,7 @@ def _sha256(path: Path) -> str:
 
 
 def _text(value: object) -> str:
+    """Normalize nullable metadata fields to searchable text."""
     if value is None or (isinstance(value, float) and np.isnan(value)):
         return ""
     if isinstance(value, (list, tuple, np.ndarray)):
@@ -122,6 +128,7 @@ def _text(value: object) -> str:
 
 
 def _structured_token(field: str, value: object) -> str:
+    """Convert one structured field to a stable token string."""
     normalized = "".join(
         character if character.isalnum() else "_" for character in str(value).lower()
     ).strip("_")
@@ -129,6 +136,7 @@ def _structured_token(field: str, value: object) -> str:
 
 
 def _field_text(field: str, value: object) -> str:
+    """Render one catalog field for TF-IDF vectorization."""
     if value is None or (isinstance(value, float) and np.isnan(value)):
         return ""
     if field == "release_year" and value is not None and not pd.isna(value):
@@ -147,6 +155,7 @@ def _field_text(field: str, value: object) -> str:
 def _catalog_text(
     catalog: pd.DataFrame, fields: tuple[str, ...], field_weights: dict[str, int]
 ) -> list[str]:
+    """Concatenate weighted metadata fields into one document per movie."""
     missing = set(fields) - set(catalog.columns)
     if missing:
         raise ValueError(f"Catalog is missing TF-IDF fields: {sorted(missing)}")
@@ -165,6 +174,7 @@ def _catalog_text(
 
 @dataclass(frozen=True)
 class TfidfArtifact:
+    """Trained vectorizer/SVD representation and its FAISS index."""
     output_dir: Path
     vectorizer: TfidfVectorizer
     svd: TruncatedSVD
@@ -176,6 +186,7 @@ class TfidfArtifact:
 
     @classmethod
     def load(cls, output_dir: Path) -> TfidfArtifact:
+        """Load and validate serialized content-retrieval state."""
         output_dir = output_dir.resolve()
         manifest_path = output_dir / "manifest.json"
         required = (
@@ -221,6 +232,7 @@ class TfidfArtifact:
         )
 
     def retrieve_one(self, seed_tmdb_id: int, top_k: int) -> list[tuple[int, float]]:
+        """Retrieve content-similar movies for one seed movie."""
         if top_k < 1:
             raise ValueError("top_k must be positive")
         index = self.tmdb_id_to_idx.get(int(seed_tmdb_id))
@@ -236,6 +248,7 @@ class TfidfArtifact:
         ]
 
     def recommend(self, seed_tmdb_ids: Iterable[int], top_k: int) -> list[int]:
+        """Fuse per-seed content candidates into a deterministic list."""
         per_seed_candidates = max(
             top_k, int(self.manifest.get("per_seed_candidates", top_k))
         )
@@ -275,6 +288,7 @@ class TfidfArtifact:
 
 
 def _seed_ids(seed_tmdb_ids: Iterable[int]) -> list[int]:
+    """Normalize seed IDs while preserving their first-seen order."""
     return list(
         dict.fromkeys(int(seed_id) for seed_id in seed_tmdb_ids if int(seed_id) > 0)
     )
@@ -317,6 +331,7 @@ class ExactSeedCache:
     neighbor_ids: np.ndarray
 
     def recommend(self, seed_tmdb_ids: Iterable[int], top_k: int) -> list[int]:
+        """Return cached exact neighbors, falling back for unknown seeds."""
         seeds = _seed_ids(seed_tmdb_ids)
         rows = [self.row_by_seed.get(seed_id) for seed_id in seeds]
         if not seeds or any(row is None for row in rows):
@@ -450,6 +465,7 @@ def train_tfidf(
         )
 
     def report(completed: int, stage: str) -> None:
+        """Report content model training progress."""
         if progress_callback is not None:
             progress_callback(completed, stage)
 

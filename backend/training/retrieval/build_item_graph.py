@@ -19,6 +19,7 @@ from training.retrieval.build_content_retriever import _merge_neighbor_rows, _se
 
 @dataclass(frozen=True)
 class ItemGraphTrainingConfig:
+    """Validated settings for co-occurrence graph construction."""
     dataset_version: str
     output_dir: Path
     neighbor_count: int
@@ -32,6 +33,7 @@ class ItemGraphTrainingConfig:
 
 
 def load_item_graph_training_config(path: Path) -> ItemGraphTrainingConfig:
+    """Load and validate the item-graph retrieval configuration."""
     path = path.resolve()
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
     values = payload.get("item_graph") if isinstance(payload, dict) else None
@@ -83,6 +85,7 @@ def load_item_graph_training_config(path: Path) -> ItemGraphTrainingConfig:
 
 @dataclass(frozen=True)
 class ItemGraphArtifact:
+    """Neighbor-position graph and TMDB mapping used for retrieval."""
     output_dir: Path
     neighbor_positions: np.ndarray
     tmdb_id_to_idx: dict[int, int]
@@ -91,6 +94,7 @@ class ItemGraphArtifact:
 
     @classmethod
     def load(cls, output_dir: Path) -> ItemGraphArtifact:
+        """Load and validate serialized item-graph state."""
         output_dir = output_dir.resolve()
         required = ("neighbor_positions.npy", "tmdb_id_to_idx.json", "manifest.json")
         missing = [name for name in required if not (output_dir / name).is_file()]
@@ -126,6 +130,7 @@ class ItemGraphArtifact:
         )
 
     def retrieve_one(self, seed_tmdb_id: int, top_k: int) -> list[tuple[int, float]]:
+        """Retrieve graph neighbors for one seed movie."""
         if top_k < 1:
             raise ValueError("top_k must be positive")
         position = self.tmdb_id_to_idx.get(int(seed_tmdb_id))
@@ -139,6 +144,7 @@ class ItemGraphArtifact:
         ][:top_k]
 
     def recommend(self, seed_tmdb_ids: Iterable[int], top_k: int) -> list[int]:
+        """Fuse per-seed graph candidates into a deterministic list."""
         evidence = collect_seed_candidates(
             seed_tmdb_ids,
             retrieve_one=self.retrieve_one,
@@ -151,6 +157,7 @@ class ItemGraphArtifact:
 def _ranked_neighbor_positions(
     similarity, neighbor_count: int, report: Callable[[int], None]
 ) -> np.ndarray:
+    """Select deterministic top neighbors from weighted graph scores."""
     positions = np.full((similarity.shape[0], neighbor_count), -1, dtype=np.int32)
     for item_position in range(similarity.shape[0]):
         row = similarity[item_position]
@@ -189,6 +196,7 @@ def train_item_graph(
         )
 
     def report(completed: int, stage: str) -> None:
+        """Report graph construction progress."""
         if progress_callback is not None:
             progress_callback(completed, stage)
 
@@ -260,11 +268,13 @@ def train_item_graph(
 
 @dataclass(frozen=True)
 class ItemGraphSeedCache:
+    """Cache graph candidates for repeated seed queries during evaluation."""
     artifact: ItemGraphArtifact
     row_by_seed: dict[int, int]
     neighbor_ids: np.ndarray
 
     def recommend(self, seed_tmdb_ids: Iterable[int], top_k: int) -> list[int]:
+        """Return cached graph neighbors, falling back for unknown seeds."""
         seeds = _seed_ids(seed_tmdb_ids)
         rows = [self.row_by_seed.get(seed_id) for seed_id in seeds]
         if not seeds or any(row is None for row in rows):

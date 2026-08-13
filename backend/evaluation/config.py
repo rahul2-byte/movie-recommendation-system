@@ -10,6 +10,7 @@ import yaml
 
 @dataclass(frozen=True)
 class EvaluationConfig:
+    """Validated settings for reproducible offline recommendation evaluation."""
     dataset_version: str
     output_dir: Path
     k_values: tuple[int, ...]
@@ -21,6 +22,7 @@ class EvaluationConfig:
 
 
 def load_evaluation_config(path: Path) -> EvaluationConfig:
+    """Load and validate evaluation settings from one YAML file."""
     path = path.resolve()
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
     values = payload.get("evaluation") if isinstance(payload, dict) else None

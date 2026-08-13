@@ -1,3 +1,5 @@
+"""Optional MLflow logging helpers for legacy service instrumentation."""
+
 import logging
 from datetime import datetime
 
@@ -101,3 +103,4 @@ def flush_to_mlflow() -> None:
     METRIC_BUFFER["latency_ms"].clear()
     METRIC_BUFFER["clicked"] = 0
     METRIC_BUFFER["impressions"] = 0
+"""Best-effort MLflow logging used by long-running training jobs."""

@@ -1,3 +1,5 @@
+"""FastAPI and Lambda entrypoint for the bundle-backed recommendation API."""
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -25,6 +27,7 @@ handler = Mangum(app)
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Return a stable JSON envelope for expected HTTP failures."""
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
@@ -33,6 +36,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    """Log unexpected failures without exposing internal details to clients."""
     log.error(f"Unhandled exception: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
@@ -42,11 +46,13 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.get("/ping")
 def ping():
+    """Provide the lightweight health endpoint used by deployment probes."""
     return {"status": "ok", "environment": config.settings.ENVIRONMENT}
 
 
 @app.on_event("startup")
 def startup():
+    """Load the configured recommendation pipeline before serving requests."""
     if str(config.settings.MODEL_BUNDLE_DIR).strip():
         get_pipeline()
     # Only start essential lightweight background tasks

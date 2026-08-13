@@ -25,6 +25,7 @@ _RAW_FILES = ("movies.csv", "links.csv", "ratings.csv", "tags.csv")
 
 @dataclass(frozen=True)
 class PrepareResult:
+    """Paths and manifest produced by resumable dataset preparation."""
     version_id: str
     version_dir: Path
     work_dir: Path
@@ -32,6 +33,7 @@ class PrepareResult:
 
 
 def _write_parquet(frame: pd.DataFrame, path: Path, config: DataPipelineConfig) -> None:
+    """Atomically write one compressed parquet part."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
     frame.to_parquet(
@@ -44,6 +46,7 @@ def _write_parquet(frame: pd.DataFrame, path: Path, config: DataPipelineConfig) 
 
 
 def _source_hashes(config: DataPipelineConfig) -> dict[str, str]:
+    """Hash every raw/enriched input so versions are reproducible."""
     paths = {filename: config.dataset.raw_dir / filename for filename in _RAW_FILES}
     paths["movies_enriched.parquet"] = config.dataset.enriched_metadata_path
     missing = [str(path) for path in paths.values() if not path.is_file()]
@@ -53,6 +56,7 @@ def _source_hashes(config: DataPipelineConfig) -> dict[str, str]:
 
 
 def _build_catalog(config: DataPipelineConfig) -> pd.DataFrame:
+    """Build the one-to-one MovieLens-to-TMDB catalog used downstream."""
     links = pd.read_csv(
         config.dataset.raw_dir / "links.csv", usecols=["movieId", "tmdbId"]
     )
@@ -84,6 +88,7 @@ def _build_catalog(config: DataPipelineConfig) -> pd.DataFrame:
 
 
 def _load_state(path: Path, expected: dict[str, Any]) -> dict[str, Any]:
+    """Load resumable state and reject inputs from a different run."""
     if not path.is_file():
         return {**expected, "completed_chunks": [], "prepared_interaction_rows": 0}
     state = json.loads(path.read_text(encoding="utf-8"))

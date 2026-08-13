@@ -12,7 +12,11 @@ from evaluation.metrics import sanitize_recommendations
 
 
 class Recommender(Protocol):
-    def recommend(self, seed_tmdb_ids: list[int], top_k: int) -> list[int]: ...
+    """Minimal interface required by evaluation-time recommenders."""
+
+    def recommend(self, seed_tmdb_ids: list[int], top_k: int) -> list[int]:
+        """Return up to ``top_k`` ranked candidate IDs."""
+        ...
 
 
 class RankFusionRecommender:
@@ -25,6 +29,7 @@ class RankFusionRecommender:
         rank_constant: int,
         candidate_k: int,
     ) -> None:
+        """Bind independent recommenders and validate fusion parameters."""
         if len(recommenders) < 2:
             raise ValueError("Rank fusion requires at least two recommenders")
         if rank_constant < 1 or candidate_k < 1:
@@ -34,6 +39,7 @@ class RankFusionRecommender:
         self.candidate_k = candidate_k
 
     def recommend(self, seed_tmdb_ids: list[int], top_k: int) -> list[int]:
+        """Return deterministic reciprocal-rank fusion results."""
         if top_k < 1:
             raise ValueError("top_k must be positive")
         seed_set = set(seed_tmdb_ids)

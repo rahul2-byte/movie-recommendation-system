@@ -12,6 +12,7 @@ from data_pipeline.manifests import sha256
 
 
 def _validate_query_boundaries(path: Path) -> None:
+    """Reject query rows whose held-out targets are not strictly in the future."""
     columns = [
         "query_id",
         "seed_tmdb_ids",
@@ -35,6 +36,7 @@ def _validate_query_boundaries(path: Path) -> None:
 
 
 def validate_dataset(version_dir: Path) -> dict[str, Any]:
+    """Verify finalized output hashes and temporal query boundaries."""
     manifest_path = version_dir / "manifest.json"
     if not manifest_path.is_file():
         raise FileNotFoundError(f"Dataset manifest not found: {manifest_path}")

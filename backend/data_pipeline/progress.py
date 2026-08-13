@@ -7,13 +7,17 @@ import time
 
 
 class ProgressReporter:
+    """Emit structured progress without contaminating machine-readable stdout."""
+
     def __init__(self, stage: str, total: int | None):
+        """Initialize a reporter for a stage with an optional known total."""
         self.stage = stage
         self.total = total
         self.started_at = time.monotonic()
         self.log = logging.getLogger(__name__)
 
     def report(self, completed: int, *, rows: int = 0) -> None:
+        """Log completion, throughput, and estimated remaining time."""
         elapsed = max(time.monotonic() - self.started_at, 0.001)
         rate = completed / elapsed
         remaining = (self.total - completed) / rate if self.total and rate else None

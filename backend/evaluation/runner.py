@@ -17,10 +17,15 @@ from evaluation.metrics import ranking_metrics, sanitize_recommendations
 
 
 class Recommender(Protocol):
-    def recommend(self, seed_tmdb_ids: list[int], top_k: int) -> list[int]: ...
+    """Minimal interface for a recommender evaluated against query records."""
+
+    def recommend(self, seed_tmdb_ids: list[int], top_k: int) -> list[int]:
+        """Return ranked candidates for one seed set."""
+        ...
 
 
 def _latency_summary(samples_ms: list[float]) -> dict[str, float]:
+    """Summarize per-query latency samples in milliseconds."""
     values = np.asarray(samples_ms, dtype=np.float64)
     return {
         "mean": float(values.mean()),
@@ -113,6 +118,7 @@ def evaluate_recommender(
 
 
 def _write_json(path: Path, value: dict[str, object]) -> None:
+    """Write one JSON evidence artifact atomically."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
     temporary.write_text(
@@ -122,6 +128,7 @@ def _write_json(path: Path, value: dict[str, object]) -> None:
 
 
 def _git_sha() -> str | None:
+    """Return the current revision when evaluation runs inside a Git checkout."""
     result = subprocess.run(
         ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=False
     )

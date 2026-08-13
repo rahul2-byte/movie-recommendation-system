@@ -28,14 +28,17 @@ from evaluation.runner import evaluate_recommender, write_evaluation_artifacts
 
 
 def _default_config(name: str) -> Path:
+    """Return the repository default evaluation config path."""
     return Path(__file__).resolve().parent.parent / "configs" / name
 
 
 def _run_id() -> str:
+    """Create a UTC identifier for one evaluation report."""
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _metric_values(summary: dict[str, object]) -> dict[str, float]:
+    """Extract scalar metrics from a nested evaluation summary."""
     result = {
         "query_count": float(summary["query_count"]),
         "failures": float(summary["failures"]),
@@ -49,6 +52,7 @@ def _metric_values(summary: dict[str, object]) -> dict[str, float]:
 
 
 def main() -> None:
+    """Run configured offline evaluation and write its immutable report."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--config", type=Path, default=_default_config("evaluation.yaml")
@@ -129,9 +133,11 @@ def main() -> None:
                 )
 
         def cache(artifact, name: str, cache_builder):
+            """Build and report progress for one retriever's seed cache."""
             progress: TerminalProgress | None = None
 
             def report(completed: int, total: int) -> None:
+                """Render cache progress after the first batch reveals total work."""
                 nonlocal progress
                 if total and progress is None:
                     progress = TerminalProgress(f"{name} seed cache", total)
@@ -161,6 +167,7 @@ def main() -> None:
         )
 
         def evaluate(name: str, recommender):
+            """Evaluate one cached recommender over the selected query partition."""
             progress = TerminalProgress(f"{name} validation", query_count)
             return evaluate_recommender(
                 recommender,

@@ -24,16 +24,19 @@ _INTERACTION_COLUMNS = ["user_id", "tmdb_id", "movielens_id", "rating", "timesta
 
 @dataclass(frozen=True)
 class SplitResult:
+    """Paths and manifest produced by temporal dataset splitting."""
     version_id: str
     version_dir: Path
     manifest: dict[str, Any]
 
 
 def _parts_for_bucket(parts_dir: Path, bucket: int) -> list[Path]:
+    """Return preparation parts belonging to one deterministic user bucket."""
     return sorted(parts_dir.glob(f"*-bucket-{bucket:03d}.parquet"))
 
 
 def _bucket_events(parts_dir: Path, bucket: int) -> pd.DataFrame:
+    """Load and concatenate all interaction parts for one bucket."""
     paths = _parts_for_bucket(parts_dir, bucket)
     if not paths:
         return pd.DataFrame(columns=_INTERACTION_COLUMNS)
@@ -41,6 +44,7 @@ def _bucket_events(parts_dir: Path, bucket: int) -> pd.DataFrame:
 
 
 def _positive_events(events: pd.DataFrame, threshold: float) -> pd.DataFrame:
+    """Deduplicate item events and retain the latest positive interaction."""
     if events.empty:
         return events
     ordered = events.sort_values(["user_id", "tmdb_id", "timestamp"], kind="stable")
@@ -51,6 +55,7 @@ def _positive_events(events: pd.DataFrame, threshold: float) -> pd.DataFrame:
 
 
 def _next_distinct_timestamp(values: np.ndarray, fraction: float) -> int:
+    """Find a later timestamp boundary that cannot split equal-time events."""
     index = int(np.ceil(fraction * (len(values) - 1)))
     values.partition(index)
     boundary = int(values[index])
@@ -69,6 +74,7 @@ def _next_distinct_timestamp(values: np.ndarray, fraction: float) -> int:
 def _cutoffs(
     parts_dir: Path, config: DataPipelineConfig, work_dir: Path
 ) -> tuple[int, int, int]:
+    """Compute global temporal cutoffs from positive interaction timestamps."""
     counts: list[int] = []
     for bucket in range(config.prepare.user_bucket_count):
         positive = _positive_events(
@@ -101,6 +107,7 @@ def _cutoffs(
 
 
 def _positive_row_count(parts_dir: Path, config: DataPipelineConfig) -> int:
+    """Count deduplicated positive rows across prepared buckets."""
     return sum(
         len(
             _positive_events(
@@ -118,6 +125,7 @@ def _partition_user_events(
     validation_start: int | None,
     test_start: int | None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Partition one user's chronological history into train/validation/test."""
     if config.split.strategy == "global_temporal_cutoffs":
         if validation_start is None or test_start is None:
             raise ValueError("Global temporal split requires timestamp cutoffs")
@@ -139,6 +147,7 @@ def _partition_user_events(
     timestamps = user_events["timestamp"].to_numpy()
 
     def boundary_after_timestamp(index: int, maximum: int) -> int:
+        """Move a boundary past all events sharing the boundary timestamp."""
         index = min(index, maximum)
         boundary = int(np.searchsorted(timestamps, timestamps[index - 1], side="right"))
         if boundary <= maximum:
@@ -163,6 +172,7 @@ def _records_for_bucket(
     test_start: int | None,
     config: DataPipelineConfig,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict[str, int]]:
+    """Build split records and leakage-safe query metadata for one bucket."""
     positive = _positive_events(events, config.split.positive_rating_threshold)
     train_frames: list[pd.DataFrame] = []
     validation_records: list[dict[str, Any]] = []
@@ -225,6 +235,7 @@ def _records_for_bucket(
 
 
 def _compact(parts: Iterator[Path], destination: Path) -> int:
+    """Stream parquet parts into one atomic output file."""
     paths = list(parts)
     if not paths:
         raise ValueError(f"No split output parts available for {destination.name}")
@@ -253,6 +264,7 @@ def _compact(parts: Iterator[Path], destination: Path) -> int:
 
 
 def _load_state(path: Path, expected: dict[str, Any]) -> dict[str, Any]:
+    """Load split progress and reject incompatible resume state."""
     if not path.is_file():
         return {
             **expected,

@@ -160,6 +160,7 @@ class BaseAPIClient:
             await self.rate_limiter.acquire()
 
             async def _request() -> dict:
+                """Issue one HTTP request; retry_async owns retry policy."""
                 async with self.session.get(
                     url,
                     params=params,

@@ -12,6 +12,7 @@ from data_pipeline.manifests import write_json
 
 @dataclass(frozen=True)
 class FeatureSchema:
+    """Versioned ordered feature names shared by training and serving."""
     schema_version: str
     feature_names: tuple[str, ...]
 
@@ -45,6 +46,7 @@ def build_feature_frame(
     popularity = train_interaction_counts.astype(np.float32)
 
     def column_or_zeros(name: str) -> pd.Series:
+        """Return a feature column or explicit zero evidence when absent."""
         # Missing retrieval evidence means this source did not return the
         # candidate; zero represents absence rather than an imputed score.
         return candidates.get(name, pd.Series(0, index=candidates.index))

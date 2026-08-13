@@ -31,6 +31,7 @@ _SUPPORTED_FEATURES = {
 
 
 def _content_text(field: str, value: object) -> str:
+    """Convert one catalog field into weighted TF-IDF token text."""
     if value is None:
         return ""
     if field == "release_year":
@@ -57,6 +58,7 @@ def _content_text(field: str, value: object) -> str:
 
 @dataclass(frozen=True)
 class BundleRecommender:
+    """Combine four bundle retrievers and score candidates with LightGBM."""
     bundle: ModelBundle
     model: lgb.Booster
     feature_names: tuple[str, ...]
@@ -70,6 +72,7 @@ class BundleRecommender:
 
     @classmethod
     def load(cls, root: Path | str) -> BundleRecommender:
+        """Load and validate ranker and feature state from one bundle."""
         bundle = load_model_bundle(root)
         ranker_dir = bundle.root / "ranker"
         schema = json.loads((ranker_dir / "feature_schema.json").read_text())
@@ -106,6 +109,7 @@ class BundleRecommender:
         )
 
     def _content_retriever(self, seed_metadata: dict[int, dict[str, Any]]) -> Any:
+        """Build content retrieval that can embed metadata-only seed movies."""
         base = self.bundle.vector_retriever("content")
         if not seed_metadata:
             return base
@@ -113,7 +117,10 @@ class BundleRecommender:
         parent = self
 
         class ContentRetriever:
+            """Add on-demand content embeddings for unknown seeds."""
+
             def retrieve_one(self, seed_tmdb_id: int, top_k: int):
+                """Return content neighbors for a known or metadata-only seed."""
                 if seed_tmdb_id in base.position_by_tmdb_id:
                     return base.retrieve_one(seed_tmdb_id, top_k)
                 movie = seed_metadata.get(seed_tmdb_id)
@@ -164,6 +171,7 @@ class BundleRecommender:
         *,
         top_n: int,
     ) -> list[tuple[int, float]]:
+        """Retrieve, fuse, featurize, and rank candidates for selected seeds."""
         seeds = list(
             dict.fromkeys(int(item_id) for item_id in seed_tmdb_ids if int(item_id) > 0)
         )

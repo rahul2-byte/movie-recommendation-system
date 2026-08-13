@@ -11,6 +11,7 @@ from urllib.request import Request, urlopen
 def validate_recommendation_response(
     payload: dict[str, Any], *, seed_tmdb_ids: list[int], limit: int
 ) -> int:
+    """Validate recommendation count, uniqueness, and seed exclusion."""
     recommendations = payload.get("recommendations")
     if not isinstance(recommendations, list) or not recommendations:
         raise ValueError("response has no recommendations")
@@ -31,6 +32,7 @@ def validate_recommendation_response(
 
 
 def main() -> None:
+    """Exercise the local recommendation endpoint with deterministic seeds."""
     parser = ArgumentParser(description="Smoke-test a running recommendation API.")
     parser.add_argument("--base-url", default="http://localhost:8080")
     parser.add_argument("--seed-tmdb-ids", type=int, nargs="+", required=True)

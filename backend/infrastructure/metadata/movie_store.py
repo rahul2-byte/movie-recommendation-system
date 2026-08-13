@@ -13,18 +13,25 @@ log = get_logger(__name__)
 
 
 class TMDBMovieClient(Protocol):
-    async def fetch_movie_full(self, tmdb_id: int) -> dict[str, Any]: ...
+    """Subset of the TMDB client needed by the metadata repository."""
+    async def fetch_movie_full(self, tmdb_id: int) -> dict[str, Any]:
+        """Fetch one full movie payload including enrichment fields."""
+        ...
 
     async def fetch_path(
         self, path: str, params: dict[str, Any] | None = None
-    ) -> dict[str, Any]: ...
+    ) -> dict[str, Any]:
+        """Fetch a provider endpoint used by catalog routes."""
+        ...
 
 
 def _image_url(path: object, size: str) -> str | None:
+    """Build a TMDB image URL or return ``None`` for missing artwork."""
     return f"{TMDB_IMAGE_BASE}/{size}{path}" if isinstance(path, str) and path else None
 
 
 def _normalize_movie(movie: dict[str, Any]) -> dict[str, Any] | None:
+    """Map provider metadata to the canonical API movie representation."""
     tmdb_id = movie.get("id")
     if not isinstance(tmdb_id, int) or tmdb_id <= 0:
         return None
@@ -98,15 +105,19 @@ class MovieStore:
     """Fetch operational movie metadata from TMDB without a local replica."""
 
     def __init__(self, tmdb_client: TMDBMovieClient | None = None):
+        """Initialize the repository with an injectable TMDB client."""
         self.tmdb_client = tmdb_client or get_tmdb_client()
 
     async def get(self, tmdb_id: int) -> dict[str, Any] | None:
+        """Fetch one movie by its canonical TMDB identifier."""
         return _normalize_movie(await self.tmdb_client.fetch_movie_full(int(tmdb_id)))
 
     async def get_by_tmdb_id(self, tmdb_id: int) -> dict[str, Any] | None:
+        """Expose the explicit TMDB-ID lookup contract used by API routes."""
         return await self.get(tmdb_id)
 
     async def get_many(self, tmdb_ids: list[int]) -> list[dict[str, Any]]:
+        """Fetch many movies while allowing individual provider failures."""
         """Fetch metadata while allowing individual optional lookups to fail.
 
         Recommendation retrieval can still produce useful candidates when one
@@ -126,9 +137,11 @@ class MovieStore:
         return movies
 
     async def get_many_by_tmdb_ids(self, tmdb_ids: list[int]) -> list[dict[str, Any]]:
+        """Fetch a batch using the repository's canonical TMDB-ID contract."""
         return await self.get_many(tmdb_ids)
 
     async def search(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
+        """Search the provider catalog for display-ready movie records."""
         data = await self.tmdb_client.fetch_path("/search/movie", {"query": query})
         return [
             {

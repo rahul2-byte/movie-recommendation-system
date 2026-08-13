@@ -36,6 +36,7 @@ _INTERACTION_COLUMNS = ["user_id", "tmdb_id", "movielens_id", "rating", "timesta
 
 @dataclass(frozen=True)
 class RankingPrepareResult:
+    """Manifest and directory for the inner train/target ranking split."""
     version_id: str
     output_dir: Path
     manifest: dict[str, Any]
@@ -43,12 +44,14 @@ class RankingPrepareResult:
 
 @dataclass(frozen=True)
 class RankingCandidateResult:
+    """Manifest and directory for fused ranking candidates."""
     output_dir: Path
     manifest: dict[str, Any]
 
 
 @dataclass(frozen=True)
 class RankingFeatureResult:
+    """Manifest and directory for materialized ranking features."""
     output_dir: Path
     manifest: dict[str, Any]
 
@@ -81,6 +84,7 @@ def _split_user_events(
 
 
 def _write_parquet(frame: pd.DataFrame, path: Path, config: RankingDataConfig) -> None:
+    """Atomically write one compressed ranking-data parquet file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
     frame.to_parquet(
@@ -93,6 +97,7 @@ def _write_parquet(frame: pd.DataFrame, path: Path, config: RankingDataConfig) -
 
 
 def _output_dir(version_dir: Path, train_path: Path, config: RankingDataConfig) -> Path:
+    """Derive an immutable output path from config and source hashes."""
     fingerprint = f"{sha256(config.path)[:12]}-{sha256(train_path)[:12]}"
     return version_dir / "ranking" / fingerprint
 
@@ -215,6 +220,7 @@ def _source_candidates(
     candidate_k: int,
     cache: dict[int, np.ndarray],
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Collect, deduplicate, and rank candidates for one retriever."""
     candidates: list[np.ndarray] = []
     ranks: list[np.ndarray] = []
     forbidden = np.asarray(seed_tmdb_ids, dtype=np.int64)
@@ -256,6 +262,7 @@ def _source_candidates(
 def _candidate_output_dir(
     prepared_dir: Path, config: RankingDataConfig, artifacts: Mapping[str, Any]
 ) -> Path:
+    """Derive candidate output identity from config and artifact manifests."""
     fingerprint = canonical_json(
         {
             "ranking_config_sha256": sha256(config.path),
@@ -298,6 +305,7 @@ def _limit_candidates_by_rrf(
 
 
 def _candidate_schema(sources: tuple[str, ...]) -> pa.Schema:
+    """Build the Arrow schema shared by all candidate partitions."""
     return pa.schema(
         [
             pa.field("query_index", pa.int64()),
@@ -399,6 +407,7 @@ def build_ranking_candidates(
     )
 
     def write_part(completed_queries: int) -> None:
+        """Flush buffered query/candidate rows as one resumable part."""
         if not query_buffers["query_index"]:
             return
         part_index = int(state["completed_parts"])
@@ -543,6 +552,7 @@ def build_ranking_candidates(
     write_part(int(prepared_manifest["eligible_users"]))
 
     def compact(parts_dir: Path, destination: Path, schema: pa.Schema) -> None:
+        """Compact resumable parquet parts into the final output atomically."""
         temporary = destination.with_name(f".{destination.name}.compact.tmp")
         writer = pq.ParquetWriter(
             temporary,
@@ -665,6 +675,7 @@ def _build_partition_candidates(
     )
 
     def write_part(completed_queries: int) -> None:
+        """Flush one candidate partition during validation/test generation."""
         if buffers["query_index"]:
             part_index = int(state["completed_parts"])
             destination = (

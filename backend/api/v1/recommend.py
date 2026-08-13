@@ -1,3 +1,5 @@
+"""Recommendation and feedback HTTP routes."""
+
 import logging
 import time
 import uuid
@@ -14,6 +16,7 @@ log = logging.getLogger(__name__)
 
 @router.post("", response_model=RecommendResponse)
 async def recommend_movies(request: Request, payload: RecommendRequest):
+    """Generate ranked recommendations for selected seed movies."""
     start = time.time()
     request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
 
@@ -74,5 +77,6 @@ async def recommend_movies(request: Request, payload: RecommendRequest):
 
 @router.post("/click")
 def movie_clicked():
+    """Accept a click event for the optional telemetry pipeline."""
     log_click()
     return {"status": "ok"}

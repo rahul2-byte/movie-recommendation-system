@@ -1,3 +1,5 @@
+"""Environment-backed settings shared by local, training, and deployed runs."""
+
 import json
 import os
 from pathlib import Path
@@ -10,6 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.absolute()
 
 
 class Settings(BaseSettings):
+    """Validated application settings with safe local defaults."""
     ENVIRONMENT: str = "PROD"
     TMDB_ACCESS_TOKEN: str = ""
     IMDB_API_KEY: str = ""
@@ -61,6 +64,7 @@ class Settings(BaseSettings):
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
     def parse_allowed_origins(cls, value):
+        """Accept list, JSON-list, or comma-separated CORS origins."""
         if isinstance(value, list):
             return [str(v).strip() for v in value if str(v).strip()]
         if value is None:
@@ -87,7 +91,10 @@ except Exception as e:
     )
 
     class MockSettings:
+        """Minimal fallback settings used when pydantic parsing is unavailable."""
+
         def __init__(self):
+            """Provide minimal defaults when optional settings parsing fails."""
             self.ENVIRONMENT = os.getenv("ENVIRONMENT", "PROD")
             self.TMDB_ACCESS_TOKEN = os.getenv("TMDB_ACCESS_TOKEN", "")
             self.IMDB_API_KEY = os.getenv("IMDB_API_KEY", "")
@@ -179,3 +186,4 @@ RANKER_MODEL_URI = f"{MODELS_PATH}/ranker"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p"
 TMDB_POSTER_SIZE = "w342"
 SCHEMA_VERSIONS_FILE = PROJECT_ROOT / "configs/schemas/schema_versions.yaml"
+"""Environment-backed settings shared by local, training, and deployed runs."""

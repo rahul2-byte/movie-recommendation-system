@@ -28,6 +28,7 @@ class DatasetValidationError(ValueError):
 def _require_columns(
     frame: pd.DataFrame, columns: tuple[str, ...], source: Path
 ) -> None:
+    """Reject a source frame that cannot satisfy its schema contract."""
     missing = set(columns) - set(frame.columns)
     if missing:
         raise DatasetValidationError(
@@ -38,6 +39,7 @@ def _require_columns(
 def _integer_column(
     frame: pd.DataFrame, column: str, source: Path, *, nullable: bool = False
 ) -> pd.Series:
+    """Coerce one identifier column and reject malformed values."""
     values = pd.to_numeric(frame[column], errors="coerce")
     if not nullable and values.isna().any():
         raise DatasetValidationError(f"{source} has malformed values in {column}")
@@ -48,6 +50,7 @@ def _integer_column(
 
 
 def _read_raw(raw_dir: Path) -> dict[str, pd.DataFrame]:
+    """Load and validate all required MovieLens CSV inputs."""
     frames: dict[str, pd.DataFrame] = {}
     for filename, columns in REQUIRED_RAW_COLUMNS.items():
         path = raw_dir / filename
@@ -72,6 +75,7 @@ def _read_raw(raw_dir: Path) -> dict[str, pd.DataFrame]:
 
 
 def _read_enriched(enriched_path: Path) -> pd.DataFrame:
+    """Load and validate the enriched metadata parquet input."""
     if not enriched_path.is_file():
         raise DatasetValidationError(f"Missing enriched metadata: {enriched_path}")
     frame = pd.read_parquet(enriched_path)
@@ -83,6 +87,7 @@ def _read_enriched(enriched_path: Path) -> pd.DataFrame:
 
 
 def _write_parquet(frame: pd.DataFrame, path: Path) -> None:
+    """Write one canonical compressed parquet output atomically."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path = path.with_name(f".{path.name}.tmp")
     frame.to_parquet(
@@ -95,6 +100,7 @@ def _write_parquet(frame: pd.DataFrame, path: Path) -> None:
 
 
 def _sha256(path: Path) -> str:
+    """Hash an output file for manifest reproducibility."""
     digest = hashlib.sha256()
     with path.open("rb") as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
@@ -105,6 +111,7 @@ def _sha256(path: Path) -> str:
 def _canonical_catalog(
     links: pd.DataFrame, enriched: pd.DataFrame
 ) -> tuple[pd.DataFrame, dict[str, int]]:
+    """Build the unique MovieLens/TMDB catalog and exclusion counts."""
     mappings = links[["movieId", "tmdbId"]].rename(
         columns={"movieId": "movielens_id", "tmdbId": "tmdb_id"}
     )
@@ -145,6 +152,7 @@ def _canonical_catalog(
 def _canonical_interactions(
     source: pd.DataFrame, catalog: pd.DataFrame, *, has_tag: bool
 ) -> pd.DataFrame:
+    """Map source events to valid TMDB IDs while preserving event fields."""
     columns = ["movielens_id", "tmdb_id"]
     mapping = catalog[columns]
     frame = source.rename(columns={"userId": "user_id", "movieId": "movielens_id"})
@@ -206,6 +214,7 @@ def build_processed_dataset(
 
 
 def main() -> None:
+    """Convert validated raw and enriched inputs into processed parquet files."""
     backend_dir = Path(__file__).resolve().parents[2]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw-dir", type=Path, default=backend_dir / "data/raw")

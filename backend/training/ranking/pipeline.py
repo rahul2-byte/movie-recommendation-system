@@ -51,6 +51,7 @@ class RankerTrainingResult:
 
 
 def read_feature_contract(feature_dir: Path) -> FeatureContract:
+    """Read the feature schema and manifest from one materialized directory."""
     schema_path = feature_dir / "feature_schema.json"
     manifest_path = feature_dir / "manifest.json"
     if not schema_path.is_file() or not manifest_path.is_file():
@@ -85,6 +86,7 @@ def read_feature_contract(feature_dir: Path) -> FeatureContract:
 def validate_feature_compatibility(
     train_feature_dir: Path, validation_feature_dir: Path
 ) -> FeatureContract:
+    """Reject train and validation directories with different contracts."""
     """Fail before training if feature definitions differ across partitions."""
     train = read_feature_contract(train_feature_dir.resolve())
     validation = read_feature_contract(validation_feature_dir.resolve())
@@ -105,6 +107,7 @@ def validate_feature_compatibility(
 
 
 def _packed_result(output_dir: Path, contract: FeatureContract) -> PackedRankingData:
+    """Describe packed memmaps written for one feature contract."""
     manifest_path = output_dir / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     return PackedRankingData(
@@ -120,6 +123,7 @@ def _packed_result(output_dir: Path, contract: FeatureContract) -> PackedRanking
 
 
 def _build_groups(query_ids: np.memmap, row_count: int) -> np.ndarray:
+    """Build LightGBM query-group sizes from sorted query IDs."""
     if row_count < 1:
         raise ValueError("Ranking feature dataset has no rows")
     groups: list[int] = []
@@ -259,6 +263,7 @@ def pack_ranking_features(
 
 
 def _open_packed(data: PackedRankingData) -> tuple[np.memmap, np.memmap, np.ndarray]:
+    """Open packed feature, label, and query-group arrays read-only."""
     features = np.memmap(
         data.features_path,
         dtype=np.float32,
@@ -277,6 +282,7 @@ def _open_packed(data: PackedRankingData) -> tuple[np.memmap, np.memmap, np.ndar
 def _mean_ranking_metrics(
     labels: np.ndarray, scores: np.ndarray, groups: np.ndarray, ks: tuple[int, ...]
 ) -> dict[str, float]:
+    """Compute mean top-k ranking metrics over query groups."""
     totals = {f"ndcg_at_{k}": 0.0 for k in ks}
     totals["map_at_10"] = 0.0
     totals["mrr_at_10"] = 0.0
@@ -296,6 +302,7 @@ def _mean_ranking_metrics(
 def _rrf_scores(
     features: np.ndarray, feature_names: tuple[str, ...], rank_constant: int
 ) -> np.ndarray:
+    """Compute retrieval-only reciprocal-rank baseline scores."""
     scores = np.zeros(len(features), dtype=np.float32)
     for index, name in enumerate(feature_names):
         if not name.startswith("retrieval_") or not name.endswith("_rank"):
@@ -313,7 +320,9 @@ def _rrf_scores(
 def _training_progress(
     callback: Callable[[int, int], None] | None, total: int
 ) -> Callable[[object], None]:
+    """Adapt progress callbacks to LightGBM's callback protocol."""
     def report(environment: object) -> None:
+        """Forward one LightGBM iteration update to the caller."""
         if callback is not None:
             callback(min(environment.iteration + 1, total), total)
 

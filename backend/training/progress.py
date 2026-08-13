@@ -11,6 +11,7 @@ class TerminalProgress:
     """Render completed work to stderr without contaminating JSON stdout."""
 
     def __init__(self, stage: str, total: int, stream: TextIO | None = None) -> None:
+        """Initialize progress rendering for one training stage."""
         if total < 1:
             raise ValueError("total must be positive")
         self.stage = stage
@@ -19,6 +20,7 @@ class TerminalProgress:
         self.started = time.perf_counter()
 
     def update(self, completed: int, detail: str = "") -> None:
+        """Render progress to stderr while preserving stdout for JSON results."""
         completed = min(max(completed, 0), self.total)
         elapsed = time.perf_counter() - self.started
         eta = (elapsed / completed * (self.total - completed)) if completed else 0.0

@@ -42,6 +42,7 @@ def ranking_metrics(
 
 
 def _validated_labels(labels: Iterable[int], k: int) -> list[int]:
+    """Normalize ranked labels to binary values for top-k metrics."""
     if k < 1:
         raise ValueError("k must be positive")
     return [int(label) > 0 for label in list(labels)[:k]]

@@ -25,6 +25,7 @@ class ModelBundleError(ValueError):
 
 
 def _sha256(path: Path) -> str:
+    """Return the content hash used for immutable bundle manifests."""
     digest = hashlib.sha256()
     with path.open("rb") as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
@@ -33,6 +34,7 @@ def _sha256(path: Path) -> str:
 
 
 def _read_json(path: Path) -> dict[str, Any]:
+    """Read one required JSON artifact as an object."""
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
@@ -43,6 +45,7 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _validate_source_artifact(name: str, path: Path) -> dict[str, Any]:
+    """Validate a source model manifest before copying its files."""
     manifest_path = path / "manifest.json"
     if not manifest_path.is_file():
         raise FileNotFoundError(f"Missing artifact manifest: {manifest_path}")
@@ -60,6 +63,7 @@ def _validate_source_artifact(name: str, path: Path) -> dict[str, Any]:
 
 
 def _tmdb_ids_from_mapping(mapping_path: Path) -> np.ndarray:
+    """Convert a TMDB-to-index mapping into an index-aligned ID array."""
     mapping = {int(key): int(value) for key, value in _read_json(mapping_path).items()}
     positions = set(mapping.values())
     expected = set(range(len(mapping)))
@@ -74,6 +78,7 @@ def _tmdb_ids_from_mapping(mapping_path: Path) -> np.ndarray:
 
 
 def _copy(path: Path, destination: Path) -> None:
+    """Copy one required artifact into the release bundle."""
     if not path.is_file():
         raise FileNotFoundError(f"Required model artifact file is missing: {path}")
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -81,6 +86,7 @@ def _copy(path: Path, destination: Path) -> None:
 
 
 def _collect_hashes(root: Path) -> dict[str, str]:
+    """Hash every bundle file for startup integrity validation."""
     return {
         str(path.relative_to(root)): _sha256(path)
         for path in sorted(root.rglob("*"))
@@ -89,6 +95,7 @@ def _collect_hashes(root: Path) -> dict[str, str]:
 
 
 def _write_popularity_counts(train_path: Path, destination: Path) -> None:
+    """Materialize popularity counts used by the ranker fallback."""
     counts: dict[int, int] = {}
     source = pq.ParquetFile(train_path)
     if "tmdb_id" not in source.schema_arrow.names:
@@ -203,11 +210,13 @@ def build_model_bundle(
 
 @dataclass(frozen=True)
 class CompactVectorRetriever:
+    """Serve vector-retrieval results from a compact FAISS bundle payload."""
     index: faiss.Index
     tmdb_ids: np.ndarray
     position_by_tmdb_id: dict[int, int]
 
     def retrieve_one(self, seed_tmdb_id: int, top_k: int) -> list[tuple[int, float]]:
+        """Return nearest TMDB IDs and similarity scores for one seed."""
         if top_k < 1:
             raise ValueError("top_k must be positive")
         position = self.position_by_tmdb_id.get(int(seed_tmdb_id))
@@ -224,11 +233,13 @@ class CompactVectorRetriever:
 
 @dataclass(frozen=True)
 class CompactItemGraphRetriever:
+    """Serve precomputed item-graph neighbors from compact NumPy arrays."""
     neighbor_positions: np.ndarray
     tmdb_ids: np.ndarray
     position_by_tmdb_id: dict[int, int]
 
     def retrieve_one(self, seed_tmdb_id: int, top_k: int) -> list[tuple[int, float]]:
+        """Return stored neighbors for one seed in graph rank order."""
         if top_k < 1:
             raise ValueError("top_k must be positive")
         position = self.position_by_tmdb_id.get(int(seed_tmdb_id))
@@ -243,12 +254,14 @@ class CompactItemGraphRetriever:
 
 @dataclass(frozen=True)
 class ModelBundle:
+    """Loaded immutable release bundle shared by serving retrievers."""
     root: Path
     manifest: dict[str, Any]
     vector_retrievers: dict[str, CompactVectorRetriever]
     item_graph: CompactItemGraphRetriever
 
     def vector_retriever(self, name: str) -> CompactVectorRetriever:
+        """Return the named vector retriever from this validated bundle."""
         try:
             return self.vector_retrievers[name]
         except KeyError as error:
@@ -258,6 +271,7 @@ class ModelBundle:
 def _load_tmdb_ids(
     path: Path, expected_count: int
 ) -> tuple[np.ndarray, dict[int, int]]:
+    """Load and validate an index-aligned TMDB ID array."""
     ids = np.load(path, allow_pickle=False)
     if ids.ndim != 1 or len(ids) != expected_count or np.any(ids <= 0):
         raise ModelBundleError(f"Invalid TMDB ID array: {path}")
@@ -331,6 +345,7 @@ def load_model_bundle(root: Path | str) -> ModelBundle:
 
 
 def main() -> None:
+    """Build an immutable serving bundle from validated model artifacts."""
     parser = ArgumentParser(description="Build one immutable runtime model bundle.")
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--popularity-train-path", type=Path, required=True)

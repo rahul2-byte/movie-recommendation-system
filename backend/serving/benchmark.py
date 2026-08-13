@@ -20,6 +20,7 @@ from serving.smoke import validate_recommendation_response
 
 
 def summarize_latencies(samples_ms: list[float]) -> dict[str, float | int]:
+    """Summarize successful request timings in milliseconds."""
     if not samples_ms:
         raise ValueError("latency samples are empty")
     values = np.asarray(samples_ms, dtype=np.float64)
@@ -35,12 +36,14 @@ def summarize_latencies(samples_ms: list[float]) -> dict[str, float | int]:
 def validate_seed_metadata(
     seed_tmdb_ids: list[int], metadata: dict[int, dict[str, Any]]
 ) -> None:
+    """Ensure every benchmark seed has metadata for content retrieval."""
     missing = sorted(set(seed_tmdb_ids) - set(metadata))
     if missing:
         raise ValueError(f"missing TMDB metadata for seed IDs: {missing}")
 
 
 async def _seed_metadata(seed_tmdb_ids: list[int]) -> dict[int, dict[str, Any]]:
+    """Fetch benchmark seed metadata and close the temporary client."""
     store = MovieStore()
     try:
         movies = await store.get_many_by_tmdb_ids(seed_tmdb_ids)
@@ -50,6 +53,7 @@ async def _seed_metadata(seed_tmdb_ids: list[int]) -> dict[int, dict[str, Any]]:
 
 
 def _api_request(base_url: str, seed_tmdb_ids: list[int], limit: int) -> dict[str, Any]:
+    """Issue one HTTP recommendation request to the running local API."""
     request = Request(
         f"{base_url.rstrip('/')}/api/v1/recommend",
         data=json.dumps({"seed_tmdb_ids": seed_tmdb_ids, "limit": limit}).encode(),
@@ -63,6 +67,7 @@ def _api_request(base_url: str, seed_tmdb_ids: list[int], limit: int) -> dict[st
 def _measure(
     name: str, request_count: int, action: Any
 ) -> tuple[list[float], list[str]]:
+    """Measure repeated actions while separating errors from timings."""
     samples_ms: list[float] = []
     errors: list[str] = []
     for index in range(request_count):
@@ -79,6 +84,7 @@ def _measure(
 
 
 def _write_report(path: Path, report: dict[str, Any]) -> None:
+    """Persist a deterministic benchmark report as formatted JSON."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -86,6 +92,7 @@ def _write_report(path: Path, report: dict[str, Any]) -> None:
 
 
 def main() -> None:
+    """Compare warm local model latency with warm HTTP endpoint latency."""
     parser = ArgumentParser(description="Benchmark a released local model bundle.")
     parser.add_argument("--bundle-dir", type=Path, required=True)
     parser.add_argument("--base-url", default="http://localhost:8080")
