@@ -35,13 +35,16 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: movie-recommendation-backend
           IMAGE_TAG: ${{ github.sha }}
+          MODEL_BUNDLE_PATH: backend/model_bundle
         run: |
+          test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"
           docker buildx build \
             --platform linux/amd64 \
             --provenance=false \
             --sbom=false \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
             -f backend/Dockerfile.lambda \
+            --build-arg MODEL_BUNDLE_PATH=$MODEL_BUNDLE_PATH \
             . \
             --push
 
