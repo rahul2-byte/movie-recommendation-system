@@ -15,6 +15,8 @@ FROM public.ecr.aws/lambda/python:3.10
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 
+ARG MODEL_BUNDLE_PATH
+
 # Copy installed dependencies from builder
 COPY --from=builder /build/.venv ${LAMBDA_TASK_ROOT}/.venv
 COPY --from=builder /build/runtime-lib ${LAMBDA_TASK_ROOT}/lib
@@ -29,11 +31,14 @@ COPY logger/ ${LAMBDA_TASK_ROOT}/logger/
 COPY pipeline/ ${LAMBDA_TASK_ROOT}/pipeline/
 COPY ranking/ ${LAMBDA_TASK_ROOT}/ranking/
 COPY retrieval/ ${LAMBDA_TASK_ROOT}/retrieval/
+COPY serving/ ${LAMBDA_TASK_ROOT}/serving/
+COPY ${MODEL_BUNDLE_PATH}/ ${LAMBDA_TASK_ROOT}/model_bundle/
 
 # Set production environment variables
 ENV ENVIRONMENT=PROD
 ENV LOG_FORMAT_JSON=true
 ENV PYTHONUNBUFFERED=1
+ENV MODEL_BUNDLE_DIR="/var/task/model_bundle"
 ENV PATH="${LAMBDA_TASK_ROOT}/.venv/bin:${PATH}"
 ENV LD_LIBRARY_PATH="${LAMBDA_TASK_ROOT}/lib:${LD_LIBRARY_PATH}"
 

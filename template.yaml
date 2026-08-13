@@ -78,6 +78,7 @@ Resources:
           TMDB_ACCESS_TOKEN: !Ref TmdbAccessToken
           IMDB_API_KEY: !Ref ImdbApiKey
           LOG_LEVEL: INFO
+          MODEL_BUNDLE_DIR: /var/task/model_bundle
       Policies:
         - S3ReadPolicy:
             BucketName: !Ref S3BucketName
