@@ -1,3 +1,5 @@
+"""TMDB-backed catalog queries used by the catalog API routes."""
+
 from common.clients.tmdb import get_tmdb_client
 
 IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"

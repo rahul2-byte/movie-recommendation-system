@@ -1,9 +1,9 @@
-from common.services.tmdb_catalog_service import (
+from fastapi import APIRouter, Query
+from infrastructure.metadata.catalog_service import (
     fetch_new_releases,
     fetch_popular_movies,
     fetch_trending_movies,
 )
-from fastapi import APIRouter, Query
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
