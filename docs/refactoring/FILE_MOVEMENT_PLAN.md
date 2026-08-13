@@ -12,7 +12,7 @@ moved until every listed consumer is migrated and the verification gate passes.
 | `backend/common/types.py:Query` | `backend/application/contracts.py:RecommendationQuery` | Request-domain query contract | migrated: API recommendation route, serving pipeline, tests | Medium |
 | `backend/common/types.py:Candidate` | `backend/retrieval/contracts.py:RetrievalCandidate` | Retrieval candidate contract | migrated: integration contract test | High |
 | `backend/serving/recommender.py` | `backend/serving/recommender.py` + `backend/serving/candidate_fusion.py` | Candidate collection/fusion is pure serving-domain logic; bundle loading, feature assembly, and ranker inference remain together | bundle recommender tests, serving pipeline | Low |
-| `backend/data_pipeline/ranking.py` | keep initially; split by tested boundaries later | Ranking-data, candidate, and feature materialization | data-pipeline CLI and integration tests | Medium |
+| `backend/data_pipeline/ranking.py` | keep as one pipeline module for now | Ranking-data preparation, candidate generation, held-out partitions, and feature materialization share schemas, hashing, resumability, and Parquet helpers | data-pipeline CLI and integration tests | Medium; split only when separate CLI/test ownership emerges |
 
 ## Deliberately not moving
 
