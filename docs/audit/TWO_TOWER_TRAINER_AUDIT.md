@@ -26,9 +26,10 @@ five-seed average is used.
 
 ## Status of legacy paths
 
-`train_two_tower.py` and `backend/training/retrieval/native/` are retained for
-forensics only. They are not authoritative and must not be used for training
-or evidence generation until separately audited and tested.
+`train_two_tower.py` was removed as a broken legacy wrapper. The native
+implementation remains for forensics only; it is not authoritative and must
+not be used for training or evidence generation until separately audited and
+tested.
 
 ## Reproduction
 
