@@ -1,8 +1,20 @@
 from pathlib import Path
 
 
-def test_orphaned_ranker_config_is_removed():
+def test_canonical_config_family_and_legacy_boundary_are_explicit():
     configs = Path(__file__).parents[2] / "configs"
+    for name in (
+        "data_pipeline.yaml",
+        "retrieval_training.yaml",
+        "ranking_data.yaml",
+        "ranking_features.yaml",
+        "ranking_training.yaml",
+        "evaluation.yaml",
+        "mlflow.yaml",
+        "settings.py",
+    ):
+        assert (configs / name).is_file()
+
+    assert (configs / "system.yml").is_file()
+    assert (configs / "features.yml").is_file()
     assert not (configs / "ranker.yml").exists()
-    assert (configs / "ranking_training.yaml").is_file()
-    assert (configs / "ranking_features.yaml").is_file()
