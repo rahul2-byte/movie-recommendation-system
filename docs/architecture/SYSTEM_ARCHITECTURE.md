@@ -48,7 +48,9 @@ MovieLens/TMDB-enriched raw data
 | --- | --- | --- |
 | HTTP transport | `backend/api/` | retrieval mathematics or data preparation |
 | Request orchestration | `backend/application/lifecycle.py` and `backend/serving/pipeline.py` | model training |
+| Request contract | `backend/application/contracts.py` | retrieval implementation details |
 | Metadata access | `backend/infrastructure/metadata/movie_store.py` | candidate scoring |
+| Retrieval contract | `backend/retrieval/contracts.py` | HTTP transport concerns |
 | Dataset preparation | `backend/data_pipeline/` | HTTP or AWS deployment |
 | Retrieval training | `backend/training/retrieval/` | request handling |
 | Ranking training | `backend/training/ranking/` | metadata network calls |

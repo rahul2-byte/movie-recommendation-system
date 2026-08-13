@@ -2,7 +2,7 @@ import logging
 import time
 import uuid
 
-from common.types import Query
+from application.contracts import RecommendationQuery
 from fastapi import APIRouter, HTTPException, Request
 from logger.services.mlflow_logger import log_click, log_recommendation
 
@@ -32,7 +32,7 @@ async def recommend_movies(request: Request, payload: RecommendRequest):
 
         # We await the async recommend method
         results = await pipeline.recommend(
-            query=Query(seed_tmdb_ids=payload.seed_tmdb_ids),
+            query=RecommendationQuery(seed_tmdb_ids=payload.seed_tmdb_ids),
             top_n=payload.limit or 20,
             request_id=request_id,
         )

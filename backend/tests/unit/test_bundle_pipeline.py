@@ -1,6 +1,6 @@
 import asyncio
 
-from common.types import Query
+from application.contracts import RecommendationQuery
 from serving.pipeline import BundleRecommendationPipeline
 
 
@@ -24,7 +24,9 @@ class _MovieStore:
 def test_bundle_pipeline_returns_tmdb_metadata_in_ranked_order():
     pipeline = BundleRecommendationPipeline(_Recommender(), _MovieStore())
 
-    results = asyncio.run(pipeline.recommend(Query(seed_tmdb_ids=[1]), top_n=2))
+    results = asyncio.run(
+        pipeline.recommend(RecommendationQuery(seed_tmdb_ids=[1]), top_n=2)
+    )
 
     assert [item["tmdbId"] for item in results] == [20, 30]
     assert [item["score"] for item in results] == [0.9, 0.8]
@@ -37,6 +39,8 @@ def test_bundle_pipeline_excludes_seed_and_duplicate_candidates():
 
     pipeline = BundleRecommendationPipeline(Recommender(), _MovieStore())
 
-    results = asyncio.run(pipeline.recommend(Query(seed_tmdb_ids=[1]), top_n=2))
+    results = asyncio.run(
+        pipeline.recommend(RecommendationQuery(seed_tmdb_ids=[1]), top_n=2)
+    )
 
     assert [item["tmdbId"] for item in results] == [20, 30]

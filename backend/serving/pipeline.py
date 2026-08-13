@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
-from common.types import Query
+from application.contracts import RecommendationQuery
 
 
 class _Recommender(Protocol):
@@ -35,7 +35,10 @@ class BundleRecommendationPipeline:
         self.movie_store = movie_store
 
     async def recommend(
-        self, query: Query, top_n: int = 20, request_id: str | None = None
+        self,
+        query: RecommendationQuery,
+        top_n: int = 20,
+        request_id: str | None = None,
     ) -> list[dict[str, Any]]:
         """Return up to ``top_n`` ranked, metadata-enriched movie records."""
         seeds = list(dict.fromkeys(query.seed_tmdb_ids))

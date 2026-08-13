@@ -1,12 +1,13 @@
 import pytest
 from api.schemas.recommend import MovieOut, RecommendRequest
-from common.types import Candidate, Query
+from application.contracts import RecommendationQuery
 from pydantic import ValidationError
+from retrieval.contracts import RetrievalCandidate
 
 
 def test_query_and_candidate_use_tmdb_ids():
-    query = Query(seed_tmdb_ids=[603, 238])
-    candidate = Candidate(tmdb_id=680)
+    query = RecommendationQuery(seed_tmdb_ids=[603, 238])
+    candidate = RetrievalCandidate(tmdb_id=680)
 
     assert query.seed_tmdb_ids == [603, 238]
     assert candidate.item_id == 680
