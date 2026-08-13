@@ -1,11 +1,11 @@
 from pathlib import Path
 
 from training.retrieval.build_als import load_als_training_config
-from training.retrieval.build_item_graph import load_item_graph_training_config
-from training.retrieval.build_tfidf import (
+from training.retrieval.build_content_retriever import (
     load_content_training_config,
     load_tfidf_training_config,
 )
+from training.retrieval.build_item_graph import load_item_graph_training_config
 from training.retrieval.build_two_tower import load_two_tower_training_config
 
 

@@ -14,11 +14,11 @@ from data_pipeline.tracking import load_tracking_config, tracked_run
 from data_pipeline.validate import validate_dataset
 from training.progress import TerminalProgress
 from training.retrieval.build_als import AlsArtifact
+from training.retrieval.build_content_retriever import build_exact_seed_cache
 from training.retrieval.build_item_graph import (
     ItemGraphArtifact,
     build_item_graph_seed_cache,
 )
-from training.retrieval.build_tfidf import build_exact_seed_cache
 from training.retrieval.build_two_tower import TwoTowerArtifact
 
 from evaluation.baselines import PopularityRecommender

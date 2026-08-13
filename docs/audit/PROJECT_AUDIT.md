@@ -132,7 +132,7 @@ This flow is inferred from code. End-to-end execution is **UNVERIFIED**.
 #### P0-03 — Python retrieval training entrypoints reference nonexistent builders
 
 - **Evidence:** `train_two_tower.py` imports `TwoTowerBuilder`, `train_als.py`
-  imports `ALSBuilder`, `build_tfidf.py` imports `TFIDFBuilder`, and
+  imports `ALSBuilder`, `build_content_retriever.py` imports `TFIDFBuilder`, and
   `build_content.py` imports `ContentBasedBuilder`. None of those classes exists in
   the respective model modules. `tfidf.py:14-15` explicitly says its builder was
   removed.
@@ -552,7 +552,7 @@ Do not run:
 - `backend/training/bin/`
 - `backend/training/retrieval/train_als.py`
 - `backend/training/retrieval/train_two_tower.py`
-- `backend/training/retrieval/build_tfidf.py`
+- `backend/training/retrieval/build_content_retriever.py`
 - `backend/training/retrieval/build_content.py`
 - `backend/features/generate_training_features.py`
 - `backend/scripts/finalize_artifacts.py`

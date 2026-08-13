@@ -14,7 +14,7 @@ from implicit.nearest_neighbours import ItemItemRecommender, bm25_weight
 from retrieval.seeded import collect_seed_candidates, order_candidate_ids
 
 from training.retrieval.build_als import _build_user_items, _load_interactions, _sha256
-from training.retrieval.build_tfidf import _merge_neighbor_rows, _seed_ids
+from training.retrieval.build_content_retriever import _merge_neighbor_rows, _seed_ids
 
 
 @dataclass(frozen=True)

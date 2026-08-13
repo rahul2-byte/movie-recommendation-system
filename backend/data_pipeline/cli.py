@@ -8,8 +8,8 @@ import logging
 from pathlib import Path
 
 from training.retrieval.build_als import AlsArtifact
+from training.retrieval.build_content_retriever import TfidfArtifact
 from training.retrieval.build_item_graph import ItemGraphArtifact
-from training.retrieval.build_tfidf import TfidfArtifact
 from training.retrieval.build_two_tower import TwoTowerArtifact
 
 from data_pipeline.config import (

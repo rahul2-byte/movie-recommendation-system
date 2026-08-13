@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
-from training.retrieval.build_tfidf import build_exact_seed_cache
+from training.retrieval.build_content_retriever import build_exact_seed_cache
 from training.retrieval.build_two_tower import train_two_tower
 
 

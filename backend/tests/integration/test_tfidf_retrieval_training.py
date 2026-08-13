@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from training.retrieval.build_tfidf import (
+from training.retrieval.build_content_retriever import (
     TfidfArtifact,
     build_tfidf_seed_cache,
     train_tfidf,

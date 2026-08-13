@@ -19,16 +19,16 @@ from evaluation.runner import evaluate_recommender, write_evaluation_artifacts
 
 from training.progress import TerminalProgress
 from training.retrieval.build_als import load_als_training_config, train_als
-from training.retrieval.build_item_graph import (
-    build_item_graph_seed_cache,
-    load_item_graph_training_config,
-    train_item_graph,
-)
-from training.retrieval.build_tfidf import (
+from training.retrieval.build_content_retriever import (
     build_exact_seed_cache,
     load_content_training_config,
     load_tfidf_training_config,
     train_tfidf,
+)
+from training.retrieval.build_item_graph import (
+    build_item_graph_seed_cache,
+    load_item_graph_training_config,
+    train_item_graph,
 )
 from training.retrieval.build_two_tower import (
     load_two_tower_training_config,

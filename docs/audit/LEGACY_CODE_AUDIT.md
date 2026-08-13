@@ -153,8 +153,8 @@ The only in-repository execution hint is a comment at `backend/api/main.py:154`.
 | ALS | `training.retrieval.cli als` → `build_als.py` | `faiss.index`, `item_embeddings.npy`, `tmdb_id_to_idx.json`, `manifest.json` | `serving.model_bundle` compact vector retriever | Yes; verified in bundle | KEEP |
 | Item graph | `training.retrieval.cli item_graph` → `build_item_graph.py` | `neighbor_positions.npy`, `tmdb_id_to_idx.npy`, `manifest.json` | `serving.model_bundle` graph loader | Yes; verified in bundle | KEEP |
 | Two-tower | `training.retrieval.cli two_tower` → `build_two_tower.py` | FAISS/index/embedding/ID map/manifest | `serving.model_bundle` compact vector retriever | Yes; verified in bundle | KEEP |
-| TF-IDF | `training.retrieval.cli tfidf` → `build_tfidf.py` | vectorizer/SVD/embedding/FAISS/ID map/manifest | `serving.model_bundle` content-compatible loader | Yes; verified by artifact loader | KEEP |
-| Content | `training.retrieval.cli content` → same `build_tfidf.py` implementation with field weights | same content artifact family, manifest `model_type=content` | `serving.recommender` reads content fields/weights | Yes; full bundle built | KEEP |
+| TF-IDF | `training.retrieval.cli tfidf` → `build_content_retriever.py` | vectorizer/SVD/embedding/FAISS/ID map/manifest | `serving.model_bundle` content-compatible loader | Yes; verified by artifact loader | KEEP |
+| Content | `training.retrieval.cli content` → same `build_content_retriever.py` implementation with field weights | same content artifact family, manifest `model_type=content` | `serving.recommender` reads content fields/weights | Yes; full bundle built | KEEP |
 | LightGBM ranker | `training.ranking.cli` → `training/ranking/pipeline.py` | `model.txt`, feature schema, popularity counts, manifest | `serving.recommender` | Yes; validation/test and bundle load verified | KEEP |
 | Old ALS/TF-IDF/content/two-tower | `retrieval/models/*.py` + old S3 keys | old mutable S3 artifacts under `configs/system.yml` | `retrieval.inference.recall` | Separate contract; not bundle-compatible | DEPRECATE/CONSOLIDATE |
 | Old ranker | `training/ranking/train_ranker*.py`, `train_from_csv.py` | old `lgbm_lambdarank.txt`, `feat_*` data | `ranking/inference/lgbm.py` | Separate feature/artifact contract | DEPRECATE/CONSOLIDATE |
@@ -202,7 +202,7 @@ Each finding includes location, evidence, current role, risk, recommendation, re
 ### LEGACY-004 — P0 — BROKEN — old trainer wrappers
 
 * **Locations:** `backend/training/retrieval/train_als.py`, `train_two_tower.py`, `build_content.py`.
-* **Evidence:** imports fail under the project environment: `ALSBuilder`, `TwoTowerBuilder`, and `ContentBasedBuilder` cannot be imported from the current model modules. The canonical CLI uses `build_als.py`, `build_two_tower.py`, and `build_tfidf.py` instead.
+* **Evidence:** imports fail under the project environment: `ALSBuilder`, `TwoTowerBuilder`, and `ContentBasedBuilder` cannot be imported from the current model modules. The canonical CLI uses `build_als.py`, `build_two_tower.py`, and `build_content_retriever.py` instead.
 * **Current role:** historical Python wrappers around the former retrieval builders.
 * **Problem:** commands appear to exist but cannot train artifacts.
 * **Recommendation:** deprecate/document the wrappers, then remove them after checking external/manual usage. Do not add compatibility builder classes merely to preserve this path.
@@ -528,7 +528,7 @@ These are recommendations for a later cleanup phase, not changes made now.
 
 1. Isolate old S3 retrievers behind a legacy package or remove them after deployment migration.
 2. Do not merge algorithm implementations that have different artifact contracts; consolidate loaders at the bundle boundary.
-3. Keep content/TF-IDF algorithm diversity, but share the single field-weighted trainer already used by `build_tfidf.py`.
+3. Keep content/TF-IDF algorithm diversity, but share the single field-weighted trainer already used by `build_content_retriever.py`.
 
 ### API/serving
 
