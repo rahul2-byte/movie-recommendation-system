@@ -19,10 +19,7 @@ export function ToggleGroupItem({
   return (
     <button
       onClick={onClick}
-      className={cn(
-        "tag",
-        active ? "tag-selected" : "tag-default"
-      )}
+      className={cn("tag", active ? "tag-selected" : "tag-default")}
     >
       {children}
     </button>

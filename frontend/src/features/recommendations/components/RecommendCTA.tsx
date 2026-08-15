@@ -17,11 +17,11 @@ export function RecommendCTA({ onDone }: { onDone: () => void }) {
   function handleClick() {
     if (!isReady) return
 
-    const seedMovieIds = selectedMovies.map((movie) => movie.movieId)
+    const seedTmdbIds = selectedMovies.map((movie) => movie.tmdbId)
 
     mutate(
       {
-        seed_movie_ids: seedMovieIds,
+        seed_tmdb_ids: seedTmdbIds,
         moods: [],
         limit: 20,
       },
@@ -46,8 +46,8 @@ export function RecommendCTA({ onDone }: { onDone: () => void }) {
             >
               <AlertCircle className="h-5 w-5 text-primary" />
               <p className="text-body text-primary">
-                Select {requiredCount} movies to tune the model ({selectedCount}/
-                {requiredCount}).
+                Select {requiredCount} movies to tune the model ({selectedCount}
+                /{requiredCount}).
               </p>
             </m.div>
           )}

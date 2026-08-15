@@ -10,8 +10,7 @@ const modalVariants = cva("modal-overlay")
 const modalContentVariants = cva("modal no-scrollbar")
 
 export interface ModalProps
-  extends ComponentProps<"div">,
-    VariantProps<typeof modalVariants> {
+  extends ComponentProps<"div">, VariantProps<typeof modalVariants> {
   contentClassName?: string
 }
 

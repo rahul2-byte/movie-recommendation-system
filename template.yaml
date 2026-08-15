@@ -8,20 +8,9 @@ Parameters:
   ImageUri:
     Type: String
     Description: URI of the Docker image in ECR
-  DynamoDBTableName:
-    Type: String
-    Default: Movies
-    Description: DynamoDB table name for movie metadata.
-  S3BucketName:
-    Type: String
-    Description: Name of the S3 bucket containing model artifacts and data.
   TmdbAccessToken:
     Type: String
     Description: TMDB API Access Token
-    NoEcho: true
-  ImdbApiKey:
-    Type: String
-    Description: OMDb/IMDb API Key
     NoEcho: true
   Environment:
     Type: String
@@ -73,24 +62,9 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref Environment
           ALLOWED_ORIGINS: !Ref AllowedOrigins
-          S3_ARTIFACT_BUCKET: !Ref S3BucketName
-          DYNAMODB_TABLE_NAME: !Ref DynamoDBTableName
           TMDB_ACCESS_TOKEN: !Ref TmdbAccessToken
-          IMDB_API_KEY: !Ref ImdbApiKey
           LOG_LEVEL: INFO
-      Policies:
-        - S3ReadPolicy:
-            BucketName: !Ref S3BucketName
-        - Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:GetItem
-                - dynamodb:BatchGetItem
-                - dynamodb:Query
-                - dynamodb:Scan
-              Resource:
-                - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableName}"
-                - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTableName}/index/*"
+          MODEL_BUNDLE_DIR: /var/task/model_bundle
 
 Outputs:
   ApiUrl:

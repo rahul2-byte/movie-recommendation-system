@@ -12,16 +12,16 @@ export function Footer() {
         </div>
 
         <div className="flex items-center gap-8">
-          <Link 
-            href="https://github.com" 
+          <Link
+            href="https://github.com"
             target="https://github.com/rahul2-byte/movie-recommendation-system"
             className="text-sm text-text-muted hover:text-accent transition-colors uppercase tracking-wider"
           >
             GitHub
           </Link>
-          <Link 
-            href="https://linkedin.com" 
-            target="https://www.linkedin.com/in/-rahul-singh22/" 
+          <Link
+            href="https://linkedin.com"
+            target="https://www.linkedin.com/in/-rahul-singh22/"
             className="text-sm text-text-muted hover:text-accent transition-colors uppercase tracking-wider"
           >
             LinkedIn

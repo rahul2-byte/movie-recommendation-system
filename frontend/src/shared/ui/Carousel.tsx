@@ -7,7 +7,7 @@ import { Button } from "@/shared/ui/Button"
 export function Carousel({ children }: { children: React.ReactNode }) {
   const rowRef = useRef<HTMLDivElement>(null)
   const [showLeft, setShowLeft] = useState(false)
-  const [showRight, setShowRight] = useState(true)
+  const [, setShowRight] = useState(true)
 
   const checkScroll = () => {
     if (!rowRef.current) return
@@ -30,14 +30,14 @@ export function Carousel({ children }: { children: React.ReactNode }) {
   const scroll = (dir: "left" | "right") => {
     if (!rowRef.current) return
     const { clientWidth, scrollLeft, scrollWidth } = rowRef.current
-    
+
     // Infinite scroll logic for buttons
     if (dir === "right" && scrollLeft >= scrollWidth - clientWidth - 5) {
       // If at end, loop to start
       rowRef.current.scrollTo({ left: 0, behavior: "smooth" })
       return
     }
-    
+
     if (dir === "left" && scrollLeft <= 0) {
       // If at start, loop to end (optional, usually confusing, but let's just stick to standard scroll left)
       // rowRef.current.scrollTo({ left: scrollWidth, behavior: "smooth" })
@@ -45,7 +45,7 @@ export function Carousel({ children }: { children: React.ReactNode }) {
     }
 
     const scrollAmount = clientWidth * 0.8 // Scroll 80% of view
-    
+
     rowRef.current.scrollBy({
       left: dir === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
@@ -66,7 +66,7 @@ export function Carousel({ children }: { children: React.ReactNode }) {
           variant="ghost"
           size="icon"
           onClick={() => scroll("left")}
-          className={`pointer-events-auto bg-black/50 hover:bg-black/80 text-white backdrop-blur rounded-full w-12 h-12 border border-white/10 ${!showLeft ? 'invisible' : ''}`}
+          className={`pointer-events-auto bg-black/50 hover:bg-black/80 text-white backdrop-blur rounded-full w-12 h-12 border border-white/10 ${!showLeft ? "invisible" : ""}`}
         >
           <ChevronLeft className="h-6 w-6" />
         </Button>

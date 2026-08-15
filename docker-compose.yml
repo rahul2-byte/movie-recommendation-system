@@ -5,18 +5,7 @@ services:
       dockerfile: backend/Dockerfile
     env_file:
       - backend/.env
-    environment:
-      AWS_ENDPOINT_URL: http://database:8000
-      SKIP_INGESTION: "1"
-      MLFLOW_TRACKING_URI: /tmp/mlruns
     ports:
       - "8000:8080"
-    depends_on:
-      - database
     volumes:
       - ./backend:/var/task
-
-  database:
-    image: docker.io/amazon/dynamodb-local:2.5.2
-    ports:
-      - "8001:8000"

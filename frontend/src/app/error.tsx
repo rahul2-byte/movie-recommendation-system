@@ -21,27 +21,27 @@ export default function GlobalError({
       <div className="mb-6 rounded-full bg-error/10 p-4 text-error">
         <AlertCircle className="h-12 w-12" />
       </div>
-      
-      <h1 className="mb-2 font-serif text-3xl text-white">Something went sideways.</h1>
+
+      <h1 className="mb-2 font-serif text-3xl text-white">
+        Something went sideways.
+      </h1>
       <p className="mb-8 max-w-md text-text-secondary">
-        An unexpected error occurred in our cinematic engine. We've been notified and are looking into it.
+        An unexpected error occurred in our cinematic engine. We have been
+        notified and are looking into it.
       </p>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          onClick={() => reset()}
-          className="btn btn-primary"
-        >
+        <button onClick={() => reset()} className="btn btn-primary">
           <RotateCcw className="h-4 w-4" />
           Try Again
         </button>
-        
+
         <Link href="/" className="btn btn-secondary">
           <Home className="h-4 w-4" />
           Back to Home
         </Link>
       </div>
-      
+
       {error.digest && (
         <p className="mt-8 text-xs text-text-muted">Error ID: {error.digest}</p>
       )}

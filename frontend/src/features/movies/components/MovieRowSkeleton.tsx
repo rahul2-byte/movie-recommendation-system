@@ -8,7 +8,7 @@ interface MovieRowSkeletonProps {
 
 export function MovieRowSkeleton({ title }: MovieRowSkeletonProps) {
   return (
-    <section className="section">
+    <section aria-label={`${title} loading`} className="section">
       <div className="container">
         <div className="flex flex-col gap-2 mb-12">
           <Skeleton className="h-4 w-32" />

@@ -9,7 +9,8 @@ import { cn } from "@/shared/lib/utils"
 const modalCloseButtonVariants = cva("text-muted-foreground")
 
 export interface ModalCloseButtonProps
-  extends ComponentProps<"button">,
+  extends
+    ComponentProps<"button">,
     VariantProps<typeof modalCloseButtonVariants> {}
 
 const ModalCloseButton = forwardRef<HTMLButtonElement, ModalCloseButtonProps>(

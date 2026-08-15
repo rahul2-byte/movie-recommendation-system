@@ -1,0 +1,20 @@
+dataset:
+  name: movielens-32m
+  schema_version: tmdb-keyed-v1
+  raw_dir: ../data/raw
+  enriched_metadata_path: ../data/raw/movies_enriched.parquet
+  versions_dir: ../data/versions
+
+prepare:
+  compression: zstd
+  compression_level: 3
+  user_bucket_count: 128
+
+split:
+  strategy: per_user_chronological
+  train_fraction: 0.60
+  validation_fraction: 0.20
+  positive_rating_threshold: 3.0
+  min_positive_interactions: 8
+  min_train_interactions: 6
+  seed_count: 5

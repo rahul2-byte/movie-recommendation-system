@@ -5,9 +5,8 @@ import { RecommendedMovie } from "@/features/recommendations/types"
 /* ---------- TYPES ---------- */
 
 export type SelectedMovie = {
-  movieId: number
+  tmdbId: number
   title: string
-  tmdbId: number | null
   posterUrl?: string | null
 }
 
@@ -28,15 +27,12 @@ type RecommendationState = {
 
   /* movie actions */
   addMovie: (m: SelectedMovie) => void
-  removeMovie: (id: number) => void
+  removeMovie: (tmdbId: number) => void
   clearMovies: () => void
 
   /* recommendation actions */
   setRecommendations: (r: RecommendedMovie[]) => void
   setError: (e: string | null) => void
-
-  /* reset */
-  clearAll: () => void
 }
 
 /* ---------- STORE ---------- */
@@ -70,7 +66,7 @@ export const useRecommendationStore = create<RecommendationState>()(
         set((state) => {
           if (
             state.selectedMovies.length >= 5 ||
-            state.selectedMovies.some((m) => m.movieId === movie.movieId)
+            state.selectedMovies.some((m) => m.tmdbId === movie.tmdbId)
           ) {
             return state
           }
@@ -79,9 +75,7 @@ export const useRecommendationStore = create<RecommendationState>()(
 
       removeMovie: (id) =>
         set((state) => ({
-          selectedMovies: state.selectedMovies.filter(
-            (m) => m.movieId !== id
-          ),
+          selectedMovies: state.selectedMovies.filter((m) => m.tmdbId !== id),
         })),
 
       clearMovies: () => set({ selectedMovies: [] }),
@@ -89,20 +83,14 @@ export const useRecommendationStore = create<RecommendationState>()(
       /* recommendation actions */
       setRecommendations: (recommendations) =>
         set({ recommendations, error: null }),
-      
-      setError: (error) => set({ error }),
 
-      /* reset */
-      clearAll: () =>
-        set({
-          selectedGenres: [],
-          selectedMovies: [],
-          recommendations: [],
-          error: null,
-        }),
+      setError: (error) => set({ error }),
     }),
     {
       name: "recommendation-storage",
+      // The previous persisted state can contain removed mood names. Discard
+      // it rather than submitting an invalid request after the clean break.
+      version: 2,
     }
   )
 )

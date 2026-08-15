@@ -1,3 +1,5 @@
+// Jest configuration is CommonJS because Next.js loads this file directly.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const nextJest = require("next/jest")
 
 const createJestConfig = nextJest({

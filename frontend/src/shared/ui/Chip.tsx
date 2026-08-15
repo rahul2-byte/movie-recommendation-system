@@ -10,8 +10,7 @@ const chipVariants = cva(
 )
 
 export interface ChipProps
-  extends ComponentProps<"span">,
-    VariantProps<typeof chipVariants> {}
+  extends ComponentProps<"span">, VariantProps<typeof chipVariants> {}
 
 const Chip = forwardRef<HTMLSpanElement, ChipProps>(
   ({ className, ...props }, ref) => {
@@ -27,7 +26,8 @@ const chipCloseButtonVariants = cva(
 )
 
 export interface ChipCloseButtonProps
-  extends ComponentProps<"button">,
+  extends
+    ComponentProps<"button">,
     VariantProps<typeof chipCloseButtonVariants> {}
 
 const ChipCloseButton = forwardRef<HTMLButtonElement, ChipCloseButtonProps>(

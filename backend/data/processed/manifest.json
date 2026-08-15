@@ -1,0 +1,26 @@
+{
+  "catalog_rows": 86007,
+  "compression": {
+    "codec": "zstd",
+    "level": 3
+  },
+  "excluded_ambiguous_tmdb_rows": 72,
+  "excluded_duplicate_movielens_rows": 0,
+  "excluded_metadata_mismatch_rows": 1382,
+  "excluded_unmapped_rows": 124,
+  "identity": {
+    "internal_index": "item_index",
+    "lineage_id": "movielens_id",
+    "operational_id": "tmdb_id"
+  },
+  "ratings_rows": 31890244,
+  "schema_version": "tmdb-keyed-v1",
+  "source_sha256": {
+    "links.csv": "ef17da7710be76f7d510d5768d1b61826e3af4bf57812b9ca377e4c912123b22",
+    "movies.csv": "b37ca1abc7798de741138ed252b62f69f7e37c84b8a8fab1b82d409b4c6c5cc2",
+    "movies_enriched.parquet": "45c8cc77cb9079393731d7ea389d3a0e1cf4bc25500cd8d2f7dc5a3e3309ffe0",
+    "ratings.csv": "91159850e41ee59c86231165a688709647e2726cab2e7ba9faf04001bd5261ee",
+    "tags.csv": "c52e458a89b9deee410f50813e7a64491fbe92a6f07b5c4b58e64c0b3cc95b89"
+  },
+  "tags_rows": 1987406
+}

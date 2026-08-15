@@ -13,10 +13,28 @@ CONTAINER_NAME="${CONTAINER_NAME:-movie-lambda-local}"
 LAMBDA_PORT="${LAMBDA_PORT:-9000}"
 APP_PORT="${APP_PORT:-8080}"
 
-AWS_REGION="${AWS_REGION:-us-east-1}"
-DYNAMODB_TABLE_NAME="${DYNAMODB_TABLE_NAME:-Movies}"
-S3_ARTIFACT_BUCKET="${S3_ARTIFACT_BUCKET:-}"
 ENVIRONMENT="${ENVIRONMENT:-PROD}"
+MODEL_BUNDLE_PATH="${MODEL_BUNDLE_PATH:-backend/model_bundle/production}"
+
+cd "$ROOT_DIR"
+
+if ! test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"; then
+  echo "ERROR: Model bundle manifest not found: $MODEL_BUNDLE_PATH/bundle_manifest.json" >&2
+  exit 1
+fi
+for required_file in \
+  ranker/manifest.json \
+  ranker/model.txt \
+  ranker/feature_schema.json \
+  retrievers/als/manifest.json \
+  retrievers/item_graph/manifest.json \
+  retrievers/two_tower/manifest.json \
+  retrievers/content/manifest.json; do
+  if ! test -f "$MODEL_BUNDLE_PATH/$required_file"; then
+    echo "ERROR: Required model bundle file not found: $MODEL_BUNDLE_PATH/$required_file" >&2
+    exit 1
+  fi
+done
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -33,13 +51,12 @@ trap cleanup EXIT
 require_cmd docker
 require_cmd curl
 
-cd "$ROOT_DIR"
-
 echo "[1/4] Building Lambda image from backend/Dockerfile.lambda..."
-docker build --no-cache --progress=plain \
+DOCKER_BUILDKIT=0 docker build --no-cache --network=host \
   -t "$IMAGE_NAME" \
   -f backend/Dockerfile.lambda \
-  backend/
+  --build-arg MODEL_BUNDLE_PATH=$MODEL_BUNDLE_PATH \
+  .
 
 echo "[2/4] Starting Lambda container..."
 RUN_ARGS=(
@@ -47,13 +64,8 @@ RUN_ARGS=(
   --name "$CONTAINER_NAME"
   -p "${LAMBDA_PORT}:${APP_PORT}"
   -e "ENVIRONMENT=${ENVIRONMENT}"
-  -e "AWS_REGION=${AWS_REGION}"
-  -e "DYNAMODB_TABLE_NAME=${DYNAMODB_TABLE_NAME}"
 )
 
-if [[ -n "$S3_ARTIFACT_BUCKET" ]]; then
-  RUN_ARGS+=(-e "S3_ARTIFACT_BUCKET=${S3_ARTIFACT_BUCKET}")
-fi
 
 docker run "${RUN_ARGS[@]}" "$IMAGE_NAME" >/dev/null
 

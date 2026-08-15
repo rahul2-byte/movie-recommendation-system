@@ -11,7 +11,12 @@ interface MovieCardProps {
   selected?: boolean
 }
 
-export function MovieCard({ movie, index = 0, onClick, selected = false }: MovieCardProps) {
+export function MovieCard({
+  movie,
+  index = 0,
+  onClick,
+  selected = false,
+}: MovieCardProps) {
   return (
     <LazyMotion features={domAnimation} strict>
       <m.div
@@ -21,7 +26,7 @@ export function MovieCard({ movie, index = 0, onClick, selected = false }: Movie
         className={`movie-card group ${selected ? "movie-card-selected" : ""}`}
         onClick={onClick}
       >
-        <div 
+        <div
           className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-[rgba(255,255,255,0.03)]"
           aria-label={`View details for ${movie.title}`}
           role="button"
@@ -40,7 +45,7 @@ export function MovieCard({ movie, index = 0, onClick, selected = false }: Movie
               No Poster
             </div>
           )}
-          
+
           {/* Hover Overlay with Gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
             <h3 className="text-lg font-serif text-white capitalize leading-tight mb-1 drop-shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
@@ -56,11 +61,7 @@ export function MovieCard({ movie, index = 0, onClick, selected = false }: Movie
             </div>
           </div>
 
-          {selected && (
-            <div className="movie-card-checkmark z-10">
-              ✓
-            </div>
-          )}
+          {selected && <div className="movie-card-checkmark z-10">✓</div>}
         </div>
       </m.div>
     </LazyMotion>

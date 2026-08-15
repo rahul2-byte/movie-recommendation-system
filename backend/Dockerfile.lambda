@@ -2,35 +2,45 @@ FROM public.ecr.aws/lambda/python:3.10 AS builder
 
 WORKDIR /build
 
-COPY requirements.txt .
-# Install to a specific directory for easy copying
-RUN pip install --no-cache-dir --target /install --only-binary :all: -r requirements.txt
-RUN mkdir -p /install/lib && \
-    cp $(ls /install/scikit_learn.libs/libgomp*.so* 2>/dev/null | head -n 1) /install/lib/libgomp.so.1 || \
-    cp $(ls /install/scipy.libs/libgomp*.so* 2>/dev/null | head -n 1) /install/lib/libgomp.so.1
+COPY --from=ghcr.io/astral-sh/uv:0.11.6 /uv /uvx /bin/
+
+COPY pyproject.toml uv.lock ./
+ENV UV_HTTP_TIMEOUT=300
+RUN yum install -y gcc gcc-c++ make zlib-devel libjpeg-turbo-devel && yum clean all
+RUN uv sync --frozen --no-default-groups --no-install-project
+RUN mkdir -p /build/runtime-lib && \
+    cp $(ls /build/.venv/lib/python3.10/site-packages/scikit_learn.libs/libgomp*.so* 2>/dev/null | head -n 1) /build/runtime-lib/libgomp.so.1 || \
+    cp $(ls /build/.venv/lib/python3.10/site-packages/scipy.libs/libgomp*.so* 2>/dev/null | head -n 1) /build/runtime-lib/libgomp.so.1
 
 # --- Final Stage ---
 FROM public.ecr.aws/lambda/python:3.10
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 
+ARG MODEL_BUNDLE_PATH
+
 # Copy installed dependencies from builder
-COPY --from=builder /install ${LAMBDA_TASK_ROOT}
+COPY --from=builder /build/.venv ${LAMBDA_TASK_ROOT}/.venv
+COPY --from=builder /build/runtime-lib ${LAMBDA_TASK_ROOT}/lib
 
 # Copy ONLY production application code
-COPY main.py ${LAMBDA_TASK_ROOT}/
-COPY api/ ${LAMBDA_TASK_ROOT}/api/
-COPY common/ ${LAMBDA_TASK_ROOT}/common/
-COPY configs/ ${LAMBDA_TASK_ROOT}/configs/
-COPY features/ ${LAMBDA_TASK_ROOT}/features/
-COPY logger/ ${LAMBDA_TASK_ROOT}/logger/
-COPY pipeline/ ${LAMBDA_TASK_ROOT}/pipeline/
-COPY ranking/ ${LAMBDA_TASK_ROOT}/ranking/
-COPY retrieval/ ${LAMBDA_TASK_ROOT}/retrieval/
+COPY backend/main.py ${LAMBDA_TASK_ROOT}/
+COPY backend/api/ ${LAMBDA_TASK_ROOT}/api/
+COPY backend/application/ ${LAMBDA_TASK_ROOT}/application/
+COPY backend/infrastructure/ ${LAMBDA_TASK_ROOT}/infrastructure/
+COPY backend/configuration/ ${LAMBDA_TASK_ROOT}/configuration/
+COPY backend/observability/ ${LAMBDA_TASK_ROOT}/observability/
+COPY backend/retrieval/ ${LAMBDA_TASK_ROOT}/retrieval/
+COPY backend/serving/ ${LAMBDA_TASK_ROOT}/serving/
+COPY ${MODEL_BUNDLE_PATH}/ ${LAMBDA_TASK_ROOT}/model_bundle/
+RUN test -f ${LAMBDA_TASK_ROOT}/model_bundle/bundle_manifest.json
 
 # Set production environment variables
 ENV ENVIRONMENT=PROD
 ENV LOG_FORMAT_JSON=true
 ENV PYTHONUNBUFFERED=1
+ENV MODEL_BUNDLE_DIR="/var/task/model_bundle"
+ENV PATH="${LAMBDA_TASK_ROOT}/.venv/bin:${PATH}"
+ENV LD_LIBRARY_PATH="${LAMBDA_TASK_ROOT}/lib:${LD_LIBRARY_PATH}"
 
 CMD [ "main.handler" ]

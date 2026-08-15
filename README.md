@@ -11,6 +11,34 @@ Users pick a few movies they already like, and the system returns personalized r
 - Blends offline-trained ML artifacts with online API enrichment and production deployment.
 - Exposes a clean frontend (Next.js) and backend API (FastAPI on AWS Lambda).
 
+## Local setup
+
+Prerequisites: `uv`, Node.js/npm, `curl`, `unzip`, and either `md5sum` or `md5`.
+
+From the repository root, run:
+
+```bash
+./start.sh
+```
+
+The script creates/reconciles `.venv` from `uv.lock`, installs the frontend from
+`frontend/package-lock.json`, and downloads plus verifies the fixed MovieLens 32M
+dataset into `backend/data/raw/`. It does not start services, process data, train
+models, upload artifacts, or contact AWS.
+
+The supported training path is Python-based and produces the immutable bundle
+consumed by local serving and Lambda. Native training experiments are retired.
+
+## Python formatting and linting
+
+Ruff is the authoritative Python formatter and linter. It is installed with
+the locked development dependencies. Run it after Python changes:
+
+```bash
+uv run --frozen ruff format backend
+uv run --frozen ruff check backend
+```
+
 ## How recommendations are generated
 
 At runtime, the backend executes a pipeline:
@@ -32,8 +60,7 @@ flowchart LR
   F -->|HTTPS /api/v1| G[API Gateway]
   G --> B[FastAPI Backend on AWS Lambda]
 
-  B --> D[(DynamoDB<br/>movie metadata)]
-  B --> S[(S3<br/>model artifacts)]
+  B --> S[(Immutable model bundle<br/>baked into image)]
   B --> T[TMDB API]
   B --> O[OMDb/IMDb API]
 
@@ -54,7 +81,7 @@ flowchart LR
 - `README.md`: high-level project explanation.
 - `template.yaml`: AWS SAM infrastructure template (API Gateway + Lambda deployment).
 - `docker-compose.yml`: local multi-service orchestration.
-- `environment.yml`: Python environment spec for reproducible setup.
+- `pyproject.toml` and `uv.lock`: authoritative Python dependency declaration and lock.
 - `.github/workflows/deploy.yml`: CI/CD workflow for backend image build and SAM deploy.
 - `backend/`: all API, ML inference, data pipelines, and deployment code for server side.
 - `frontend/`: user-facing web application.
@@ -68,16 +95,15 @@ Backend responsibility: serve recommendation and movie APIs with production-safe
   - `catalog.py`: trending/popular/new catalog APIs.
   - `movies.py`: movie search and movie detail APIs.
   - `recommend.py`: recommendation generation endpoint and click logging endpoint.
-- `common/`: shared runtime services.
-  - `lifecycle.py`: lazy initialization for MovieStore and RecommendationPipeline.
-  - `services/movie_store.py`: metadata access + TMDB/IMDb fallbacks.
-  - `storage/repositories.py`: DynamoDB and S3 artifact repository access.
-- `pipeline/pipeline.py`: end-to-end recommendation orchestration (recall -> features -> rank).
-- `retrieval/`: candidate generation logic (ALS, two-tower, TF-IDF, content-based, recall service).
-- `ranking/`: ranking inference logic (LightGBM ranker).
-- `features/`: runtime feature construction for ranking.
-- `configs/`: environment and system configuration (paths, buckets, service limits).
-- `training/` and `scripts/`: offline data prep, model training, and utility jobs.
+- `application/`: lazy lifecycle construction and recommendation query contracts.
+- `infrastructure/`: external metadata and HTTP-client adapters.
+- `observability/`: structured application logging.
+- `serving/`: immutable bundle loading, four-retriever fusion, and ranking.
+- `data_pipeline/`: immutable preparation, temporal splits, and ranking data.
+- `evaluation/`: reproducible offline metrics and baselines.
+- `configuration/`: environment and system configuration (paths, buckets, service limits).
+- `training/`: canonical offline model training.
+- `scripts/data_enrichment/`: supported source-data conversion and enrichment jobs.
 - `Dockerfile.lambda`: production container image build for Lambda.
 
 ### Frontend folder (`frontend/`)
@@ -101,8 +127,8 @@ Frontend responsibility: provide a polished movie discovery UI and call backend 
 
 1. Frontend calls backend using `NEXT_PUBLIC_API_BASE`.
 2. Backend receives request on `/api/v1/...`.
-3. Lazy lifecycle initializes store/pipeline when first needed.
-4. Pipeline fetches candidates, builds features, ranks results.
+3. Lifecycle loads the validated immutable model bundle.
+4. Bundle retrievers generate candidates, the ranker scores them, and MovieStore enriches results.
 5. Response is returned and rendered in UI.
 
 ## Deployment snapshot
@@ -110,8 +136,8 @@ Frontend responsibility: provide a polished movie discovery UI and call backend 
 - Frontend: Vercel.
 - Backend: FastAPI packaged as Docker image, deployed to AWS Lambda through SAM.
 - API edge: API Gateway.
-- Metadata store: DynamoDB.
-- Model/data artifacts: S3.
+- Metadata provider: TMDB.
+- Model artifacts: immutable bundle baked into the local/Lambda image.
 
 ## Simple explanation
 

@@ -26,6 +26,7 @@ ENV/
 data/raw/
 data/processed/
 data/interim/
+backend/data/versions/
 *.csv
 *.parquet
 *.feather
@@ -39,6 +40,7 @@ data/interim/
 # Model Artifacts
 # =========================
 artifacts/
+backend/model_bundle/
 checkpoints/
 *.pt
 *.pth
@@ -53,6 +55,8 @@ logs/
 outputs/
 wandb/
 mlruns/
+backend/mlflow.db
+backend/data/raw/movies_enriched.json
 
 # =========================
 # OS / IDE

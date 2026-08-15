@@ -38,7 +38,11 @@ const cardDescriptionVariants = cva("text-body text-muted-foreground")
 
 const CardDescription = forwardRef<HTMLParagraphElement, ComponentProps<"p">>(
   ({ className, ...props }, ref) => (
-    <p ref={ref} className={cn(cardDescriptionVariants(), className)} {...props} />
+    <p
+      ref={ref}
+      className={cn(cardDescriptionVariants(), className)}
+      {...props}
+    />
   )
 )
 CardDescription.displayName = "CardDescription"
@@ -47,7 +51,11 @@ const cardContentVariants = cva("p-card pt-0")
 
 const CardContent = forwardRef<HTMLDivElement, ComponentProps<"div">>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn(cardContentVariants(), className)} {...props} />
+    <div
+      ref={ref}
+      className={cn(cardContentVariants(), className)}
+      {...props}
+    />
   )
 )
 CardContent.displayName = "CardContent"

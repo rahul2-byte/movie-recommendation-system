@@ -1,39 +1,43 @@
-from typing import List
+"""Typed request and response models for recommendation APIs."""
+
+from typing import Annotated, Literal
+
 from pydantic import BaseModel, Field
 
-from api.domain.moods import MOOD
+TMDBId = Annotated[int, Field(gt=0)]
+MoodName = Literal["DARK", "FEEL_GOOD", "INSPIRING", "FOCUS", "CHILL", "ADVENTURE"]
 
 
 class RecommendRequest(BaseModel):
-    # Canonical input
-    seed_movie_ids: List[int] = Field(
-        min_length=1,
-        max_length=5,
-        description="User-selected seed movies"
+    """Validate selected seed movies and the requested result count."""
+
+    seed_tmdb_ids: list[TMDBId] = Field(
+        min_length=1, max_length=5, description="User-selected seed movies"
     )
 
-    moods: List[str] = Field(
+    moods: list[MoodName] = Field(
         default_factory=list,
-        description="Optional mood signals"
+        description="Optional mood preferences used as a soft ranking signal.",
     )
 
     limit: int = Field(
-        default=99,
-        le=150,
-        description="Number of recommendations"
+        default=99, ge=1, le=150, description="Number of recommendations"
     )
 
 
 class MovieOut(BaseModel):
-    movieId: int
+    """Movie metadata returned by the recommendation and catalog APIs."""
+
+    tmdbId: int
     title: str
     year: int | None
-    genres: List[str]
-    tmdbId: int | None
+    genres: list[str]
     posterUrl: str | None
     rating: float | None
     score: float | None = None
 
 
 class RecommendResponse(BaseModel):
-    recommendations: List[MovieOut]
+    """Represent the ranked movie records returned to the client."""
+
+    recommendations: list[MovieOut]

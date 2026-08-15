@@ -8,8 +8,7 @@ import { cn } from "@/shared/lib/utils"
 const modalHeaderVariants = cva("mb-stack flex items-center justify-between")
 
 export interface ModalHeaderProps
-  extends ComponentProps<"header">,
-    VariantProps<typeof modalHeaderVariants> {}
+  extends ComponentProps<"header">, VariantProps<typeof modalHeaderVariants> {}
 
 const ModalHeader = forwardRef<HTMLElement, ModalHeaderProps>(
   ({ className, ...props }, ref) => {
