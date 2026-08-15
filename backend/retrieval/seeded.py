@@ -10,6 +10,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class SeedCandidate:
     """One retriever result linked to its originating seed and rank."""
+
     seed_tmdb_id: int
     candidate_tmdb_id: int
     source: str

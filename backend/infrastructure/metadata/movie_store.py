@@ -5,15 +5,17 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Protocol
 
-from common.clients.tmdb import get_tmdb_client
-from common.logger import get_logger
-from configs.settings import TMDB_IMAGE_BASE, TMDB_POSTER_SIZE
+from configuration.settings import TMDB_IMAGE_BASE, TMDB_POSTER_SIZE
+from observability.logging import get_logger
+
+from infrastructure.clients.tmdb import get_tmdb_client
 
 log = get_logger(__name__)
 
 
 class TMDBMovieClient(Protocol):
     """Subset of the TMDB client needed by the metadata repository."""
+
     async def fetch_movie_full(self, tmdb_id: int) -> dict[str, Any]:
         """Fetch one full movie payload including enrichment fields."""
         ...
@@ -30,7 +32,7 @@ def _image_url(path: object, size: str) -> str | None:
     return f"{TMDB_IMAGE_BASE}/{size}{path}" if isinstance(path, str) and path else None
 
 
-def _normalize_movie(movie: dict[str, Any]) -> dict[str, Any] | None:
+def normalize_tmdb_movie(movie: dict[str, Any]) -> dict[str, Any] | None:
     """Map provider metadata to the canonical API movie representation."""
     tmdb_id = movie.get("id")
     if not isinstance(tmdb_id, int) or tmdb_id <= 0:
@@ -110,35 +112,28 @@ class MovieStore:
 
     async def get(self, tmdb_id: int) -> dict[str, Any] | None:
         """Fetch one movie by its canonical TMDB identifier."""
-        return _normalize_movie(await self.tmdb_client.fetch_movie_full(int(tmdb_id)))
-
-    async def get_by_tmdb_id(self, tmdb_id: int) -> dict[str, Any] | None:
-        """Expose the explicit TMDB-ID lookup contract used by API routes."""
-        return await self.get(tmdb_id)
+        return normalize_tmdb_movie(
+            await self.tmdb_client.fetch_movie_full(int(tmdb_id))
+        )
 
     async def get_many(self, tmdb_ids: list[int]) -> list[dict[str, Any]]:
-        """Fetch many movies while allowing individual provider failures."""
         """Fetch metadata while allowing individual optional lookups to fail.
 
         Recommendation retrieval can still produce useful candidates when one
         metadata request is unavailable, so failed records are omitted rather
         than aborting the entire batch.
         """
-        responses = await asyncio.gather(
+        metadata_results = await asyncio.gather(
             *(self.get(tmdb_id) for tmdb_id in tmdb_ids), return_exceptions=True
         )
-        movies: list[dict[str, Any]] = []
-        for tmdb_id, response in zip(tmdb_ids, responses, strict=True):
-            if isinstance(response, Exception):
+        normalized_movies: list[dict[str, Any]] = []
+        for tmdb_id, metadata_result in zip(tmdb_ids, metadata_results, strict=True):
+            if isinstance(metadata_result, Exception):
                 log.warning("Movie metadata lookup failed", tmdb_id=tmdb_id)
                 continue
-            if response is not None:
-                movies.append(response)
-        return movies
-
-    async def get_many_by_tmdb_ids(self, tmdb_ids: list[int]) -> list[dict[str, Any]]:
-        """Fetch a batch using the repository's canonical TMDB-ID contract."""
-        return await self.get_many(tmdb_ids)
+            if metadata_result is not None:
+                normalized_movies.append(metadata_result)
+        return normalized_movies
 
     async def search(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search the provider catalog for display-ready movie records."""

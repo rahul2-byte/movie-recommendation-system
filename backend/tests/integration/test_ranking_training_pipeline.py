@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from training.ranking.cli import build_parser
 from training.ranking.config import load_ranking_training_config
-from training.ranking.pipeline import (
+from training.ranking.ranker_training import (
     _rrf_scores,
     evaluate_ranker,
     pack_ranking_features,
@@ -68,10 +68,23 @@ def test_pack_ranking_features_preserves_query_groups_and_schema_order(tmp_path)
 
     assert packed.row_count == 5
     assert packed.query_count == 2
+    assert packed.feature_dtype == "float16"
+    assert packed.query_id_dtype == "int32"
+    manifest = json.loads((packed.output_dir / "manifest.json").read_text())
+    assert manifest["storage_dtypes"] == {"features": "float16", "query_ids": "int32"}
     assert np.load(packed.groups_path).tolist() == [2, 3]
     assert np.memmap(
-        packed.features_path, dtype=np.float32, mode="r", shape=(5, 2)
-    ).tolist() == [[10.0, 2.0], [11.0, 3.0], [12.0, 4.0], [13.0, 5.0], [14.0, 6.0]]
+        packed.features_path,
+        dtype=packed.feature_dtype,
+        mode="r",
+        shape=(5, 2),
+    ).astype(np.float32).tolist() == [
+        [10.0, 2.0],
+        [11.0, 3.0],
+        [12.0, 4.0],
+        [13.0, 5.0],
+        [14.0, 6.0],
+    ]
 
 
 def test_validate_feature_compatibility_rejects_different_feature_code(tmp_path):
@@ -114,7 +127,9 @@ def test_train_ranker_uses_packed_groups_and_writes_versioned_artifact(tmp_path)
     train = pack_ranking_features(train_dir, tmp_path / "packed-train")
     validation = pack_ranking_features(validation_dir, tmp_path / "packed-validation")
     config = replace(
-        load_ranking_training_config(Path("backend/configs/ranking_training.yaml")),
+        load_ranking_training_config(
+            Path("backend/configuration/ranking_training.yaml")
+        ),
         num_boost_round=10,
         early_stopping_rounds=3,
         min_data_in_leaf=1,
@@ -150,7 +165,9 @@ def test_evaluate_ranker_scores_immutable_feature_artifact(tmp_path):
     train = pack_ranking_features(train_dir, tmp_path / "packed-train")
     validation = pack_ranking_features(validation_dir, tmp_path / "packed-validation")
     config = replace(
-        load_ranking_training_config(Path("backend/configs/ranking_training.yaml")),
+        load_ranking_training_config(
+            Path("backend/configuration/ranking_training.yaml")
+        ),
         num_boost_round=10,
         early_stopping_rounds=3,
         min_data_in_leaf=1,

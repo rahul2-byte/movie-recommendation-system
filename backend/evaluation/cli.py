@@ -9,27 +9,30 @@ from pathlib import Path
 
 import pyarrow.parquet as pq
 from data_pipeline.config import load_config as load_data_config
-from data_pipeline.manifests import sha256
 from data_pipeline.tracking import load_tracking_config, tracked_run
 from data_pipeline.validate import validate_dataset
+from hashing import sha256
 from training.progress import TerminalProgress
-from training.retrieval.build_als import AlsArtifact
-from training.retrieval.build_content_retriever import build_exact_seed_cache
-from training.retrieval.build_item_graph import (
+from training.retrieval.als_trainer import AlsArtifact
+from training.retrieval.content_retriever import build_exact_seed_cache
+from training.retrieval.item_graph_trainer import (
     ItemGraphArtifact,
     build_item_graph_seed_cache,
 )
-from training.retrieval.build_two_tower import TwoTowerArtifact
+from training.retrieval.two_tower_trainer import TwoTowerArtifact
 
 from evaluation.baselines import PopularityRecommender
 from evaluation.config import load_evaluation_config
-from evaluation.fusion import RankFusionRecommender, analyze_candidate_overlap
-from evaluation.runner import evaluate_recommender, write_evaluation_artifacts
+from evaluation.offline_evaluator import (
+    evaluate_recommender,
+    write_evaluation_artifacts,
+)
+from evaluation.rank_fusion import RankFusionRecommender, analyze_candidate_overlap
 
 
 def _default_config(name: str) -> Path:
     """Return the repository default evaluation config path."""
-    return Path(__file__).resolve().parent.parent / "configs" / name
+    return Path(__file__).resolve().parent.parent / "configuration" / name
 
 
 def _run_id() -> str:

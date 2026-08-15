@@ -1,7 +1,10 @@
 from pathlib import Path
 
 import pandas as pd
-from evaluation.runner import evaluate_recommender, write_evaluation_artifacts
+from evaluation.offline_evaluator import (
+    evaluate_recommender,
+    write_evaluation_artifacts,
+)
 
 
 class _StubRecommender:

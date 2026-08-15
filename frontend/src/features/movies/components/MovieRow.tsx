@@ -15,7 +15,12 @@ interface MovieRowProps {
   category?: string
 }
 
-export function MovieRow({ title, subtitle = "Curated by our algorithms", movies, category = "trending" }: MovieRowProps) {
+export function MovieRow({
+  title,
+  subtitle = "Curated by our algorithms",
+  movies,
+  category = "trending",
+}: MovieRowProps) {
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null)
   const [selectedTmdbId, setSelectedTmdbId] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -49,22 +54,25 @@ export function MovieRow({ title, subtitle = "Curated by our algorithms", movies
               <span className="label-accent">{subtitle}</span>
               <h2 className="heading-section">{title}</h2>
             </div>
-            
-            <Link href={`/catalog?category=${category}`} className="text-sm font-medium uppercase tracking-wider text-accent flex items-center gap-1 hover:gap-2 transition-all">
+
+            <Link
+              href={`/catalog?category=${category}`}
+              className="text-sm font-medium uppercase tracking-wider text-accent flex items-center gap-1 hover:gap-2 transition-all"
+            >
               View All <span>→</span>
             </Link>
           </div>
 
           <Carousel>
             {movies.map((movie, index) => (
-              <div 
-                key={movie.tmdbId} 
+              <div
+                key={movie.tmdbId}
                 className="flex-none w-[calc(50%-1rem)] md:w-[calc(33.33%-1.33rem)] lg:w-[calc(25%-1.5rem)] aspect-[2/3]"
               >
-                <MovieCard 
-                  movie={movie} 
-                  index={index} 
-                  onClick={() => handleMovieClick(movie.movieId, movie.tmdbId)} 
+                <MovieCard
+                  movie={movie}
+                  index={index}
+                  onClick={() => handleMovieClick(movie.movieId, movie.tmdbId)}
                 />
               </div>
             ))}

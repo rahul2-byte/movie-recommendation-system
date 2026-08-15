@@ -1,9 +1,9 @@
 export type Mood =
   | "FEEL_GOOD"
   | "DARK"
-  | "ROMANTIC"
-  | "ADVENTUROUS"
-  | "THRILLING"
+  | "INSPIRING"
+  | "FOCUS"
+  | "ADVENTURE"
   | "CHILL"
 
 export interface RecommendRequest {

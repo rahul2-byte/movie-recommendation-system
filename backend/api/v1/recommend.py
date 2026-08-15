@@ -4,9 +4,7 @@ import logging
 import time
 import uuid
 
-from application.contracts import RecommendationQuery
 from fastapi import APIRouter, HTTPException, Request
-from logger.services.mlflow_logger import log_click, log_recommendation
 
 from api.schemas.recommend import RecommendRequest, RecommendResponse
 
@@ -35,24 +33,11 @@ async def recommend_movies(request: Request, payload: RecommendRequest):
 
         # We await the async recommend method
         results = await pipeline.recommend(
-            query=RecommendationQuery(seed_tmdb_ids=payload.seed_tmdb_ids),
+            seed_tmdb_ids=payload.seed_tmdb_ids,
             top_n=payload.limit or 20,
-            request_id=request_id,
         )
 
-        # Map 'score' from pipeline to 'rating' expected by RecommendResponse schema
-        for r in results:
-            if "score" in r:
-                r["rating"] = r["score"]
-
         latency = int((time.time() - start) * 1000)
-        trace = {
-            "request_id": request_id,
-            "final_items": results,
-            "latency_ms": latency,
-        }
-
-        log_recommendation(trace, latency)
         log.info(
             "recommend.request.success request_id=%s latency_ms=%s result_count=%s",
             request_id,
@@ -73,10 +58,3 @@ async def recommend_movies(request: Request, payload: RecommendRequest):
             status_code=500,
             detail=f"Recommendation failed. request_id={request_id}",
         ) from e
-
-
-@router.post("/click")
-def movie_clicked():
-    """Accept a click event for the optional telemetry pipeline."""
-    log_click()
-    return {"status": "ok"}

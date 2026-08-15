@@ -3,7 +3,6 @@ import type { Metadata, Viewport } from "next"
 import { Inter, Playfair_Display } from "next/font/google"
 import { Header } from "@/shared/ui/layout/Header"
 import { Footer } from "@/shared/ui/layout/Footer"
-import { RecommendationProvider } from "@/features/recommendations/context/RecommendationContext"
 import { Providers } from "@/shared/ui/Providers"
 
 const inter = Inter({
@@ -20,8 +19,11 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "M99 | Premium Cinema Curation",
-  description: "Discover films based on mood, tone, and cinematic DNA. Your personal digital film archive.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  description:
+    "Discover films based on mood, tone, and cinematic DNA. Your personal digital film archive.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  ),
   openGraph: {
     title: "M99 Cinema",
     description: "AI-Powered Movie Recommendations",
@@ -31,7 +33,7 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-  }
+  },
 }
 
 export const viewport: Viewport = {
@@ -53,13 +55,11 @@ export default function RootLayout({
       >
         <div className="grain-overlay" />
         <Providers>
-          <RecommendationProvider>
-            <div className="flex min-h-screen flex-col bg-black text-white">
-              <Header />
-              <main className="w-full flex-1">{children}</main>
-              <Footer />
-            </div>
-          </RecommendationProvider>
+          <div className="flex min-h-screen flex-col bg-black text-white">
+            <Header />
+            <main className="w-full flex-1">{children}</main>
+            <Footer />
+          </div>
         </Providers>
       </body>
     </html>

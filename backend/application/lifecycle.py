@@ -1,10 +1,10 @@
 """Lazy application singletons for the bundle-backed recommendation service."""
 
-from common.logger import get_logger
-from configs.settings import settings
+from configuration.settings import settings
 from infrastructure.metadata.movie_store import MovieStore
-from serving.pipeline import BundleRecommendationPipeline
-from serving.recommender import BundleRecommender
+from observability.logging import get_logger
+from serving.bundle_recommender import BundleRecommender
+from serving.recommendation_pipeline import BundleRecommendationPipeline
 
 log = get_logger(__name__)
 
@@ -15,9 +15,6 @@ _movie_store = None
 def get_movie_store() -> MovieStore:
     """Create or return the process-local metadata store."""
     global _movie_store
-    if _movie_store is not None:
-        return _movie_store
-
     if _movie_store is None:
         log.info("Lifecycle: Initializing MovieStore (Lazy)...")
         # Lazy construction keeps module import cheap and lets warm Lambda
@@ -30,9 +27,6 @@ def get_movie_store() -> MovieStore:
 def get_pipeline() -> BundleRecommendationPipeline:
     """Create or return the validated bundle-backed recommendation pipeline."""
     global _pipeline
-    if _pipeline is not None:
-        return _pipeline
-
     if _pipeline is None:
         log.info("Lifecycle: Initializing Recommendation Pipeline...")
 

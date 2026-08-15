@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import pyarrow.parquet as pq
 import pytest
-from scripts.data_enrichment.csv_to_parquet import (
+from scripts.data_enrichment.convert_raw_csv_to_parquet import (
     DatasetValidationError,
     build_processed_dataset,
 )

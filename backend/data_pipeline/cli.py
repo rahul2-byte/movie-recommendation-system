@@ -7,10 +7,10 @@ import json
 import logging
 from pathlib import Path
 
-from training.retrieval.build_als import AlsArtifact
-from training.retrieval.build_content_retriever import TfidfArtifact
-from training.retrieval.build_item_graph import ItemGraphArtifact
-from training.retrieval.build_two_tower import TwoTowerArtifact
+from training.retrieval.als_trainer import AlsArtifact
+from training.retrieval.content_retriever import TfidfArtifact
+from training.retrieval.item_graph_trainer import ItemGraphArtifact
+from training.retrieval.two_tower_trainer import TwoTowerArtifact
 
 from data_pipeline.config import (
     DataPipelineConfig,
@@ -19,7 +19,7 @@ from data_pipeline.config import (
     load_ranking_features_config,
 )
 from data_pipeline.prepare import prepare_dataset
-from data_pipeline.ranking import (
+from data_pipeline.ranking_dataset import (
     build_ranking_candidates,
     build_test_candidates,
     build_validation_candidates,
@@ -33,7 +33,7 @@ from data_pipeline.validate import validate_dataset
 
 def _default_config(name: str) -> Path:
     """Return the checked-in default YAML path for a pipeline command."""
-    return Path(__file__).resolve().parent.parent / "configs" / name
+    return Path(__file__).resolve().parent.parent / "configuration" / name
 
 
 def _resolve_version(

@@ -1,7 +1,7 @@
 # Ranking feature contract
 
 The ranker consumes the features below in the exact order declared by
-`backend/configs/ranking_features.yaml`. Training and serving must use the same
+`backend/configuration/ranking_features.yaml`. Training and serving must use the same
 schema version and defaults.
 
 | Feature | Type | Source / transformation | Missing value |

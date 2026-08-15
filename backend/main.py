@@ -8,13 +8,12 @@ from api.v1.catalog import router as catalog_router
 from api.v1.movies import router as movies_router
 from api.v1.recommend import router as recommend_router
 from application.lifecycle import get_pipeline
-from common.config import config
-from common.logger import get_logger
+from configuration.settings import settings
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from logger.background.tasks import start_background_tasks
 from mangum import Mangum
+from observability.logging import get_logger
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 log = get_logger(__name__)
@@ -47,22 +46,19 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/ping")
 def ping():
     """Provide the lightweight health endpoint used by deployment probes."""
-    return {"status": "ok", "environment": config.settings.ENVIRONMENT}
+    return {"status": "ok", "environment": settings.ENVIRONMENT}
 
 
 @app.on_event("startup")
 def startup():
     """Load the configured recommendation pipeline before serving requests."""
-    if str(config.settings.MODEL_BUNDLE_DIR).strip():
+    if str(settings.MODEL_BUNDLE_DIR).strip():
         get_pipeline()
-    # Only start essential lightweight background tasks
-    # Heavy model/data loading is now LAZY (occurs on first request)
-    start_background_tasks()
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=config.settings.ALLOWED_ORIGINS,
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

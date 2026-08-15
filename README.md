@@ -60,7 +60,6 @@ flowchart LR
   F -->|HTTPS /api/v1| G[API Gateway]
   G --> B[FastAPI Backend on AWS Lambda]
 
-  B --> D[(DynamoDB<br/>movie metadata)]
   B --> S[(Immutable model bundle<br/>baked into image)]
   B --> T[TMDB API]
   B --> O[OMDb/IMDb API]
@@ -96,13 +95,13 @@ Backend responsibility: serve recommendation and movie APIs with production-safe
   - `catalog.py`: trending/popular/new catalog APIs.
   - `movies.py`: movie search and movie detail APIs.
   - `recommend.py`: recommendation generation endpoint and click logging endpoint.
-- `common/`: shared runtime services.
-  - `lifecycle.py`: lazy initialization for the bundle-backed pipeline.
-  - `services/movie_store.py`: metadata access + TMDB/IMDb fallbacks.
+- `application/`: lazy lifecycle construction and recommendation query contracts.
+- `infrastructure/`: external metadata and HTTP-client adapters.
+- `observability/`: structured application logging.
 - `serving/`: immutable bundle loading, four-retriever fusion, and ranking.
 - `data_pipeline/`: immutable preparation, temporal splits, and ranking data.
 - `evaluation/`: reproducible offline metrics and baselines.
-- `configs/`: environment and system configuration (paths, buckets, service limits).
+- `configuration/`: environment and system configuration (paths, buckets, service limits).
 - `training/`: canonical offline model training.
 - `scripts/data_enrichment/`: supported source-data conversion and enrichment jobs.
 - `Dockerfile.lambda`: production container image build for Lambda.
@@ -137,7 +136,7 @@ Frontend responsibility: provide a polished movie discovery UI and call backend 
 - Frontend: Vercel.
 - Backend: FastAPI packaged as Docker image, deployed to AWS Lambda through SAM.
 - API edge: API Gateway.
-- Metadata store: DynamoDB.
+- Metadata provider: TMDB.
 - Model artifacts: immutable bundle baked into the local/Lambda image.
 
 ## Simple explanation

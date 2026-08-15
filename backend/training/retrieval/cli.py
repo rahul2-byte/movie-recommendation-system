@@ -6,31 +6,35 @@ import argparse
 import json
 import subprocess
 import sys
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pyarrow.parquet as pq
 from data_pipeline.config import load_config as load_data_config
-from data_pipeline.manifests import sha256
 from data_pipeline.tracking import load_tracking_config, tracked_run
 from data_pipeline.validate import validate_dataset
 from evaluation.config import load_evaluation_config
-from evaluation.runner import evaluate_recommender, write_evaluation_artifacts
+from evaluation.offline_evaluator import (
+    evaluate_recommender,
+    write_evaluation_artifacts,
+)
+from hashing import sha256
 
 from training.progress import TerminalProgress
-from training.retrieval.build_als import load_als_training_config, train_als
-from training.retrieval.build_content_retriever import (
+from training.retrieval.als_trainer import load_als_training_config, train_als
+from training.retrieval.content_retriever import (
     build_exact_seed_cache,
     load_content_training_config,
     load_tfidf_training_config,
     train_tfidf,
 )
-from training.retrieval.build_item_graph import (
+from training.retrieval.item_graph_trainer import (
     build_item_graph_seed_cache,
     load_item_graph_training_config,
     train_item_graph,
 )
-from training.retrieval.build_two_tower import (
+from training.retrieval.two_tower_trainer import (
     load_two_tower_training_config,
     train_two_tower,
 )
@@ -38,7 +42,7 @@ from training.retrieval.build_two_tower import (
 
 def _default_config(name: str) -> Path:
     """Return the default retrieval config path."""
-    return Path(__file__).resolve().parent.parent.parent / "configs" / name
+    return Path(__file__).resolve().parent.parent.parent / "configuration" / name
 
 
 def _run_id() -> str:
@@ -112,6 +116,21 @@ def main() -> None:
         action="store_true",
         help="Train and track an artifact without reading validation queries",
     )
+    parser.add_argument(
+        "--artifact-dir",
+        type=Path,
+        help="Write this run to an exact artifact directory (for sweeps)",
+    )
+    parser.add_argument(
+        "--embedding-dim",
+        type=int,
+        help="Override content/TF-IDF SVD dimensions for an experiment",
+    )
+    parser.add_argument(
+        "--neighbor-count",
+        type=int,
+        help="Override item-graph neighbor depth for an experiment",
+    )
     args = parser.parse_args()
     model_type = args.model
     loaders = {
@@ -122,6 +141,14 @@ def main() -> None:
         "item_graph": load_item_graph_training_config,
     }
     training_config = loaders[model_type](args.config)
+    if args.embedding_dim is not None:
+        if model_type not in {"tfidf", "content"} or args.embedding_dim < 1:
+            parser.error("--embedding-dim requires a positive content/TF-IDF model")
+        training_config = replace(training_config, embedding_dim=args.embedding_dim)
+    if args.neighbor_count is not None:
+        if model_type != "item_graph" or args.neighbor_count < 1:
+            parser.error("--neighbor-count requires a positive item_graph model")
+        training_config = replace(training_config, neighbor_count=args.neighbor_count)
     data_config = load_data_config(args.data_config)
     evaluation_config = load_evaluation_config(args.evaluation_config)
     version_dir = data_config.dataset.versions_dir / training_config.dataset_version
@@ -137,7 +164,13 @@ def main() -> None:
     if not catalog_path.is_file():
         raise FileNotFoundError(f"Retrieval catalog not found: {catalog_path}")
     run_id = _run_id()
-    artifact_dir = training_config.output_dir / run_id
+    artifact_dir = (
+        args.artifact_dir.resolve()
+        if args.artifact_dir is not None
+        else training_config.output_dir / run_id
+    )
+    if artifact_dir.exists():
+        raise FileExistsError(f"Refusing to overwrite artifact directory: {artifact_dir}")
     metadata = {
         "training_config_sha256": sha256(args.config),
         "dataset_manifest_sha256": sha256(version_dir / "manifest.json"),

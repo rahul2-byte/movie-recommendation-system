@@ -14,6 +14,7 @@ import yaml
 @dataclass(frozen=True)
 class TrackingConfig:
     """Local MLflow store and default experiment for one pipeline."""
+
     local_store_dir: Path
     experiment_name: str
 

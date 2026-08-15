@@ -6,7 +6,6 @@ from pathlib import Path
 import pandas as pd
 import pytest
 from data_pipeline.config import load_config
-from data_pipeline.manifests import sha256
 from data_pipeline.prepare import prepare_dataset
 from data_pipeline.split import (
     _partition_user_events,
@@ -14,6 +13,7 @@ from data_pipeline.split import (
     split_dataset,
 )
 from data_pipeline.validate import validate_dataset
+from hashing import sha256
 
 
 def _write_config(path: Path) -> None:

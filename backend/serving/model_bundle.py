@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import shutil
 from argparse import ArgumentParser
@@ -11,26 +10,21 @@ from pathlib import Path
 from typing import Any
 
 import faiss
+import joblib
 import numpy as np
-import pyarrow.parquet as pq
+from hashing import sha256
 
 _RETRIEVER_NAMES = ("als", "item_graph", "two_tower", "content")
 _VECTOR_RETRIEVERS = frozenset({"als", "two_tower", "content"})
 _ID_SCHEMA_VERSION = "tmdb-keyed-v1"
 _BUNDLE_SCHEMA_VERSION = "model-bundle-v1"
+_QUANTIZED_BUNDLE_SCHEMA_VERSION = "model-bundle-v2"
+_QUANTIZATION_MODES = frozenset({"none", "fp16", "int8", "sq6", "sq4"})
+_MISSING_NEIGHBOR_POSITION = np.iinfo(np.uint16).max
 
 
 class ModelBundleError(ValueError):
     """A model bundle cannot be safely served."""
-
-
-def _sha256(path: Path) -> str:
-    """Return the content hash used for immutable bundle manifests."""
-    digest = hashlib.sha256()
-    with path.open("rb") as source:
-        for chunk in iter(lambda: source.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -69,10 +63,12 @@ def _tmdb_ids_from_mapping(mapping_path: Path) -> np.ndarray:
     expected = set(range(len(mapping)))
     if positions != expected:
         raise ModelBundleError(f"TMDB position map is not contiguous: {mapping_path}")
-    ids = np.empty(len(mapping), dtype=np.int64)
+    ids = np.empty(len(mapping), dtype=np.uint32)
     for tmdb_id, position in mapping.items():
         if tmdb_id <= 0:
             raise ModelBundleError(f"TMDB ID map contains invalid ID: {mapping_path}")
+        if tmdb_id > np.iinfo(np.uint32).max:
+            raise ModelBundleError(f"TMDB ID exceeds uint32 storage range: {mapping_path}")
         ids[position] = tmdb_id
     return ids
 
@@ -85,10 +81,75 @@ def _copy(path: Path, destination: Path) -> None:
     shutil.copy2(path, destination)
 
 
+def _copy_compressed_joblib(path: Path, destination: Path) -> None:
+    """Re-serialize a joblib payload with compression for bundle delivery."""
+    if not path.is_file():
+        raise FileNotFoundError(f"Required model artifact file is missing: {path}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(joblib.load(path), destination, compress=3)
+
+
+def _write_compact_graph(source: Path, destination: Path) -> dict[str, object]:
+    """Store graph positions as uint16; 65535 represents a missing neighbor."""
+    mapping = _read_json(source / "tmdb_id_to_idx.json")
+    neighbor_count = len(mapping)
+    positions = np.asarray(
+        np.load(source / "neighbor_positions.npy", allow_pickle=False), dtype=np.int64
+    )
+    if positions.ndim != 2 or np.any(positions >= neighbor_count):
+        raise ModelBundleError(f"Invalid item-graph neighbor positions: {source}")
+    if np.any(positions < -1):
+        raise ModelBundleError(f"Invalid negative item-graph position: {source}")
+    compact = np.where(
+        positions < 0, _MISSING_NEIGHBOR_POSITION, positions
+    ).astype(np.uint16)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    np.save(destination, compact)
+    return {
+        "mode": "uint16",
+        "missing_position": int(_MISSING_NEIGHBOR_POSITION),
+        "neighbor_count": int(compact.shape[1]),
+    }
+
+
+def _write_vector_index(source: Path, destination: Path, quantization: str) -> dict[str, object]:
+    """Write an exact or scalar-quantized FAISS index from source embeddings."""
+    if quantization == "none":
+        _copy(source / "faiss.index", destination)
+        index = faiss.read_index(str(source / "faiss.index"))
+        return {"mode": "none", "index_type": type(index).__name__}
+    embeddings_path = source / "item_embeddings.npy"
+    if not embeddings_path.is_file():
+        raise FileNotFoundError(f"Quantization requires source embeddings: {embeddings_path}")
+    embeddings = np.asarray(np.load(embeddings_path, allow_pickle=False), dtype=np.float32)
+    if embeddings.ndim != 2 or not np.isfinite(embeddings).all():
+        raise ModelBundleError(f"Invalid source embeddings: {embeddings_path}")
+    source_index = faiss.read_index(str(source / "faiss.index"))
+    metric = source_index.metric_type
+    quantizer_type = {
+        "fp16": faiss.ScalarQuantizer.QT_fp16,
+        "int8": faiss.ScalarQuantizer.QT_8bit,
+        "sq6": faiss.ScalarQuantizer.QT_6bit,
+        "sq4": faiss.ScalarQuantizer.QT_4bit,
+    }[quantization]
+    index = faiss.IndexScalarQuantizer(embeddings.shape[1], quantizer_type, metric)
+    index.train(embeddings)
+    index.add(embeddings)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    faiss.write_index(index, str(destination))
+    return {
+        "mode": quantization,
+        "index_type": type(index).__name__,
+        "embedding_count": int(embeddings.shape[0]),
+        "embedding_dimension": int(embeddings.shape[1]),
+        "embedding_dtype": "float32",
+    }
+
+
 def _collect_hashes(root: Path) -> dict[str, str]:
     """Hash every bundle file for startup integrity validation."""
     return {
-        str(path.relative_to(root)): _sha256(path)
+        str(path.relative_to(root)): sha256(path)
         for path in sorted(root.rglob("*"))
         if path.is_file()
     }
@@ -96,6 +157,8 @@ def _collect_hashes(root: Path) -> dict[str, str]:
 
 def _write_popularity_counts(train_path: Path, destination: Path) -> None:
     """Materialize popularity counts used by the ranker fallback."""
+    import pyarrow.parquet as pq
+
     counts: dict[int, int] = {}
     source = pq.ParquetFile(train_path)
     if "tmdb_id" not in source.schema_arrow.names:
@@ -122,6 +185,7 @@ def build_model_bundle(
     popularity_train_path: Path | None = None,
     candidate_limit: int = 300,
     rrf_rank_constant: int = 60,
+    quantization: str = "none",
 ) -> Path:
     """Build one immutable runtime bundle without duplicate FAISS embeddings."""
     required = {*_RETRIEVER_NAMES, "ranker"}
@@ -131,6 +195,8 @@ def build_model_bundle(
         raise ValueError(
             "Bundle candidate_limit and rrf_rank_constant must be positive"
         )
+    if quantization not in _QUANTIZATION_MODES:
+        raise ValueError(f"Unsupported quantization mode: {quantization}")
     output_dir = output_dir.resolve()
     if output_dir.exists():
         raise FileExistsError(f"Refusing to overwrite immutable bundle: {output_dir}")
@@ -159,15 +225,22 @@ def build_model_bundle(
                 _tmdb_ids_from_mapping(source / "tmdb_id_to_idx.json"),
             )
             if name in _VECTOR_RETRIEVERS:
-                _copy(source / "faiss.index", destination / "faiss.index")
+                quantization_metadata = _write_vector_index(
+                    source, destination / "faiss.index", quantization
+                )
             else:
-                _copy(
-                    source / "neighbor_positions.npy",
-                    destination / "neighbor_positions.npy",
+                quantization_metadata = _write_compact_graph(
+                    source, destination / "neighbor_positions.npy"
                 )
             if name == "content":
-                _copy(source / "vectorizer.joblib", destination / "vectorizer.joblib")
-                _copy(source / "svd.joblib", destination / "svd.joblib")
+                _copy_compressed_joblib(
+                    source / "vectorizer.joblib", destination / "vectorizer.joblib"
+                )
+                _copy_compressed_joblib(source / "svd.joblib", destination / "svd.joblib")
+            (destination / "quantization.json").write_text(
+                json.dumps(quantization_metadata, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
 
         ranker_source = source_artifacts["ranker"].resolve()
         for filename in ("manifest.json", "model.txt", "feature_schema.json"):
@@ -181,15 +254,18 @@ def build_model_bundle(
             )
 
         root_manifest = {
-            "schema_version": _BUNDLE_SCHEMA_VERSION,
+            "schema_version": (
+                _BUNDLE_SCHEMA_VERSION if quantization == "none" else _QUANTIZED_BUNDLE_SCHEMA_VERSION
+            ),
             "dataset_version": dataset_versions.pop(),
             "id_schema_version": _ID_SCHEMA_VERSION,
             "candidate_limit": candidate_limit,
             "rrf_rank_constant": rrf_rank_constant,
+            "quantization": quantization,
             "components": {
                 name: {
                     "model_type": manifests[name]["model_type"],
-                    "source_manifest_sha256": _sha256(
+                    "source_manifest_sha256": sha256(
                         source_artifacts[name].resolve() / "manifest.json"
                     ),
                 }
@@ -211,6 +287,7 @@ def build_model_bundle(
 @dataclass(frozen=True)
 class CompactVectorRetriever:
     """Serve vector-retrieval results from a compact FAISS bundle payload."""
+
     index: faiss.Index
     tmdb_ids: np.ndarray
     position_by_tmdb_id: dict[int, int]
@@ -234,6 +311,7 @@ class CompactVectorRetriever:
 @dataclass(frozen=True)
 class CompactItemGraphRetriever:
     """Serve precomputed item-graph neighbors from compact NumPy arrays."""
+
     neighbor_positions: np.ndarray
     tmdb_ids: np.ndarray
     position_by_tmdb_id: dict[int, int]
@@ -248,13 +326,14 @@ class CompactItemGraphRetriever:
         return [
             (int(self.tmdb_ids[int(neighbor)]), 1.0 / rank)
             for rank, neighbor in enumerate(self.neighbor_positions[position], start=1)
-            if int(neighbor) >= 0
+            if int(neighbor) != _MISSING_NEIGHBOR_POSITION
         ][:top_k]
 
 
 @dataclass(frozen=True)
 class ModelBundle:
     """Loaded immutable release bundle shared by serving retrievers."""
+
     root: Path
     manifest: dict[str, Any]
     vector_retrievers: dict[str, CompactVectorRetriever]
@@ -290,7 +369,10 @@ def load_model_bundle(root: Path | str) -> ModelBundle:
     if not manifest_path.is_file():
         raise FileNotFoundError(f"Model bundle manifest is missing: {manifest_path}")
     manifest = _read_json(manifest_path)
-    if manifest.get("schema_version") != _BUNDLE_SCHEMA_VERSION:
+    if manifest.get("schema_version") not in {
+        _BUNDLE_SCHEMA_VERSION,
+        _QUANTIZED_BUNDLE_SCHEMA_VERSION,
+    }:
         raise ModelBundleError("Unsupported model bundle schema")
     if manifest.get("id_schema_version") != _ID_SCHEMA_VERSION:
         raise ModelBundleError("Model bundle has incompatible TMDB ID schema")
@@ -301,7 +383,7 @@ def load_model_bundle(root: Path | str) -> ModelBundle:
         payload = root / relative_path
         if not payload.is_file():
             raise ModelBundleError(f"Model bundle payload is missing: {relative_path}")
-        if _sha256(payload) != expected_hash:
+        if sha256(payload) != expected_hash:
             raise ModelBundleError(
                 f"Model bundle payload hash mismatch: {relative_path}"
             )
@@ -351,6 +433,12 @@ def main() -> None:
     parser.add_argument("--popularity-train-path", type=Path, required=True)
     parser.add_argument("--candidate-limit", type=int, default=300)
     parser.add_argument("--rrf-rank-constant", type=int, default=60)
+    parser.add_argument(
+        "--quantization",
+        choices=sorted(_QUANTIZATION_MODES),
+        default="none",
+        help="FAISS payload precision: none, fp16, int8, sq6, or sq4.",
+    )
     for name in (*_RETRIEVER_NAMES, "ranker"):
         parser.add_argument(
             f"--{name.replace('_', '-')}-artifact", type=Path, required=True
@@ -366,6 +454,7 @@ def main() -> None:
         popularity_train_path=args.popularity_train_path,
         candidate_limit=args.candidate_limit,
         rrf_rank_constant=args.rrf_rank_constant,
+        quantization=args.quantization,
     )
     print(json.dumps(load_model_bundle(bundle_dir).manifest, indent=2, sort_keys=True))
 

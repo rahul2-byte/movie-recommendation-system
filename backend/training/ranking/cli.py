@@ -9,12 +9,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pyarrow.parquet as pq
-from data_pipeline.manifests import sha256
 from data_pipeline.tracking import load_tracking_config, tracked_run
+from hashing import sha256
 
 from training.progress import TerminalProgress
 from training.ranking.config import load_ranking_training_config
-from training.ranking.pipeline import (
+from training.ranking.ranker_training import (
     evaluate_ranker,
     pack_ranking_features,
     read_feature_contract,
@@ -25,7 +25,7 @@ from training.ranking.pipeline import (
 
 def _default_config(name: str) -> Path:
     """Return a default ranking-training config path."""
-    return Path(__file__).resolve().parents[2] / "configs" / name
+    return Path(__file__).resolve().parents[2] / "configuration" / name
 
 
 def _run_id() -> str:

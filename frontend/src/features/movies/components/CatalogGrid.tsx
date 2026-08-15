@@ -5,9 +5,12 @@ import { MovieCard } from "./MovieCard"
 import { useState } from "react"
 import dynamic from "next/dynamic"
 
-const MovieDetailModal = dynamic(() => import("./MovieDetailModal").then(mod => mod.MovieDetailModal), {
-  ssr: false
-})
+const MovieDetailModal = dynamic(
+  () => import("./MovieDetailModal").then((mod) => mod.MovieDetailModal),
+  {
+    ssr: false,
+  }
+)
 
 export function CatalogGrid({ movies }: { movies: Movie[] }) {
   const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null)

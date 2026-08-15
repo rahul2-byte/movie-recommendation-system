@@ -11,6 +11,7 @@ import yaml
 @dataclass(frozen=True)
 class EvaluationConfig:
     """Validated settings for reproducible offline recommendation evaluation."""
+
     dataset_version: str
     output_dir: Path
     k_values: tuple[int, ...]

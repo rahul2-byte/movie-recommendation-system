@@ -30,6 +30,7 @@ def _path(config_dir: Path, value: Any, name: str) -> Path:
 @dataclass(frozen=True)
 class DatasetConfig:
     """Input locations and schema identity for one dataset version."""
+
     name: str
     schema_version: str
     raw_dir: Path
@@ -40,6 +41,7 @@ class DatasetConfig:
 @dataclass(frozen=True)
 class PrepareConfig:
     """Compression and bucketing controls for preparation outputs."""
+
     compression: str
     compression_level: int
     user_bucket_count: int
@@ -48,6 +50,7 @@ class PrepareConfig:
 @dataclass(frozen=True)
 class SplitConfig:
     """Temporal split rules that define train/validation/test boundaries."""
+
     strategy: str
     train_fraction: float
     validation_fraction: float
@@ -65,6 +68,7 @@ class SplitConfig:
 @dataclass(frozen=True)
 class DataPipelineConfig:
     """Fully resolved, validated configuration for offline data processing."""
+
     path: Path
     dataset: DatasetConfig
     prepare: PrepareConfig
@@ -167,6 +171,7 @@ class RankingDataConfig:
     seed_count: int
     candidate_k: int
     candidate_limit: int
+    rrf_rank_constant: int
     candidate_query_batch_size: int
     retrievers: tuple[str, ...]
     compression: str
@@ -220,6 +225,7 @@ def load_ranking_data_config(path: Path) -> RankingDataConfig:
         seed_count=int(raw.get("seed_count", 0)),
         candidate_k=int(raw.get("candidate_k", 0)),
         candidate_limit=int(raw.get("candidate_limit", raw.get("candidate_k", 0))),
+        rrf_rank_constant=int(raw.get("rrf_rank_constant", 60)),
         candidate_query_batch_size=int(raw.get("candidate_query_batch_size", 1_000)),
         retrievers=tuple(str(retriever) for retriever in retrievers),
         compression=str(raw.get("compression", "")),
@@ -239,6 +245,8 @@ def load_ranking_data_config(path: Path) -> RankingDataConfig:
         raise ConfigError("candidate_k must be positive")
     if config.candidate_limit < 1:
         raise ConfigError("candidate_limit must be positive")
+    if config.rrf_rank_constant < 1:
+        raise ConfigError("rrf_rank_constant must be positive")
     if config.candidate_query_batch_size < 1:
         raise ConfigError("candidate_query_batch_size must be positive")
     if config.compression != "zstd":

@@ -1,15 +1,12 @@
 import pytest
 from api.schemas.recommend import MovieOut, RecommendRequest
-from application.contracts import RecommendationQuery
 from pydantic import ValidationError
 from retrieval.contracts import RetrievalCandidate
 
 
-def test_query_and_candidate_use_tmdb_ids():
-    query = RecommendationQuery(seed_tmdb_ids=[603, 238])
+def test_candidate_uses_tmdb_ids():
     candidate = RetrievalCandidate(tmdb_id=680)
 
-    assert query.seed_tmdb_ids == [603, 238]
     assert candidate.item_id == 680
 
 
@@ -42,3 +39,11 @@ def test_recommend_request_rejects_invalid_seed_ids_and_limits():
         RecommendRequest(seed_tmdb_ids=[-1])
     with pytest.raises(ValidationError):
         RecommendRequest(seed_tmdb_ids=[603], limit=0)
+
+
+def test_recommend_request_accepts_only_canonical_moods():
+    request = RecommendRequest(seed_tmdb_ids=[603], moods=["DARK", "FOCUS"])
+
+    assert request.moods == ["DARK", "FOCUS"]
+    with pytest.raises(ValidationError):
+        RecommendRequest(seed_tmdb_ids=[603], moods=["ROMANTIC"])

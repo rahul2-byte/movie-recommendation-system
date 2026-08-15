@@ -15,8 +15,8 @@ from urllib.request import Request, urlopen
 import numpy as np
 from infrastructure.metadata.movie_store import MovieStore
 
-from serving.recommender import BundleRecommender
-from serving.smoke import validate_recommendation_response
+from serving.bundle_recommender import BundleRecommender
+from serving.serving_smoke_test import validate_recommendation_response
 
 
 def summarize_latencies(samples_ms: list[float]) -> dict[str, float | int]:
@@ -46,7 +46,7 @@ async def _seed_metadata(seed_tmdb_ids: list[int]) -> dict[int, dict[str, Any]]:
     """Fetch benchmark seed metadata and close the temporary client."""
     store = MovieStore()
     try:
-        movies = await store.get_many_by_tmdb_ids(seed_tmdb_ids)
+        movies = await store.get_many(seed_tmdb_ids)
         return {int(movie["tmdbId"]): movie for movie in movies}
     finally:
         await store.tmdb_client.close()

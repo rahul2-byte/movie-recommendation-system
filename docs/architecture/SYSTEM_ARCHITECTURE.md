@@ -11,13 +11,12 @@ Frontend
   -> backend/main.py
     -> api/v1 routes
       -> application.lifecycle
-        -> serving.pipeline
-          -> serving.recommender
+        -> serving.recommendation_pipeline
+          -> serving.bundle_recommender
             -> ALS, item graph, two-tower, content retrievers
             -> rank fusion and LightGBM ranking
           -> infrastructure.metadata.MovieStore
-              -> DynamoDB/catalog metadata
-              -> TMDB fallback metadata
+              -> TMDB metadata
         -> API response
 ```
 
@@ -46,8 +45,8 @@ MovieLens/TMDB-enriched raw data
 | Domain | Canonical owner | Must not own |
 | --- | --- | --- |
 | HTTP transport | `backend/api/` | retrieval mathematics or data preparation |
-| Request orchestration | `backend/application/lifecycle.py` and `backend/serving/pipeline.py` | model training |
-| Request contract | `backend/application/contracts.py` | retrieval implementation details |
+| Request orchestration | `backend/application/lifecycle.py` and `backend/serving/recommendation_pipeline.py` | model training |
+| Request contract | `backend/application/recommendation_query.py` | retrieval implementation details |
 | Metadata access | `backend/infrastructure/metadata/movie_store.py` | candidate scoring |
 | Retrieval contract | `backend/retrieval/contracts.py` | HTTP transport concerns |
 | Dataset preparation | `backend/data_pipeline/` | HTTP or AWS deployment |
@@ -69,7 +68,7 @@ evaluation -> pure metrics and reproducible artifacts
 ```
 
 Core metrics, retrieval utilities, and ranking feature calculations must remain
-usable without FastAPI, Lambda, DynamoDB, or network access.
+usable without FastAPI, Lambda, or network access.
 
 ## Invariants
 

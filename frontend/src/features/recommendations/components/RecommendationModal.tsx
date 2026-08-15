@@ -9,11 +9,7 @@ import { ModalCloseButton } from "@/shared/ui/ModalCloseButton"
 import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion"
 import { useRecommendationStore } from "@/features/recommendations/store"
 
-export function RecommendationModal({
-  onClose,
-}: {
-  onClose: () => void
-}) {
+export function RecommendationModal({ onClose }: { onClose: () => void }) {
   const { selectedMovies } = useRecommendationStore()
   const moviesNeeded = 5 - selectedMovies.length
 
@@ -42,7 +38,10 @@ export function RecommendationModal({
               </m.p>
             </AnimatePresence>
           </div>
-          <ModalCloseButton onClick={onClose} className="hover:rotate-90 transition-transform duration-500" />
+          <ModalCloseButton
+            onClick={onClose}
+            className="hover:rotate-90 transition-transform duration-500"
+          />
         </header>
 
         <LazyMotion features={domAnimation} strict>

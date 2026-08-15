@@ -10,14 +10,17 @@ import { RecommendationsError } from "@/features/recommendations/components/Reco
 import { RecommendationsGrid } from "@/features/recommendations/components/RecommendationsGrid"
 import { PageTransition } from "@/shared/ui/motion/PageTransition"
 import Link from "next/link"
-import { ArrowLeft, RefreshCw, Share2 } from "lucide-react"
+import { ArrowLeft, RefreshCw } from "lucide-react"
+import type { Mood } from "@/features/recommendations/types"
 
 export default function RecommendationsPage() {
-  const recommendations = useRecommendationStore(state => state.recommendations)
-  const error = useRecommendationStore(state => state.error)
-  const selectedMovies = useRecommendationStore(state => state.selectedMovies)
-  const selectedGenres = useRecommendationStore(state => state.selectedGenres)
-  
+  const recommendations = useRecommendationStore(
+    (state) => state.recommendations
+  )
+  const error = useRecommendationStore((state) => state.error)
+  const selectedMovies = useRecommendationStore((state) => state.selectedMovies)
+  const selectedGenres = useRecommendationStore((state) => state.selectedGenres)
+
   const { mutate, isPending: isRefreshing } = useRecommendations()
   const [selectedMovie, setSelectedMovie] = useState<RecommendedMovie | null>(
     null
@@ -30,8 +33,12 @@ export default function RecommendationsPage() {
   }
 
   const handleRefresh = () => {
-    const seedTmdbIds = selectedMovies.map(m => m.tmdbId)
-    mutate({ seed_tmdb_ids: seedTmdbIds, moods: selectedGenres as any, limit: 20 })
+    const seedTmdbIds = selectedMovies.map((m) => m.tmdbId)
+    mutate({
+      seed_tmdb_ids: seedTmdbIds,
+      moods: selectedGenres as Mood[],
+      limit: 20,
+    })
   }
 
   if (error) {
@@ -54,15 +61,17 @@ export default function RecommendationsPage() {
     <PageTransition>
       <div className="section pt-32 min-h-screen">
         <div className="container">
-          
-          <Link href="/setup" className="inline-flex items-center gap-2 text-text-muted hover:text-accent transition-colors mb-8 text-sm">
-             <ArrowLeft className="w-4 h-4" /> Back to Curation
+          <Link
+            href="/setup"
+            className="inline-flex items-center gap-2 text-text-muted hover:text-accent transition-colors mb-8 text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Curation
           </Link>
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
             <div className="flex flex-col gap-2 max-w-2xl">
               <span className="label-accent leading-relaxed">
-                Based on: {selectedMovies.map(m => m.title).join(", ")}
+                Based on: {selectedMovies.map((m) => m.title).join(", ")}
               </span>
               <h1 className="heading-section">Your Curated Lineup</h1>
               {selectedGenres.length > 0 && (
@@ -71,20 +80,25 @@ export default function RecommendationsPage() {
                 </p>
               )}
             </div>
-            
+
             <div className="flex gap-3">
-              <button 
+              <button
                 className="btn btn-secondary"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
               >
-                <RefreshCw className={`btn-icon ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? 'Thinking...' : 'Refresh'}
+                <RefreshCw
+                  className={`btn-icon ${isRefreshing ? "animate-spin" : ""}`}
+                />
+                {isRefreshing ? "Thinking..." : "Refresh"}
               </button>
             </div>
           </div>
 
-          <RecommendationsGrid movies={recommendations} onSelect={handleMovieClick} />
+          <RecommendationsGrid
+            movies={recommendations}
+            onSelect={handleMovieClick}
+          />
 
           <MovieDetailModal
             movieId={null}

@@ -5,7 +5,9 @@ from training.ranking.config import RankingTrainingConfig, load_ranking_training
 
 
 def test_load_ranking_training_config_reads_explicit_model_contract():
-    config = load_ranking_training_config(Path("backend/configs/ranking_training.yaml"))
+    config = load_ranking_training_config(
+        Path("backend/configuration/ranking_training.yaml")
+    )
 
     assert isinstance(config, RankingTrainingConfig)
     assert config.random_seed == 42

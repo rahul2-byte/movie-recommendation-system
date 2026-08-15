@@ -12,10 +12,11 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
+from hashing import sha256
 
 from data_pipeline.config import DataPipelineConfig
-from data_pipeline.manifests import sha256, write_json
-from data_pipeline.prepare import _write_parquet
+from data_pipeline.manifests import write_json
+from data_pipeline.parquet_io import write_parquet
 from data_pipeline.progress import ProgressReporter
 
 log = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ _INTERACTION_COLUMNS = ["user_id", "tmdb_id", "movielens_id", "rating", "timesta
 @dataclass(frozen=True)
 class SplitResult:
     """Paths and manifest produced by temporal dataset splitting."""
+
     version_id: str
     version_dir: Path
     manifest: dict[str, Any]
@@ -316,22 +318,25 @@ def split_dataset(config: DataPipelineConfig, version_id: str) -> SplitResult:
             _bucket_events(parts_dir, bucket), validation_start, test_start, config
         )
         if not train.empty:
-            _write_parquet(
+            write_parquet(
                 train,
                 work_dir / "parts" / "train" / f"bucket-{bucket:03d}.parquet",
-                config,
+                compression=config.prepare.compression,
+                compression_level=config.prepare.compression_level,
             )
         if not validation.empty:
-            _write_parquet(
+            write_parquet(
                 validation,
                 work_dir / "parts" / "validation" / f"bucket-{bucket:03d}.parquet",
-                config,
+                compression=config.prepare.compression,
+                compression_level=config.prepare.compression_level,
             )
         if not test.empty:
-            _write_parquet(
+            write_parquet(
                 test,
                 work_dir / "parts" / "test" / f"bucket-{bucket:03d}.parquet",
-                config,
+                compression=config.prepare.compression,
+                compression_level=config.prepare.compression_level,
             )
         completed.add(bucket)
         state["completed_buckets"] = sorted(completed)

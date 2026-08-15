@@ -48,15 +48,6 @@ def dataset_version_id(
     return f"{config.dataset.name}-{digest}"
 
 
-def sha256(path: Path) -> str:
-    """Return the SHA-256 digest of a file's bytes."""
-    digest = hashlib.sha256()
-    with path.open("rb") as source:
-        for chunk in iter(lambda: source.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def write_json(path: Path, value: dict[str, Any]) -> None:
     """Write a manifest atomically so interrupted jobs cannot publish partial state."""
     path.parent.mkdir(parents=True, exist_ok=True)

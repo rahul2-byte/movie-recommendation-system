@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from training.retrieval.build_als import load_als_training_config
-from training.retrieval.build_content_retriever import (
+from training.retrieval.als_trainer import load_als_training_config
+from training.retrieval.content_retriever import (
     load_content_training_config,
     load_tfidf_training_config,
 )
-from training.retrieval.build_item_graph import load_item_graph_training_config
-from training.retrieval.build_two_tower import load_two_tower_training_config
+from training.retrieval.item_graph_trainer import load_item_graph_training_config
+from training.retrieval.two_tower_trainer import load_two_tower_training_config
 
 
 def test_loads_tfidf_training_config_relative_to_config_file(tmp_path: Path):

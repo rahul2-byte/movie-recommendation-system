@@ -46,8 +46,8 @@ export function RecommendCTA({ onDone }: { onDone: () => void }) {
             >
               <AlertCircle className="h-5 w-5 text-primary" />
               <p className="text-body text-primary">
-                Select {requiredCount} movies to tune the model ({selectedCount}/
-                {requiredCount}).
+                Select {requiredCount} movies to tune the model ({selectedCount}
+                /{requiredCount}).
               </p>
             </m.div>
           )}

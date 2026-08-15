@@ -1,7 +1,7 @@
 "use client"
 
 import { forwardRef } from "react"
-import type { ComponentProps, HTMLAttributes } from "react"
+import type { HTMLAttributes } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
@@ -25,7 +25,8 @@ const sheetPortalVariants = cva("fixed inset-0 z-50 flex", {
 })
 
 interface SheetPortalProps
-  extends SheetPrimitive.DialogPortalProps,
+  extends
+    SheetPrimitive.DialogPortalProps,
     VariantProps<typeof sheetPortalVariants> {}
 
 const SheetPortal = ({ position, children, ...props }: SheetPortalProps) => (
@@ -88,7 +89,8 @@ const sheetVariants = cva(
 )
 
 export interface SheetContentProps
-  extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
+  extends
+    React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
 
 const SheetContent = forwardRef<
@@ -113,12 +115,18 @@ const SheetContent = forwardRef<
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({ ...props }: HTMLAttributes<HTMLDivElement>) => (
-  <div className="flex flex-col space-y-tight text-center sm:text-left" {...props} />
+  <div
+    className="flex flex-col space-y-tight text-center sm:text-left"
+    {...props}
+  />
 )
 SheetHeader.displayName = "SheetHeader"
 
 const SheetFooter = ({ ...props }: HTMLAttributes<HTMLDivElement>) => (
-  <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2" {...props} />
+  <div
+    className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2"
+    {...props}
+  />
 )
 SheetFooter.displayName = "SheetFooter"
 

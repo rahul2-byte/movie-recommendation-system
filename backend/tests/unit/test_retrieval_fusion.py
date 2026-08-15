@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
-from evaluation.fusion import RankFusionRecommender, analyze_candidate_overlap
+from evaluation.rank_fusion import RankFusionRecommender, analyze_candidate_overlap
 
 
 class StaticRecommender:

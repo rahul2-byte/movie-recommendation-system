@@ -1,5 +1,5 @@
 import pytest
-from serving.smoke import validate_recommendation_response
+from serving.serving_smoke_test import validate_recommendation_response
 
 
 def test_smoke_response_validator_rejects_seed_and_duplicate_results():

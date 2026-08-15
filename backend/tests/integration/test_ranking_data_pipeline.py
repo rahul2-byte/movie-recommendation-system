@@ -10,8 +10,7 @@ from data_pipeline.config import (
     load_ranking_data_config,
     load_ranking_features_config,
 )
-from data_pipeline.manifests import sha256
-from data_pipeline.ranking import (
+from data_pipeline.ranking_dataset import (
     _limit_candidates_by_rrf,
     build_ranking_candidates,
     build_test_candidates,
@@ -19,6 +18,7 @@ from data_pipeline.ranking import (
     materialize_ranking_features,
     prepare_ranking_data,
 )
+from hashing import sha256
 
 
 class _FakeArtifact:

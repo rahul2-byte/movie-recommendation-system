@@ -7,13 +7,15 @@ large package move merely to match this document.
 ```text
 backend/
   api/             FastAPI request/response transport
-  common/          shared runtime contracts, clients, and storage adapters
-  configs/         version-controlled YAML configuration
+  application/     application lifecycle and request-domain contracts
+  configuration/   version-controlled YAML and environment configuration
   data/
     raw/           ignored downloaded source inputs
     versions/       ignored immutable prepared/split datasets
   data_pipeline/   authoritative ETL, validation, manifests, and MLflow hooks
   evaluation/      pure metrics, baselines, evaluation runners, and CLI
+  infrastructure/  metadata and external HTTP adapters
+  observability/   structured application logging
   retrieval/       shared retrieval-domain contracts and utilities
   training/        future authoritative Python training entry points
   tests/
@@ -30,7 +32,7 @@ backend/
   they do not import API routes.
 - Ranking feature construction is owned by `data_pipeline/` and
   `training/ranking/`; runtime feature construction is owned by `serving/`.
-- `configs/` controls behavior; `data/versions/` and `artifacts/` are generated,
+- `configuration/` controls behavior; `data/versions/` and `artifacts/` are generated,
   immutable or ignored outputs.
 - Tests import backend packages through root pytest configuration. Run
   `uv run --frozen pytest` without `PYTHONPATH=backend`.

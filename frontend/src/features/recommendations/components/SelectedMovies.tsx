@@ -13,15 +13,15 @@ export function SelectedMovies() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-         <h2 className="heading-section text-2xl">Your Selection</h2>
-         <button 
-           onClick={clearMovies}
-           className="text-sm text-text-muted hover:text-error transition-colors flex items-center gap-2"
-         >
-           <Trash2 className="w-4 h-4" /> Clear All
-         </button>
+        <h2 className="heading-section text-2xl">Your Selection</h2>
+        <button
+          onClick={clearMovies}
+          className="text-sm text-text-muted hover:text-error transition-colors flex items-center gap-2"
+        >
+          <Trash2 className="w-4 h-4" /> Clear All
+        </button>
       </div>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
         <LazyMotion features={domAnimation} strict>
           <AnimatePresence>
@@ -33,7 +33,7 @@ export function SelectedMovies() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 layout
               >
-                <MovieCard 
+                <MovieCard
                   movie={{
                     ...movie,
                     movieId: movie.tmdbId,
@@ -41,7 +41,7 @@ export function SelectedMovies() {
                     genres: [],
                     posterUrl: movie.posterUrl ?? null,
                   }}
-                  selected={true} 
+                  selected={true}
                   index={index}
                   onClick={() => removeMovie(movie.tmdbId)}
                 />

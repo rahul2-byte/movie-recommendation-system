@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
-from training.retrieval.build_item_graph import (
+from training.retrieval.item_graph_trainer import (
     build_item_graph_seed_cache,
     train_item_graph,
 )

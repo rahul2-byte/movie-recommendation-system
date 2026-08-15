@@ -14,17 +14,12 @@ const inputVariants = cva(
 )
 
 export interface InputProps
-  extends ComponentProps<"input">,
-    VariantProps<typeof inputVariants> {}
+  extends ComponentProps<"input">, VariantProps<typeof inputVariants> {}
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, ...props }, ref) => {
     return (
-      <input
-        className={cn(inputVariants(), className)}
-        ref={ref}
-        {...props}
-      />
+      <input className={cn(inputVariants(), className)} ref={ref} {...props} />
     )
   }
 )

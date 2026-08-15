@@ -9,14 +9,15 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from hashing import sha256
 
 from data_pipeline.config import DataPipelineConfig
 from data_pipeline.manifests import (
     dataset_version_id,
     implementation_fingerprint,
-    sha256,
     write_json,
 )
+from data_pipeline.parquet_io import write_parquet
 from data_pipeline.progress import ProgressReporter
 
 log = logging.getLogger(__name__)
@@ -26,23 +27,11 @@ _RAW_FILES = ("movies.csv", "links.csv", "ratings.csv", "tags.csv")
 @dataclass(frozen=True)
 class PrepareResult:
     """Paths and manifest produced by resumable dataset preparation."""
+
     version_id: str
     version_dir: Path
     work_dir: Path
     manifest: dict[str, Any]
-
-
-def _write_parquet(frame: pd.DataFrame, path: Path, config: DataPipelineConfig) -> None:
-    """Atomically write one compressed parquet part."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.tmp")
-    frame.to_parquet(
-        temporary,
-        index=False,
-        compression=config.prepare.compression,
-        compression_level=config.prepare.compression_level,
-    )
-    temporary.replace(path)
 
 
 def _source_hashes(config: DataPipelineConfig) -> dict[str, str]:
@@ -123,7 +112,12 @@ def prepare_dataset(
     state = _load_state(state_path, expected)
     catalog_path = version_dir / "catalog.parquet"
     if not catalog_path.is_file():
-        _write_parquet(_build_catalog(config), catalog_path, config)
+        write_parquet(
+            _build_catalog(config),
+            catalog_path,
+            compression=config.prepare.compression,
+            compression_level=config.prepare.compression_level,
+        )
     catalog = pd.read_parquet(catalog_path, columns=["movielens_id", "tmdb_id"])
     mapping = dict(zip(catalog["movielens_id"], catalog["tmdb_id"], strict=True))
     completed = set(state["completed_chunks"])
@@ -159,12 +153,13 @@ def prepare_dataset(
                 / "interaction_parts"
                 / f"chunk-{chunk_index:06d}-bucket-{int(bucket):03d}.parquet"
             )
-            _write_parquet(
+            write_parquet(
                 bucket_frame[
                     ["user_id", "tmdb_id", "movielens_id", "rating", "timestamp"]
                 ],
                 part_path,
-                config,
+                compression=config.prepare.compression,
+                compression_level=config.prepare.compression_level,
             )
         total_rows += len(frame)
         completed.add(chunk_index)

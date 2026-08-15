@@ -1,6 +1,6 @@
 import lightgbm as lgb
 import numpy as np
-from serving.recommender import BundleRecommender
+from serving.bundle_recommender import BundleRecommender
 
 
 class _Retriever:

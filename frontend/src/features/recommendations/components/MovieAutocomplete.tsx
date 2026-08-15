@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useRef, useMemo } from "react"
+import { useRef, useMemo } from "react"
 import { useRecommendationStore } from "@/features/recommendations/store"
-import { MAX_LIKED_MOVIES } from "@/features/recommendations/state"
+import type { Movie } from "@/features/movies/types/movie"
 import { Input } from "@/shared/ui/Input"
 import { useMovieSearch } from "@/features/recommendations/hooks/useMovieSearch"
 import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion"
@@ -10,14 +10,14 @@ import { MovieCard } from "@/features/movies/components/MovieCard"
 import { Search, Loader2 } from "lucide-react"
 
 export function MovieAutocomplete() {
-  const addMovie = useRecommendationStore(state => state.addMovie)
-  const removeMovie = useRecommendationStore(state => state.removeMovie)
-  const selectedMovies = useRecommendationStore(state => state.selectedMovies)
-  
+  const addMovie = useRecommendationStore((state) => state.addMovie)
+  const removeMovie = useRecommendationStore((state) => state.removeMovie)
+  const selectedMovies = useRecommendationStore((state) => state.selectedMovies)
+
   const { query, setQuery, results, isLoading, isError } = useMovieSearch()
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const canAddMore = selectedMovies.length < MAX_LIKED_MOVIES
+  const canAddMore = selectedMovies.length < 5
 
   const filteredResults = useMemo(() => {
     if (!results) return []
@@ -25,7 +25,7 @@ export function MovieAutocomplete() {
     return results.slice(0, 12)
   }, [results])
 
-  const toggleMovie = (movie: any) => {
+  const toggleMovie = (movie: Movie) => {
     const tmdbId = movie.tmdbId
     const isSelected = selectedMovies.some((m) => m.tmdbId === tmdbId)
     if (isSelected) {
@@ -71,7 +71,9 @@ export function MovieAutocomplete() {
               >
                 {filteredResults.map((movie, index) => {
                   const tmdbId = movie.tmdbId
-                  const isSelected = selectedMovies.some((m) => m.tmdbId === tmdbId)
+                  const isSelected = selectedMovies.some(
+                    (m) => m.tmdbId === tmdbId
+                  )
                   return (
                     <MovieCard
                       key={tmdbId}
@@ -91,7 +93,9 @@ export function MovieAutocomplete() {
                 className="flex flex-col items-center justify-center py-20 text-text-muted"
               >
                 <Search className="w-12 h-12 mb-4 opacity-20" />
-                <p className="text-xl">No movies found matching "{query}"</p>
+                <p className="text-xl">
+                  No movies found matching &ldquo;{query}&rdquo;
+                </p>
                 <p className="text-sm">Try searching for something else.</p>
               </m.div>
             ) : null}
@@ -100,8 +104,12 @@ export function MovieAutocomplete() {
 
         {isError && (
           <div className="text-center py-20">
-            <p className="text-error text-xl mb-2">Unable to connect to the archive.</p>
-            <p className="text-text-muted">Please check your connection and try again.</p>
+            <p className="text-error text-xl mb-2">
+              Unable to connect to the archive.
+            </p>
+            <p className="text-text-muted">
+              Please check your connection and try again.
+            </p>
           </div>
         )}
       </div>

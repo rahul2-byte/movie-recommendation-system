@@ -7,7 +7,9 @@ export default function AboutPage() {
     <PageTransition>
       <div className="container py-section space-y-section">
         <section className="max-w-narrow space-y-stack">
-          <p className="text-overline text-muted-foreground/70">About the project</p>
+          <p className="text-overline text-muted-foreground/70">
+            About the project
+          </p>
           <h1 className="text-display font-semibold">
             A portfolio piece built to feel like a real product.
           </h1>

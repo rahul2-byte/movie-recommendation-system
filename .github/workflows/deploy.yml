@@ -2,16 +2,51 @@ name: Deploy Backend to AWS Lambda
 
 on:
   workflow_dispatch:
+    inputs:
+      MODEL_RELEASE_TAG:
+        description: GitHub Release tag containing the production and comparison bundles
+        required: true
+        type: string
   push:
     branches:
       - main
     paths:
       - "backend/**"
+      - "frontend/**"
       - "template.yaml"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/**"
 
 jobs:
+  frontend-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Run frontend quality gates
+        run: |
+          npm --prefix frontend run lint
+          npm --prefix frontend test -- --runInBand
+          npm --prefix frontend run build
+
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      MODEL_RELEASE_TAG: ${{ inputs.MODEL_RELEASE_TAG || vars.MODEL_RELEASE_TAG }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -30,6 +65,56 @@ jobs:
           uv run --frozen ruff check backend
           PYTHONPATH=backend uv run --frozen pytest -q
 
+      - name: Download and validate model release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRODUCTION_ASSET: movie-recs-bundle-int8-graph200-content256-v1.tar.zst
+          COMPARISON_ASSET: movie-recs-bundle-sq6-graph200-content256-v1.tar.zst
+        run: |
+          test -n "$MODEL_RELEASE_TAG" || {
+            echo "MODEL_RELEASE_TAG input or repository variable is required" >&2
+            exit 1
+          }
+          RELEASE_DIR="$RUNNER_TEMP/model-release"
+          rm -rf "$RELEASE_DIR"
+          mkdir -p "$RELEASE_DIR/production" "$RELEASE_DIR/comparison"
+          sudo apt-get update
+          sudo apt-get install -y zstd
+          gh release download "$MODEL_RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern release-manifest.json \
+            --pattern "$PRODUCTION_ASSET" \
+            --pattern "$COMPARISON_ASSET" \
+            --dir "$RELEASE_DIR"
+          tar --zstd -xf "$RELEASE_DIR/$PRODUCTION_ASSET" -C "$RELEASE_DIR/production"
+          tar --zstd -xf "$RELEASE_DIR/$COMPARISON_ASSET" -C "$RELEASE_DIR/comparison"
+          PYTHONPATH=backend uv run --frozen python \
+            backend/scripts/validate_release_bundles.py \
+            --release-dir "$RELEASE_DIR" \
+            --production-dir "$RELEASE_DIR/production" \
+            --comparison-dir "$RELEASE_DIR/comparison"
+          rm -rf backend/model_bundle/production
+          mkdir -p backend/model_bundle/production
+          cp -a "$RELEASE_DIR/production/." backend/model_bundle/production/
+          echo "RELEASE_DIR=$RELEASE_DIR" >> "$GITHUB_ENV"
+          echo "MODEL_BUNDLE_PATH=backend/model_bundle/production" >> "$GITHUB_ENV"
+
+      - name: Compare production and compact bundles
+        run: |
+          for limit in 100 200 300; do
+            PYTHONPATH=backend uv run --frozen python -m serving.compare_bundles \
+              --reference-bundle "$RELEASE_DIR/production" \
+              --candidate-bundle "$RELEASE_DIR/comparison" \
+              --seed-tmdb-ids 603 238 680 550 13 \
+              --limit "$limit" > "$RUNNER_TEMP/compression-comparison-$limit.json"
+          done
+
+      - name: Upload compression comparison evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: compression-comparison-${{ github.sha }}
+          path: ${{ runner.temp }}/compression-comparison-*.json
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -44,12 +129,17 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Smoke-test the Lambda image
+        env:
+          MODEL_BUNDLE_PATH: backend/model_bundle/production
+        run: bash backend/scripts/lambda_preflight.sh
+
       - name: Build and push Lambda image to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: movie-recommendation-backend
           IMAGE_TAG: ${{ github.sha }}
-          MODEL_BUNDLE_PATH: backend/model_bundle/movielens-32m-4retriever-ranker-v1
+          MODEL_BUNDLE_PATH: backend/model_bundle/production
         run: |
           test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"
           for required_file in \
@@ -98,5 +188,4 @@ jobs:
               AllowedOrigins="${{ secrets.ALLOWED_ORIGINS }}" \
               ImageUri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
               TmdbAccessToken=${{ secrets.TMDB_ACCESS_TOKEN }} \
-              ImdbApiKey=${{ secrets.IMDB_API_KEY }} \
             --no-confirm-changeset

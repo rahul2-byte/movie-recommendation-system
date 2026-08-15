@@ -16,17 +16,17 @@ export function RecommendationsGrid({
         <MovieCard
           key={`${movie.tmdbId}-${index}`}
           movie={{
-             ...movie,
-             year: movie.year ?? null,
-             posterUrl: movie.posterUrl ?? null,
-             rating: movie.rating ?? null,
-             voteAverage: movie.rating ?? null,
-             backdropUrl: null,
-             overview: movie.overview ?? null,
-             genres: movie.genres,
-             tmdbId: movie.tmdbId,
-             title: movie.title,
-             movieId: movie.tmdbId
+            ...movie,
+            year: movie.year ?? null,
+            posterUrl: movie.posterUrl ?? null,
+            rating: movie.rating ?? null,
+            voteAverage: movie.rating ?? null,
+            backdropUrl: null,
+            overview: movie.overview ?? null,
+            genres: movie.genres,
+            tmdbId: movie.tmdbId,
+            title: movie.title,
+            movieId: movie.tmdbId,
           }}
           onClick={() => onSelect(movie)}
         />

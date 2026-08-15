@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query"
 import { fetchRecommendations } from "@/features/recommendations/api/recommendations"
 import { useRecommendationStore } from "@/features/recommendations/store"
 import { useRouter } from "next/navigation"
-import { logger } from "@/shared/lib/logger"
 
 export function useRecommendations() {
   const { setRecommendations, setError } = useRecommendationStore()
@@ -17,8 +16,10 @@ export function useRecommendations() {
       router.push("/recommendations")
     },
     onError: (error) => {
-      logger.error("Recommendation API Error:", error)
-      setError(error instanceof Error ? error.message : "An unexpected error occurred")
+      console.error("Recommendation API Error:", error)
+      setError(
+        error instanceof Error ? error.message : "An unexpected error occurred"
+      )
     },
   })
 }

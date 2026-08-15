@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from retrieval.rank_fusion import score_candidate_ranks
+
 
 def collect_source_candidates(
     retriever: Any, seed_tmdb_ids: list[int], top_k: int
 ) -> dict[int, int]:
     """Collect one retriever's candidates using seed support and best rank."""
-    evidence: dict[int, list[int]] = {}
+    ranks_by_candidate_id: dict[int, list[int]] = {}
     seed_set = set(seed_tmdb_ids)
     for seed_tmdb_id in seed_tmdb_ids:
         seen: set[int] = set()
@@ -23,22 +25,25 @@ def collect_source_candidates(
                 continue
             seen.add(candidate_id)
             rank += 1
-            evidence.setdefault(candidate_id, []).append(rank)
+            ranks_by_candidate_id.setdefault(candidate_id, []).append(rank)
             if rank == top_k:
                 break
-    ordered = sorted(
-        evidence,
+    candidate_ids_by_support = sorted(
+        ranks_by_candidate_id,
         key=lambda movie_id: (
-            -len(evidence[movie_id]),
-            min(evidence[movie_id]),
+            -len(ranks_by_candidate_id[movie_id]),
+            min(ranks_by_candidate_id[movie_id]),
             movie_id,
         ),
     )[:top_k]
-    return {movie_id: rank for rank, movie_id in enumerate(ordered, start=1)}
+    return {
+        movie_id: rank
+        for rank, movie_id in enumerate(candidate_ids_by_support, start=1)
+    }
 
 
 def fuse_reciprocal_ranks(
-    source_ranks: dict[str, dict[int, int]],
+    ranks_by_retriever: dict[str, dict[int, int]],
     rank_constant: int,
     candidate_limit: int,
 ) -> list[tuple[int, float]]:
@@ -46,18 +51,13 @@ def fuse_reciprocal_ranks(
     # ALS, graph, content, and neural scores have different numerical scales.
     # Rank fusion keeps one source from dominating merely because its raw
     # similarity values are larger.
-    candidate_ids = sorted(
-        {movie_id for rows in source_ranks.values() for movie_id in rows}
+    rrf_scores_by_candidate_id = score_candidate_ranks(
+        ranks_by_retriever, rank_constant
     )
-    scores = {
-        movie_id: sum(
-            1.0 / (rank_constant + rank)
-            for rows in source_ranks.values()
-            if (rank := rows.get(movie_id))
-        )
-        for movie_id in candidate_ids
-    }
     return sorted(
-        ((movie_id, scores[movie_id]) for movie_id in candidate_ids),
+        (
+            (movie_id, rrf_scores_by_candidate_id[movie_id])
+            for movie_id in rrf_scores_by_candidate_id
+        ),
         key=lambda item: (-item[1], item[0]),
     )[:candidate_limit]

@@ -13,6 +13,7 @@ from data_pipeline.manifests import write_json
 @dataclass(frozen=True)
 class FeatureSchema:
     """Versioned ordered feature names shared by training and serving."""
+
     schema_version: str
     feature_names: tuple[str, ...]
 

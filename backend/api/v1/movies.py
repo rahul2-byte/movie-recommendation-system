@@ -3,14 +3,13 @@
 from typing import Any
 
 from application.lifecycle import get_movie_store
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query
 
 router = APIRouter(prefix="/movies", tags=["Movies"])
 
 
 @router.get("/search")
 async def movie_search(
-    request: Request,
     q: str = Query(..., min_length=2),
     limit: int = Query(10, ge=5, le=20),
 ) -> list[dict]:
@@ -20,7 +19,7 @@ async def movie_search(
 
 
 @router.get("/{movie_id}")
-async def get_movie_by_id(request: Request, movie_id: int) -> dict[str, Any]:
+async def get_movie_by_id(movie_id: int) -> dict[str, Any]:
     """
     Get movie details by TMDB ID.
     """
@@ -32,9 +31,9 @@ async def get_movie_by_id(request: Request, movie_id: int) -> dict[str, Any]:
 
 
 @router.get("/tmdb/{tmdb_id}")
-async def get_movie_by_tmdb_id(request: Request, tmdb_id: int) -> dict[str, Any]:
+async def get_movie_by_tmdb_id(tmdb_id: int) -> dict[str, Any]:
     """Return one movie identified by its canonical TMDB ID."""
-    movie = await get_movie_store().get_by_tmdb_id(tmdb_id)
+    movie = await get_movie_store().get(tmdb_id)
     if movie is None:
         raise HTTPException(status_code=404, detail="Movie not found")
     return movie

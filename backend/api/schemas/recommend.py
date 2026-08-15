@@ -1,10 +1,11 @@
 """Typed request and response models for recommendation APIs."""
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
 TMDBId = Annotated[int, Field(gt=0)]
+MoodName = Literal["DARK", "FEEL_GOOD", "INSPIRING", "FOCUS", "CHILL", "ADVENTURE"]
 
 
 class RecommendRequest(BaseModel):
@@ -14,7 +15,10 @@ class RecommendRequest(BaseModel):
         min_length=1, max_length=5, description="User-selected seed movies"
     )
 
-    moods: list[str] = Field(default_factory=list, description="Optional mood signals")
+    moods: list[MoodName] = Field(
+        default_factory=list,
+        description="Optional mood preferences used as a soft ranking signal.",
+    )
 
     limit: int = Field(
         default=99, ge=1, le=150, description="Number of recommendations"

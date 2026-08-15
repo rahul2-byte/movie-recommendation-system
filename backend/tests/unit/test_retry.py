@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 from aiohttp import ClientResponseError, RequestInfo
-from common.clients.retry import retry_async
+from infrastructure.clients.retry import retry_async
 from multidict import CIMultiDict
 from yarl import URL
 

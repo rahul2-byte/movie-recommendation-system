@@ -10,33 +10,35 @@ export function Hero() {
       <div className="container">
         <LazyMotion features={domAnimation} strict>
           <div className="hero-content mx-auto text-center max-w-[900px]">
-            <m.p 
+            <m.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="label-accent mb-6 block"
             >
               AI-POWERED CURATION
             </m.p>
-            
-            <m.h1 
+
+            <m.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               className="heading-hero mb-8"
             >
-              Cinema,<br />
+              Cinema,
+              <br />
               <em className="italic font-serif">Understood.</em>
             </m.h1>
-            
-            <m.p 
+
+            <m.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="text-body mb-12 max-w-[600px] mx-auto"
             >
-              Discover films based on mood, tone, and cinematic DNA. Not just genres.
+              Discover films based on mood, tone, and cinematic DNA. Not just
+              genres.
             </m.p>
-            
+
             <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

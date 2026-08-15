@@ -1,8 +1,12 @@
-import { getTrendingMovies, getPopularMovies, getNewReleases } from "@/features/movies/api"
+import {
+  getTrendingMovies,
+  getPopularMovies,
+  getNewReleases,
+} from "@/features/movies/api"
 import { CatalogGrid } from "@/features/movies/components/CatalogGrid"
 import { PageTransition } from "@/shared/ui/motion/PageTransition"
 import Link from "next/link"
-import { ArrowLeft, WifiOff, AlertCircle } from "lucide-react"
+import { ArrowLeft, WifiOff } from "lucide-react"
 
 type Props = {
   searchParams: Promise<{ category?: string }>
@@ -11,7 +15,7 @@ type Props = {
 export default async function CatalogPage({ searchParams }: Props) {
   const params = await searchParams
   const category = params.category || "trending"
-  
+
   let movies = null
   let title = ""
 
@@ -29,7 +33,7 @@ export default async function CatalogPage({ searchParams }: Props) {
         movies = await getTrendingMovies(50)
         title = "Trending This Week"
     }
-  } catch (err) {
+  } catch {
     movies = null
   }
 
@@ -37,8 +41,11 @@ export default async function CatalogPage({ searchParams }: Props) {
     <PageTransition>
       <div className="section pt-32 min-h-screen">
         <div className="container">
-          <Link href="/" className="inline-flex items-center gap-2 text-text-muted hover:text-accent transition-colors mb-8 text-sm">
-             <ArrowLeft className="w-4 h-4" /> Back to Home
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-text-muted hover:text-accent transition-colors mb-8 text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Home
           </Link>
 
           <div className="mb-12">
@@ -51,9 +58,12 @@ export default async function CatalogPage({ searchParams }: Props) {
               <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
                 <WifiOff className="w-10 h-10 text-text-muted" />
               </div>
-              <h2 className="text-2xl font-serif text-white mb-2">Connection snags.</h2>
+              <h2 className="text-2xl font-serif text-white mb-2">
+                Connection snags.
+              </h2>
               <p className="text-text-muted max-w-md mx-auto mb-8">
-                We couldn't reach our cinematic archive. This usually means the backend server is resting or having connection issues.
+                We could not reach our cinematic archive. This usually means the
+                backend server is resting or having connection issues.
               </p>
               <Link href="/" className="btn btn-primary">
                 Return to Home

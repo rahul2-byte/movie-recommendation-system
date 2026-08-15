@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import pandas as pd
-from training.retrieval.build_content_retriever import build_exact_seed_cache
-from training.retrieval.build_two_tower import train_two_tower
+from training.retrieval.content_retriever import build_exact_seed_cache
+from training.retrieval.two_tower_trainer import train_two_tower
 
 
 def test_train_two_tower_writes_loadable_tmdb_keyed_artifact(tmp_path: Path):

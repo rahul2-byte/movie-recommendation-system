@@ -7,8 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
-
-from data_pipeline.manifests import sha256
+from hashing import sha256
 
 
 def _validate_query_boundaries(path: Path) -> None:
