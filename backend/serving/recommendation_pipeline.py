@@ -43,30 +43,80 @@ class BundleRecommendationPipeline:
         self,
         seed_tmdb_ids: list[int],
         top_n: int = 20,
+        refresh_seed: int | None = None,
     ) -> list[dict[str, Any]]:
         """Return up to ``top_n`` ranked, metadata-enriched movie records."""
-        # Metadata enrichment is downstream of ranking. A lookup failure drops
-        # one display record without changing the model candidate set or
-        # failing the entire recommendation request.
+        ranked_candidate_scores = await self.rank_candidates(
+            seed_tmdb_ids,
+            top_n=top_n,
+            refresh_seed=refresh_seed,
+        )
+        recommendations, _ = await self.materialize_candidates(
+            ranked_candidate_scores,
+            offset=0,
+            page_size=top_n,
+        )
+        return recommendations
+
+    async def rank_candidates(
+        self,
+        seed_tmdb_ids: list[int],
+        top_n: int,
+        refresh_seed: int | None = None,
+    ) -> list[tuple[int, float]]:
+        """Rank candidates once so display pages can be enriched on demand."""
         unique_seed_tmdb_ids = list(dict.fromkeys(seed_tmdb_ids))
         seed_movies = await self.movie_store.get_many(unique_seed_tmdb_ids)
         seed_metadata = {int(movie["tmdbId"]): movie for movie in seed_movies}
         ranked_candidate_scores = self.recommender.recommend(
-            unique_seed_tmdb_ids, seed_metadata, top_n=top_n * 2
+            unique_seed_tmdb_ids,
+            seed_metadata,
+            top_n=max(top_n + 8, top_n * 2),
         )
-        candidate_movies = await self.movie_store.get_many(
-            [item_id for item_id, _ in ranked_candidate_scores]
-        )
-        movies_by_tmdb_id = {int(movie["tmdbId"]): movie for movie in candidate_movies}
-        recommendations = []
+        if refresh_seed is not None:
+            ranked_candidate_scores = list(ranked_candidate_scores)
+            if ranked_candidate_scores:
+                offset = refresh_seed % len(ranked_candidate_scores)
+                ranked_candidate_scores = (
+                    ranked_candidate_scores[offset:] + ranked_candidate_scores[:offset]
+                )
         seen_tmdb_ids = set(unique_seed_tmdb_ids)
+        candidates = []
         for item_id, score in ranked_candidate_scores:
-            if item_id in seen_tmdb_ids or item_id not in movies_by_tmdb_id:
+            if item_id in seen_tmdb_ids:
                 continue
             seen_tmdb_ids.add(item_id)
-            recommendations.append(
-                {**movies_by_tmdb_id[item_id], "score": score, "rating": score}
-            )
-            if len(recommendations) == top_n:
+            candidates.append((item_id, score))
+            if len(candidates) == top_n:
                 break
-        return recommendations
+        return candidates
+
+    async def materialize_candidates(
+        self,
+        ranked_candidate_scores: list[tuple[int, float]],
+        offset: int,
+        page_size: int,
+    ) -> tuple[list[dict[str, Any]], int | None]:
+        """Enrich a page, skipping records that no longer have a poster."""
+        recommendations = []
+        cursor = offset
+        while (
+            cursor < len(ranked_candidate_scores) and len(recommendations) < page_size
+        ):
+            chunk = ranked_candidate_scores[cursor : cursor + page_size]
+            movies = await self.movie_store.get_many([item_id for item_id, _ in chunk])
+            movies_by_tmdb_id = {
+                int(movie["tmdbId"]): movie
+                for movie in movies
+                if "posterUrl" not in movie or movie.get("posterUrl")
+            }
+            for item_id, score in chunk:
+                movie = movies_by_tmdb_id.get(item_id)
+                if movie is not None:
+                    recommendations.append({**movie, "rankScore": score})
+                    if len(recommendations) == page_size:
+                        break
+            cursor += len(chunk)
+        return recommendations, cursor if cursor < len(
+            ranked_candidate_scores
+        ) else None

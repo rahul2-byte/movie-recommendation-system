@@ -70,13 +70,16 @@ def test_lambda_image_and_sam_template_configure_the_model_bundle_contract():
     assert "DYNAMODB_TABLE_NAME" not in template
     assert "dynamodb:" not in template
     assert "DYNAMODB_TABLE_NAME" not in preflight
-    assert 'MODEL_BUNDLE_PATH="${MODEL_BUNDLE_PATH:-backend/model_bundle/production}"' in preflight
+    assert (
+        'MODEL_BUNDLE_PATH="${MODEL_BUNDLE_PATH:-backend/model_bundle/production}"'
+        in preflight
+    )
     assert 'test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"' in preflight
     assert "--build-arg MODEL_BUNDLE_PATH=$MODEL_BUNDLE_PATH" in preflight
     assert preflight.index(
         'test -f "$MODEL_BUNDLE_PATH/bundle_manifest.json"'
     ) < preflight.index("trap cleanup EXIT")
     assert "production-release-v1" in release_validator
-    assert 'expected_quantization: str' in release_validator
+    assert "expected_quantization: str" in release_validator
     assert "movie-recs-bundle-int8-graph200-content256-v1.tar.zst" in release_packager
     assert "movie-recs-bundle-sq6-graph200-content256-v1.tar.zst" in release_packager

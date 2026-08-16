@@ -64,7 +64,10 @@ def _train(
         )
     result = json.loads(completed.stdout)
     trained_path = Path(result["artifact_dir"]).resolve()
-    if trained_path != artifact_dir.resolve() or not (trained_path / "manifest.json").is_file():
+    if (
+        trained_path != artifact_dir.resolve()
+        or not (trained_path / "manifest.json").is_file()
+    ):
         raise RuntimeError(f"Trainer returned an invalid artifact path: {trained_path}")
     return trained_path
 
@@ -86,7 +89,9 @@ def _build_bundle(
     )
 
 
-def _overlap(reference: Path, candidate: Path, seeds: list[int], limits: list[int]) -> dict[str, Any]:
+def _overlap(
+    reference: Path, candidate: Path, seeds: list[int], limits: list[int]
+) -> dict[str, Any]:
     """Compare deterministic recommendation overlap against the baseline."""
     reference_recommender = BundleRecommender.load(reference)
     candidate_recommender = BundleRecommender.load(candidate)
@@ -103,7 +108,9 @@ def _overlap(reference: Path, candidate: Path, seeds: list[int], limits: list[in
         union = reference_ids | candidate_ids
         result[str(limit)] = {
             "overlap": len(reference_ids & candidate_ids),
-            "jaccard": len(reference_ids & candidate_ids) / len(union) if union else 1.0,
+            "jaccard": len(reference_ids & candidate_ids) / len(union)
+            if union
+            else 1.0,
             "reference_count": len(reference_ids),
             "candidate_count": len(candidate_ids),
         }
@@ -123,9 +130,15 @@ def main() -> None:
     parser.add_argument("--ranker-artifact", type=Path, required=True)
     parser.add_argument("--reference-bundle", type=Path)
     parser.add_argument("--seed-tmdb-ids", type=int, nargs="*")
-    parser.add_argument("--graph-depths", type=int, nargs="+", default=[25, 50, 100, 150, 200, 300])
-    parser.add_argument("--content-dims", type=int, nargs="+", default=[32, 64, 128, 256, 384])
-    parser.add_argument("--quantizations", nargs="+", default=["none", "fp16", "int8", "sq6", "sq4"])
+    parser.add_argument(
+        "--graph-depths", type=int, nargs="+", default=[25, 50, 100, 150, 200, 300]
+    )
+    parser.add_argument(
+        "--content-dims", type=int, nargs="+", default=[32, 64, 128, 256, 384]
+    )
+    parser.add_argument(
+        "--quantizations", nargs="+", default=["none", "fp16", "int8", "sq6", "sq4"]
+    )
     args = parser.parse_args()
     if any(value < 1 for value in (*args.graph_depths, *args.content_dims)):
         parser.error("graph depths and content dimensions must be positive")
@@ -168,7 +181,9 @@ def main() -> None:
     for depth, graph_artifact in graph_artifacts.items():
         for dimension, content_artifact in content_artifacts.items():
             for quantization in args.quantizations:
-                bundle_dir = bundles_root / f"graph-{depth}-content-{dimension}-{quantization}"
+                bundle_dir = (
+                    bundles_root / f"graph-{depth}-content-{dimension}-{quantization}"
+                )
                 started = time.perf_counter()
                 _build_bundle(
                     bundle_dir,

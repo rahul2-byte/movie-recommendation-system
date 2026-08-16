@@ -41,7 +41,7 @@ const SheetOverlay = forwardRef<
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
 >(({ ...props }, ref) => (
   <SheetPrimitive.Overlay
-    className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm transition-all duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in"
+    className="fixed inset-0 z-50 bg-ink/75 backdrop-blur-sm transition-all duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in"
     {...props}
     ref={ref}
   />
@@ -49,7 +49,7 @@ const SheetOverlay = forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
 
 const sheetVariants = cva(
-  "fixed z-50 scale-100 gap-4 bg-surface p-card opacity-100 shadow-card border border-border",
+  "fixed z-50 scale-100 gap-4 border border-line bg-panel p-5 text-paper opacity-100 shadow-xl shadow-black/30",
   {
     variants: {
       position: {
@@ -105,7 +105,7 @@ const SheetContent = forwardRef<
       {...props}
     >
       {children}
-      <SheetPrimitive.Close className="absolute top-4 right-4 rounded-pill p-tight text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-surface-strong">
+      <SheetPrimitive.Close className="absolute right-4 top-4 grid size-9 place-items-center text-muted transition-colors hover:bg-ink hover:text-paper focus:outline-none disabled:pointer-events-none">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </SheetPrimitive.Close>
@@ -115,10 +115,7 @@ const SheetContent = forwardRef<
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({ ...props }: HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className="flex flex-col space-y-tight text-center sm:text-left"
-    {...props}
-  />
+  <div className="flex flex-col gap-2 text-center sm:text-left" {...props} />
 )
 SheetHeader.displayName = "SheetHeader"
 
@@ -136,7 +133,7 @@ const SheetTitle = forwardRef<
 >(({ ...props }, ref) => (
   <SheetPrimitive.Title
     ref={ref}
-    className="text-h3 font-semibold text-foreground"
+    className="font-display text-2xl text-paper"
     {...props}
   />
 ))
@@ -148,7 +145,7 @@ const SheetDescription = forwardRef<
 >(({ ...props }, ref) => (
   <SheetPrimitive.Description
     ref={ref}
-    className="text-body text-muted-foreground"
+    className="text-sm leading-6 text-muted"
     {...props}
   />
 ))

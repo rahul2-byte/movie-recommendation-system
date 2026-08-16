@@ -6,13 +6,13 @@ import { useRecommendationStore } from "@/features/recommendations/store"
 import { useRouter } from "next/navigation"
 
 export function useRecommendations() {
-  const { setRecommendations, setError } = useRecommendationStore()
+  const { setRecommendationPage, setError } = useRecommendationStore()
   const router = useRouter()
 
   return useMutation({
     mutationFn: fetchRecommendations,
     onSuccess: (data) => {
-      setRecommendations(data.recommendations)
+      setRecommendationPage(data)
       router.push("/recommendations")
     },
     onError: (error) => {

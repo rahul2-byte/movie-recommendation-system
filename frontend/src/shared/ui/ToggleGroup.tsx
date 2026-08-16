@@ -19,7 +19,12 @@ export function ToggleGroupItem({
   return (
     <button
       onClick={onClick}
-      className={cn("tag", active ? "tag-selected" : "tag-default")}
+      className={cn(
+        "min-h-10 border px-4 text-sm font-semibold transition-colors",
+        active
+          ? "border-crimson bg-crimson text-white"
+          : "border-line bg-panel text-muted hover:text-paper"
+      )}
     >
       {children}
     </button>

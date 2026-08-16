@@ -1,26 +1,23 @@
 import Link from "next/link"
-import { Button } from "@/shared/ui/Button"
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-gutter text-center space-y-stack">
-      <div className="space-y-tight">
-        <h1 className="text-display font-semibold text-muted-foreground/20 select-none">
-          404
-        </h1>
-        <p className="text-h2 font-semibold text-primary">Scene not found</p>
-      </div>
-
-      <p className="max-w-narrow text-body text-muted-foreground">
-        The page you are looking for has been cut from the final edit or moved
-        to a new reel.
+    <main className="mx-auto flex min-h-[70vh] w-full max-w-7xl flex-col justify-center px-6 py-20 sm:px-10">
+      <span className="text-xs font-bold uppercase tracking-[0.18em] text-crimson">
+        404 · Scene missing
+      </span>
+      <h1 className="mt-3 font-display text-5xl text-paper sm:text-7xl">
+        That page isn&apos;t in this cut.
+      </h1>
+      <p className="mt-5 max-w-xl text-lg leading-8 text-muted">
+        The link may have moved, or the movie is no longer available.
       </p>
-
-      <Link href="/">
-        <Button size="lg" variant="outline">
-          Return to home
-        </Button>
+      <Link
+        href="/"
+        className="mt-8 inline-flex min-h-11 w-fit items-center bg-crimson px-5 text-sm font-bold text-white transition-colors hover:bg-crimson-bright"
+      >
+        Return to discover
       </Link>
-    </div>
+    </main>
   )
 }

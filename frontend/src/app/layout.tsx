@@ -1,32 +1,27 @@
 import "./globals.css"
 import type { Metadata, Viewport } from "next"
-import { Inter, Playfair_Display } from "next/font/google"
+import { Inter } from "next/font/google"
 import { Header } from "@/shared/ui/layout/Header"
 import { Footer } from "@/shared/ui/layout/Footer"
 import { Providers } from "@/shared/ui/Providers"
+import { PageTransition } from "@/shared/ui/motion/PageTransition"
 
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-})
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-serif",
+  variable: "--font-inter",
   display: "swap",
 })
 
 export const metadata: Metadata = {
-  title: "M99 | Premium Cinema Curation",
+  title: "M99 | Movie Recommendation System",
   description:
-    "Discover films based on mood, tone, and cinematic DNA. Your personal digital film archive.",
+    "Choose movies you love and discover a ranked lineup for your next watch.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
   ),
   openGraph: {
     title: "M99 Cinema",
-    description: "AI-Powered Movie Recommendations",
+    description: "An end-to-end movie recommendation and discovery project.",
     type: "website",
     locale: "en_US",
   },
@@ -37,7 +32,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#121212",
+  themeColor: "#080808",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -51,13 +46,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${playfair.variable} font-sans selection:bg-accent selection:text-black`}
+        className={`${inter.variable} font-sans selection:bg-accent selection:text-white`}
       >
-        <div className="grain-overlay" />
         <Providers>
-          <div className="flex min-h-screen flex-col bg-black text-white">
+          <div className="flex min-h-screen flex-col overflow-x-clip">
             <Header />
-            <main className="w-full flex-1">{children}</main>
+            <main className="w-full flex-1">
+              <PageTransition>{children}</PageTransition>
+            </main>
             <Footer />
           </div>
         </Providers>

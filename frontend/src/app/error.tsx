@@ -12,38 +12,43 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    // Log the error to an observability provider (e.g., Sentry)
     console.error("Uncaught App Error:", error)
   }, [error])
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6 text-center">
-      <div className="mb-6 rounded-full bg-error/10 p-4 text-error">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-ink p-6 text-center">
+      <div className="mb-6 grid size-20 place-items-center rounded-full bg-danger/10 text-danger">
         <AlertCircle className="h-12 w-12" />
       </div>
 
-      <h1 className="mb-2 font-serif text-3xl text-white">
+      <h1 className="mb-2 font-display text-3xl text-paper">
         Something went sideways.
       </h1>
-      <p className="mb-8 max-w-md text-text-secondary">
-        An unexpected error occurred in our cinematic engine. We have been
-        notified and are looking into it.
+      <p className="mb-8 max-w-md text-muted">
+        An unexpected error interrupted this page. Try again, or return home and
+        continue browsing.
       </p>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button onClick={() => reset()} className="btn btn-primary">
+        <button
+          onClick={() => reset()}
+          className="inline-flex min-h-11 items-center justify-center gap-2 bg-crimson px-4 text-sm font-bold text-white transition-colors hover:bg-crimson-bright"
+        >
           <RotateCcw className="h-4 w-4" />
           Try Again
         </button>
 
-        <Link href="/" className="btn btn-secondary">
+        <Link
+          href="/"
+          className="inline-flex min-h-11 items-center justify-center gap-2 border border-line bg-panel px-4 text-sm font-bold text-paper transition-colors hover:border-muted"
+        >
           <Home className="h-4 w-4" />
           Back to Home
         </Link>
       </div>
 
       {error.digest && (
-        <p className="mt-8 text-xs text-text-muted">Error ID: {error.digest}</p>
+        <p className="mt-8 text-xs text-dim">Error ID: {error.digest}</p>
       )}
     </div>
   )

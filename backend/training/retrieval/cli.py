@@ -170,7 +170,9 @@ def main() -> None:
         else training_config.output_dir / run_id
     )
     if artifact_dir.exists():
-        raise FileExistsError(f"Refusing to overwrite artifact directory: {artifact_dir}")
+        raise FileExistsError(
+            f"Refusing to overwrite artifact directory: {artifact_dir}"
+        )
     metadata = {
         "training_config_sha256": sha256(args.config),
         "dataset_manifest_sha256": sha256(version_dir / "manifest.json"),

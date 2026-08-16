@@ -9,3 +9,9 @@ export async function fetchRecommendations(
     body: JSON.stringify(payload),
   })
 }
+
+export function fetchRecommendationPage(sessionId: string, offset: number) {
+  return apiClient<RecommendResponse>(
+    `/recommend/${encodeURIComponent(sessionId)}?offset=${offset}`
+  )
+}

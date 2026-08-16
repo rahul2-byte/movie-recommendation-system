@@ -4,13 +4,19 @@ import {
   getNewReleases,
 } from "@/features/movies/api"
 import { MovieRow } from "./MovieRow"
+import type { Movie } from "../types/movie"
 
 export async function TrendingMoviesRow() {
-  const movies = await getTrendingMovies(20)
+  let movies: Movie[] = []
+  try {
+    movies = await getTrendingMovies(20)
+  } catch {
+    movies = []
+  }
   return (
     <MovieRow
       title="Trending This Week"
-      subtitle="Curated by our algorithms"
+      subtitle="What people are watching"
       movies={movies || []}
       category="trending"
     />
@@ -18,11 +24,16 @@ export async function TrendingMoviesRow() {
 }
 
 export async function PopularMoviesRow() {
-  const movies = await getPopularMovies(20)
+  let movies: Movie[] = []
+  try {
+    movies = await getPopularMovies(20)
+  } catch {
+    movies = []
+  }
   return (
     <MovieRow
       title="Popular Hits"
-      subtitle="Most watched globally"
+      subtitle="Audience favourites"
       movies={movies || []}
       category="popular"
     />
@@ -30,11 +41,16 @@ export async function PopularMoviesRow() {
 }
 
 export async function NewReleasesRow() {
-  const movies = await getNewReleases(20)
+  let movies: Movie[] = []
+  try {
+    movies = await getNewReleases(20)
+  } catch {
+    movies = []
+  }
   return (
     <MovieRow
       title="New Releases"
-      subtitle="Fresh from the cinema"
+      subtitle="Recently released"
       movies={movies || []}
       category="new"
     />

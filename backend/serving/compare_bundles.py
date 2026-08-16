@@ -15,13 +15,19 @@ def _bundle_bytes(root: Path) -> int:
     return sum(path.stat().st_size for path in root.rglob("*") if path.is_file())
 
 
-def _recommend(root: Path, seed_ids: list[int], limit: int) -> tuple[float, list[int], dict]:
+def _recommend(
+    root: Path, seed_ids: list[int], limit: int
+) -> tuple[float, list[int], dict]:
     """Load a bundle and produce one deterministic recommendation list."""
     started = time.perf_counter()
     recommender = BundleRecommender.load(root)
     load_ms = (time.perf_counter() - started) * 1_000
     recommendations = recommender.recommend(seed_ids, {}, top_n=limit)
-    return load_ms, [item_id for item_id, _ in recommendations], recommender.bundle.manifest
+    return (
+        load_ms,
+        [item_id for item_id, _ in recommendations],
+        recommender.bundle.manifest,
+    )
 
 
 def main() -> None:
