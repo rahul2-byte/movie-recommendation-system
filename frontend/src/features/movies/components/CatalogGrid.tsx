@@ -1,46 +1,14 @@
-"use client"
-
 import { Movie } from "@/features/movies/types/movie"
 import { MovieCard } from "./MovieCard"
-import { useState } from "react"
-import dynamic from "next/dynamic"
-
-const MovieDetailModal = dynamic(
-  () => import("./MovieDetailModal").then((mod) => mod.MovieDetailModal),
-  {
-    ssr: false,
-  }
-)
 
 export function CatalogGrid({ movies }: { movies: Movie[] }) {
-  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null)
-  const [selectedTmdbId, setSelectedTmdbId] = useState<number | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-
-  const handleMovieClick = (movieId: number, tmdbId: number) => {
-    setSelectedMovieId(movieId)
-    setSelectedTmdbId(tmdbId)
-    setIsModalOpen(true)
-  }
-
   return (
-    <>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {movies.map((movie, index) => (
-          <MovieCard
-            key={`${movie.movieId}-${index}`}
-            movie={movie}
-            index={index}
-            onClick={() => handleMovieClick(movie.movieId, movie.tmdbId)}
-          />
+    <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-5 xl:grid-cols-6">
+      {movies
+        .filter((movie) => movie.posterUrl)
+        .map((movie) => (
+          <MovieCard key={movie.tmdbId} movie={movie} />
         ))}
-      </div>
-      <MovieDetailModal
-        movieId={selectedMovieId}
-        tmdbId={selectedTmdbId}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </>
+    </div>
   )
 }

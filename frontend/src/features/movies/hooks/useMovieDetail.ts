@@ -1,33 +1,19 @@
 import { useQuery } from "@tanstack/react-query"
 import { Movie } from "../types/movie"
-import { env } from "@/shared/config/env"
-
-const API_BASE = env.NEXT_PUBLIC_API_BASE
+import { getMovieDetails } from "../api/movies"
 
 export async function fetchMovieDetail(
   movieId: number | null,
   tmdbId?: number | null
 ): Promise<Movie | null> {
-  let url = ""
-  if (movieId && movieId > 0) {
-    url = `${API_BASE}/api/v1/movies/${movieId}`
-  } else if (tmdbId) {
-    url = `${API_BASE}/api/v1/movies/tmdb/${tmdbId}`
-  } else {
-    return null
-  }
-
+  const id = movieId && movieId > 0 ? movieId : tmdbId
+  if (!id) return null
   try {
-    const res = await fetch(url)
-    if (!res.ok) {
-      console.error(
-        `Failed to fetch movie details. url: ${url}, status: ${res.status}`
-      )
-      return null
-    }
-    return res.json()
+    return await getMovieDetails(id)
   } catch (error) {
-    console.error(`Error fetching movie details. url: ${url}, error: ${error}`)
+    console.error(
+      `Error fetching movie details. tmdbId: ${id}, error: ${error}`
+    )
     return null
   }
 }

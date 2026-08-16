@@ -1,69 +1,98 @@
 "use client"
 
-import Image from "next/image"
 import type { Movie } from "@/features/movies/types/movie"
-import { LazyMotion, domAnimation, m } from "framer-motion"
+import Link from "next/link"
+import { Check, Star } from "lucide-react"
+import { MovieArtwork } from "./MovieArtwork"
 
 interface MovieCardProps {
   movie: Movie
-  index?: number
   onClick?: () => void
   selected?: boolean
+  variant?: "portrait" | "landscape"
 }
 
 export function MovieCard({
   movie,
-  index = 0,
   onClick,
   selected = false,
+  variant = "portrait",
 }: MovieCardProps) {
-  return (
-    <LazyMotion features={domAnimation} strict>
-      <m.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
-        className={`movie-card group ${selected ? "movie-card-selected" : ""}`}
-        onClick={onClick}
+  const landscape = variant === "landscape"
+  const content = (
+    <>
+      <div
+        className={`relative overflow-hidden border border-line/70 bg-panel transition duration-300 group-hover:border-muted group-hover:shadow-2xl ${
+          landscape ? "aspect-video" : "aspect-[2/3]"
+        }`}
       >
-        <div
-          className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-[rgba(255,255,255,0.03)]"
-          aria-label={`View details for ${movie.title}`}
-          role="button"
-        >
-          {movie.posterUrl ? (
-            <Image
-              src={movie.posterUrl}
-              alt={movie.title}
-              fill
-              className="movie-card-poster transition-transform duration-500 group-hover:scale-110"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 15vw"
-              priority={index < 4}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-text-muted uppercase tracking-widest border border-white/10 rounded-md">
-              No Poster
-            </div>
-          )}
-
-          {/* Hover Overlay with Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-            <h3 className="text-lg font-serif text-white capitalize leading-tight mb-1 drop-shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-              {movie.title}
-            </h3>
-            <div className="flex items-center gap-2 text-xs text-gray-300 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 delay-75">
-              <span>{movie.year}</span>
-              <span>•</span>
-              <span className="flex items-center gap-1 text-accent">
-                <span>★</span>
-                <span>{movie.rating?.toFixed(1) ?? "—"}</span>
-              </span>
-            </div>
+        <MovieArtwork
+          title={movie.title}
+          posterUrl={movie.posterUrl}
+          backdropUrl={movie.backdropUrl}
+          variant={variant === "landscape" ? "backdrop" : "poster"}
+          sizes={
+            variant === "landscape"
+              ? "(max-width: 640px) 82vw, (max-width: 1024px) 46vw, 30vw"
+              : "(max-width: 640px) 46vw, (max-width: 1024px) 30vw, 16vw"
+          }
+        />
+        {landscape && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-ink via-ink/45 to-transparent" />
+        )}
+        {selected && (
+          <div className="absolute right-3 top-3 grid size-7 place-items-center rounded-full bg-crimson text-white shadow-lg">
+            <Check className="size-4" aria-label="Selected" />
           </div>
-
-          {selected && <div className="movie-card-checkmark z-10">✓</div>}
+        )}
+      </div>
+      <div
+        className={landscape ? "absolute inset-x-0 bottom-0 z-10 p-4" : "pt-3"}
+      >
+        <h3
+          title={movie.title}
+          className={`truncate text-sm font-semibold ${
+            landscape ? "text-paper" : "text-paper"
+          }`}
+        >
+          {movie.title}
+        </h3>
+        <div
+          className={`mt-1 flex items-center justify-between text-xs ${landscape ? "text-muted" : "text-dim"}`}
+        >
+          <span>{movie.year ?? "Year unknown"}</span>
+          {movie.rating != null && (
+            <span className="inline-flex items-center gap-1 text-crimson">
+              <Star aria-hidden="true" className="h-3.5 w-3.5 fill-current" />
+              {movie.rating.toFixed(1)}
+            </span>
+          )}
         </div>
-      </m.div>
-    </LazyMotion>
+      </div>
+    </>
+  )
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={`group relative block w-full text-left ${selected ? "ring-2 ring-crimson ring-offset-2 ring-offset-ink" : ""}`}
+        onClick={onClick}
+        aria-pressed={selected || undefined}
+        aria-label={`${selected ? "Remove" : "Select"} ${movie.title}`}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <Link
+      href={`/movies/${movie.tmdbId}`}
+      className={`group relative block ${selected ? "ring-2 ring-crimson ring-offset-2 ring-offset-ink" : ""}`}
+      aria-label={`View details for ${movie.title}`}
+    >
+      {content}
+    </Link>
   )
 }

@@ -17,12 +17,14 @@ class RecommendRequest(BaseModel):
 
     moods: list[MoodName] = Field(
         default_factory=list,
-        description="Optional mood preferences used as a soft ranking signal.",
+        description="Compatibility field; the current ranker does not use moods.",
     )
 
     limit: int = Field(
-        default=99, ge=1, le=150, description="Number of recommendations"
+        default=200, ge=1, le=200, description="Number of recommendations"
     )
+
+    refresh_seed: int | None = Field(default=None, ge=0)
 
 
 class MovieOut(BaseModel):
@@ -34,10 +36,13 @@ class MovieOut(BaseModel):
     genres: list[str]
     posterUrl: str | None
     rating: float | None
-    score: float | None = None
+    rankScore: float | None = None
 
 
 class RecommendResponse(BaseModel):
     """Represent the ranked movie records returned to the client."""
 
     recommendations: list[MovieOut]
+    sessionId: str
+    nextOffset: int | None
+    hasMore: bool

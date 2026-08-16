@@ -74,7 +74,9 @@ def main() -> None:
     comparison = _validate_bundle(args.comparison_dir.resolve(), "sq6")
     if production["dataset_version"] != comparison["dataset_version"]:
         raise ValueError("Production and comparison bundles use different datasets")
-    print(json.dumps({"production": production, "comparison": comparison}, sort_keys=True))
+    print(
+        json.dumps({"production": production, "comparison": comparison}, sort_keys=True)
+    )
 
 
 if __name__ == "__main__":

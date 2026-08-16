@@ -182,6 +182,4 @@ def test_bundle_compacts_missing_graph_neighbors(tmp_path, source_artifacts):
         bundle_dir / "retrievers" / "item_graph" / "neighbor_positions.npy"
     )
     assert positions.tolist() == [[1, 65535], [65535, 0]]
-    assert load_model_bundle(bundle_dir).item_graph.retrieve_one(101, 2) == [
-        (202, 1.0)
-    ]
+    assert load_model_bundle(bundle_dir).item_graph.retrieve_one(101, 2) == [(202, 1.0)]

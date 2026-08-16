@@ -4,6 +4,7 @@ from typing import Any
 
 from application.lifecycle import get_movie_store
 from fastapi import APIRouter, HTTPException, Query
+from infrastructure.metadata.catalog_service import fetch_similar_movies
 
 router = APIRouter(prefix="/movies", tags=["Movies"])
 
@@ -11,11 +12,12 @@ router = APIRouter(prefix="/movies", tags=["Movies"])
 @router.get("/search")
 async def movie_search(
     q: str = Query(..., min_length=2),
-    limit: int = Query(10, ge=5, le=20),
+    limit: int = Query(24, ge=5, le=50),
+    page: int = Query(1, ge=1, le=500),
 ) -> list[dict]:
     """Search the operational metadata store by title or text query."""
     movie_store = get_movie_store()
-    return await movie_store.search(q, limit)
+    return await movie_store.search(q, limit, page)
 
 
 @router.get("/{movie_id}")
@@ -37,3 +39,13 @@ async def get_movie_by_tmdb_id(tmdb_id: int) -> dict[str, Any]:
     if movie is None:
         raise HTTPException(status_code=404, detail="Movie not found")
     return movie
+
+
+@router.get("/{tmdb_id}/similar")
+async def get_similar_movies(
+    tmdb_id: int,
+    limit: int = Query(24, ge=5, le=50),
+    page: int = Query(1, ge=1, le=500),
+) -> list[dict]:
+    """Return display-ready movies related to one TMDB title."""
+    return await fetch_similar_movies(tmdb_id, limit, page)

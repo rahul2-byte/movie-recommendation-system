@@ -4,8 +4,6 @@ import { MovieCard } from "./MovieCard"
 import { Carousel } from "@/shared/ui/Carousel"
 import type { Movie } from "@/features/movies/types/movie"
 import { MovieRowSkeleton } from "./MovieRowSkeleton"
-import { MovieDetailModal } from "./MovieDetailModal"
-import { useState } from "react"
 import Link from "next/link"
 
 interface MovieRowProps {
@@ -13,6 +11,8 @@ interface MovieRowProps {
   subtitle?: string
   movies: Movie[] | null | undefined
   category?: string
+  showViewAll?: boolean
+  variant?: "portrait" | "landscape"
 }
 
 export function MovieRow({
@@ -20,23 +20,9 @@ export function MovieRow({
   subtitle = "Curated by our algorithms",
   movies,
   category = "trending",
+  showViewAll = true,
+  variant = "portrait",
 }: MovieRowProps) {
-  const [selectedMovieId, setSelectedMovieId] = useState<number | null>(null)
-  const [selectedTmdbId, setSelectedTmdbId] = useState<number | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-
-  const handleMovieClick = (movieId: number, tmdbId: number) => {
-    setSelectedMovieId(movieId)
-    setSelectedTmdbId(tmdbId)
-    setIsModalOpen(true)
-  }
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
-    setSelectedMovieId(null)
-    setSelectedTmdbId(null)
-  }
-
   if (movies === undefined || movies === null) {
     return <MovieRowSkeleton title={title} />
   }
@@ -46,45 +32,45 @@ export function MovieRow({
   }
 
   return (
-    <>
-      <section className="section">
-        <div className="container">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
-            <div className="flex flex-col gap-2">
-              <span className="label-accent">{subtitle}</span>
-              <h2 className="heading-section">{title}</h2>
-            </div>
-
-            <Link
-              href={`/catalog?category=${category}`}
-              className="text-sm font-medium uppercase tracking-wider text-accent flex items-center gap-1 hover:gap-2 transition-all"
-            >
-              View All <span>→</span>
-            </Link>
+    <section className="py-12 first:pt-16 sm:py-16">
+      <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-[0.16em] text-crimson">
+              {subtitle}
+            </span>
+            <h2 className="mt-2 font-display text-3xl leading-none tracking-[-0.035em] text-paper sm:text-4xl">
+              {title}
+            </h2>
           </div>
 
-          <Carousel>
-            {movies.map((movie, index) => (
+          {showViewAll && (
+            <Link
+              href={`/catalog?category=${category}`}
+              className="shrink-0 text-sm font-bold text-crimson transition-colors hover:text-paper"
+            >
+              View all <span aria-hidden="true">→</span>
+            </Link>
+          )}
+        </div>
+
+        <Carousel>
+          {movies
+            .filter((movie) => movie.posterUrl)
+            .map((movie) => (
               <div
                 key={movie.tmdbId}
-                className="flex-none w-[calc(50%-1rem)] md:w-[calc(33.33%-1.33rem)] lg:w-[calc(25%-1.5rem)] aspect-[2/3]"
+                className={`shrink-0 ${
+                  variant === "portrait"
+                    ? "w-[42vw] max-w-[190px] sm:w-[180px] lg:w-[190px]"
+                    : "w-[78vw] sm:w-[400px]"
+                }`}
               >
-                <MovieCard
-                  movie={movie}
-                  index={index}
-                  onClick={() => handleMovieClick(movie.movieId, movie.tmdbId)}
-                />
+                <MovieCard movie={movie} variant={variant} />
               </div>
             ))}
-          </Carousel>
-        </div>
-      </section>
-      <MovieDetailModal
-        movieId={selectedMovieId}
-        tmdbId={selectedTmdbId}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
-    </>
+        </Carousel>
+      </div>
+    </section>
   )
 }

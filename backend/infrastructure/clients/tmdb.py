@@ -51,7 +51,7 @@ class TMDBClient(BaseAPIClient):
             return self._cache[cache_key]
 
         url = f"{self.base_url}/movie/{tmdb_id}"
-        params = {"append_to_response": "keywords,credits"}
+        params = {"append_to_response": "keywords,credits,videos"}
 
         try:
             # Ensure session is active (Lazy Start)

@@ -5,7 +5,6 @@ export interface Movie {
   year: number | null
   genres: string[]
   posterUrl: string | null
-  // Extended fields for "Netflix" modal
   backdropUrl?: string | null
   overview?: string | null
   tagline?: string | null
@@ -15,9 +14,14 @@ export interface Movie {
   voteCountTmdb?: number | null
   cast?: string[]
   director?: string | null
-  score?: number // Recommendation score
-  retrieval_sources?: string[]
-  // Legacy/Alternate field mapping
+  trailerUrl?: string | null
+  voteCount?: number | null
+  rankScore?: number
   rating?: number | null
   popularity?: number
+}
+
+export interface Genre {
+  id: number
+  name: string
 }

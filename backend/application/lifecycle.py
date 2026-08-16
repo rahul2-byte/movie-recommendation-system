@@ -6,10 +6,13 @@ from observability.logging import get_logger
 from serving.bundle_recommender import BundleRecommender
 from serving.recommendation_pipeline import BundleRecommendationPipeline
 
+from application.recommendation_sessions import RecommendationSessionStore
+
 log = get_logger(__name__)
 
 _pipeline = None
 _movie_store = None
+_recommendation_sessions = None
 
 
 def get_movie_store() -> MovieStore:
@@ -40,6 +43,17 @@ def get_pipeline() -> BundleRecommendationPipeline:
                 BundleRecommender.load(bundle_dir), store
             )
             log.info("Lifecycle: Bundle-backed pipeline fully initialized.")
-            return _pipeline
+        else:
+            raise RuntimeError(
+                "MODEL_BUNDLE_DIR is required for recommendation serving"
+            )
 
-        raise RuntimeError("MODEL_BUNDLE_DIR is required for recommendation serving")
+    return _pipeline
+
+
+def get_recommendation_sessions() -> RecommendationSessionStore:
+    """Create or return the short-lived progressive-loading session store."""
+    global _recommendation_sessions
+    if _recommendation_sessions is None:
+        _recommendation_sessions = RecommendationSessionStore()
+    return _recommendation_sessions

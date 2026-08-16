@@ -35,18 +35,24 @@ Validation requires one to five positive TMDB IDs. `limit` is bounded from 1 to 
       "year": 1999,
       "genres": ["Drama"],
       "posterUrl": "https://image.tmdb.org/t/p/w342/example.jpg",
-      "rating": 0.921,
-      "score": 0.921
+      "rating": 7.8,
+      "rankScore": 0.921
     }
   ]
 }
 ```
 
-The current pipeline sets both `score` and `rating` to the ranker score. Consumers should not interpret `rating` as the TMDB vote average in this endpoint.
+`rating` is the TMDB vote average. `rankScore` is the raw LightGBM ordering
+score; it is not a probability, confidence value, similarity percentage, or
+user-facing star rating.
 
 ## Frontend flow
 
-`frontend/src/app/setup/page.tsx` collects five selected movies. `fetchRecommendations()` posts to `/recommend`; the shared API client prefixes `/api/v1`; React Query stores the result in the Zustand recommendation store; `/recommendations` renders the result grid.
+The homepage recommendation builder collects one to five selected movies.
+`fetchRecommendations()` posts to `/recommend`; the shared API client prefixes
+`/api/v1`; React Query stores the result in the Zustand recommendation store;
+`/recommendations` renders the result grid. `/setup` remains a compatibility
+redirect to the homepage builder.
 
 Catalog routes use frontend revalidation hints, but recommendation calls are request-driven and are not statically cached.
 

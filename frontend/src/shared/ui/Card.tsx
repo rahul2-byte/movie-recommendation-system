@@ -6,7 +6,7 @@ import { cva } from "class-variance-authority"
 import { cn } from "@/shared/lib/utils"
 
 const cardVariants = cva(
-  "rounded-card border border-border bg-surface text-foreground shadow-card"
+  "border border-line bg-panel text-paper shadow-lg shadow-black/10"
 )
 
 const Card = forwardRef<HTMLDivElement, ComponentProps<"div">>(
@@ -16,7 +16,7 @@ const Card = forwardRef<HTMLDivElement, ComponentProps<"div">>(
 )
 Card.displayName = "Card"
 
-const cardHeaderVariants = cva("flex flex-col space-y-tight p-card")
+const cardHeaderVariants = cva("flex flex-col gap-2 p-5")
 
 const CardHeader = forwardRef<HTMLDivElement, ComponentProps<"div">>(
   ({ className, ...props }, ref) => (
@@ -25,7 +25,7 @@ const CardHeader = forwardRef<HTMLDivElement, ComponentProps<"div">>(
 )
 CardHeader.displayName = "CardHeader"
 
-const cardTitleVariants = cva("text-h3 font-semibold leading-h3")
+const cardTitleVariants = cva("font-display text-2xl leading-tight text-paper")
 
 const CardTitle = forwardRef<HTMLParagraphElement, ComponentProps<"p">>(
   ({ className, ...props }, ref) => (
@@ -34,7 +34,7 @@ const CardTitle = forwardRef<HTMLParagraphElement, ComponentProps<"p">>(
 )
 CardTitle.displayName = "CardTitle"
 
-const cardDescriptionVariants = cva("text-body text-muted-foreground")
+const cardDescriptionVariants = cva("text-sm leading-6 text-muted")
 
 const CardDescription = forwardRef<HTMLParagraphElement, ComponentProps<"p">>(
   ({ className, ...props }, ref) => (
@@ -47,7 +47,7 @@ const CardDescription = forwardRef<HTMLParagraphElement, ComponentProps<"p">>(
 )
 CardDescription.displayName = "CardDescription"
 
-const cardContentVariants = cva("p-card pt-0")
+const cardContentVariants = cva("p-5 pt-0")
 
 const CardContent = forwardRef<HTMLDivElement, ComponentProps<"div">>(
   ({ className, ...props }, ref) => (
@@ -60,7 +60,7 @@ const CardContent = forwardRef<HTMLDivElement, ComponentProps<"div">>(
 )
 CardContent.displayName = "CardContent"
 
-const cardFooterVariants = cva("flex items-center p-card pt-0")
+const cardFooterVariants = cva("flex items-center p-5 pt-0")
 
 const CardFooter = forwardRef<HTMLDivElement, ComponentProps<"div">>(
   ({ className, ...props }, ref) => (

@@ -2,6 +2,13 @@ import pytest
 from application import lifecycle
 
 
+def test_lifecycle_returns_cached_pipeline(monkeypatch):
+    pipeline = object()
+    monkeypatch.setattr(lifecycle, "_pipeline", pipeline)
+
+    assert lifecycle.get_pipeline() is pipeline
+
+
 def test_lifecycle_uses_bundle_pipeline_when_bundle_dir_is_configured(monkeypatch):
     created = {}
 

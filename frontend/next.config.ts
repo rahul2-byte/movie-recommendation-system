@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactCompiler: true,
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
+    qualities: [70, 75],
     remotePatterns: [
       {
         protocol: "https",

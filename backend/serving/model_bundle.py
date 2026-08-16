@@ -68,7 +68,9 @@ def _tmdb_ids_from_mapping(mapping_path: Path) -> np.ndarray:
         if tmdb_id <= 0:
             raise ModelBundleError(f"TMDB ID map contains invalid ID: {mapping_path}")
         if tmdb_id > np.iinfo(np.uint32).max:
-            raise ModelBundleError(f"TMDB ID exceeds uint32 storage range: {mapping_path}")
+            raise ModelBundleError(
+                f"TMDB ID exceeds uint32 storage range: {mapping_path}"
+            )
         ids[position] = tmdb_id
     return ids
 
@@ -100,9 +102,9 @@ def _write_compact_graph(source: Path, destination: Path) -> dict[str, object]:
         raise ModelBundleError(f"Invalid item-graph neighbor positions: {source}")
     if np.any(positions < -1):
         raise ModelBundleError(f"Invalid negative item-graph position: {source}")
-    compact = np.where(
-        positions < 0, _MISSING_NEIGHBOR_POSITION, positions
-    ).astype(np.uint16)
+    compact = np.where(positions < 0, _MISSING_NEIGHBOR_POSITION, positions).astype(
+        np.uint16
+    )
     destination.parent.mkdir(parents=True, exist_ok=True)
     np.save(destination, compact)
     return {
@@ -112,7 +114,9 @@ def _write_compact_graph(source: Path, destination: Path) -> dict[str, object]:
     }
 
 
-def _write_vector_index(source: Path, destination: Path, quantization: str) -> dict[str, object]:
+def _write_vector_index(
+    source: Path, destination: Path, quantization: str
+) -> dict[str, object]:
     """Write an exact or scalar-quantized FAISS index from source embeddings."""
     if quantization == "none":
         _copy(source / "faiss.index", destination)
@@ -120,8 +124,12 @@ def _write_vector_index(source: Path, destination: Path, quantization: str) -> d
         return {"mode": "none", "index_type": type(index).__name__}
     embeddings_path = source / "item_embeddings.npy"
     if not embeddings_path.is_file():
-        raise FileNotFoundError(f"Quantization requires source embeddings: {embeddings_path}")
-    embeddings = np.asarray(np.load(embeddings_path, allow_pickle=False), dtype=np.float32)
+        raise FileNotFoundError(
+            f"Quantization requires source embeddings: {embeddings_path}"
+        )
+    embeddings = np.asarray(
+        np.load(embeddings_path, allow_pickle=False), dtype=np.float32
+    )
     if embeddings.ndim != 2 or not np.isfinite(embeddings).all():
         raise ModelBundleError(f"Invalid source embeddings: {embeddings_path}")
     source_index = faiss.read_index(str(source / "faiss.index"))
@@ -236,7 +244,9 @@ def build_model_bundle(
                 _copy_compressed_joblib(
                     source / "vectorizer.joblib", destination / "vectorizer.joblib"
                 )
-                _copy_compressed_joblib(source / "svd.joblib", destination / "svd.joblib")
+                _copy_compressed_joblib(
+                    source / "svd.joblib", destination / "svd.joblib"
+                )
             (destination / "quantization.json").write_text(
                 json.dumps(quantization_metadata, sort_keys=True) + "\n",
                 encoding="utf-8",
@@ -255,7 +265,9 @@ def build_model_bundle(
 
         root_manifest = {
             "schema_version": (
-                _BUNDLE_SCHEMA_VERSION if quantization == "none" else _QUANTIZED_BUNDLE_SCHEMA_VERSION
+                _BUNDLE_SCHEMA_VERSION
+                if quantization == "none"
+                else _QUANTIZED_BUNDLE_SCHEMA_VERSION
             ),
             "dataset_version": dataset_versions.pop(),
             "id_schema_version": _ID_SCHEMA_VERSION,

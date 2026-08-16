@@ -4,7 +4,9 @@ import pandas as pd
 from data_pipeline.parquet_io import write_parquet
 
 
-def test_write_parquet_creates_compressed_file_without_temporary_artifact(tmp_path: Path):
+def test_write_parquet_creates_compressed_file_without_temporary_artifact(
+    tmp_path: Path,
+):
     path = tmp_path / "nested" / "movies.parquet"
     frame = pd.DataFrame({"tmdb_id": [603], "title": ["The Matrix"]})
 

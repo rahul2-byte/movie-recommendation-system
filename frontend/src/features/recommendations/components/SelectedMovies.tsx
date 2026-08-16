@@ -1,55 +1,75 @@
 "use client"
 
+import Image from "next/image"
+import { Trash2, X } from "lucide-react"
 import { useRecommendationStore } from "@/features/recommendations/store"
-import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion"
-import { Trash2 } from "lucide-react"
-import { MovieCard } from "@/features/movies/components/MovieCard"
 
 export function SelectedMovies() {
   const { selectedMovies, removeMovie, clearMovies } = useRecommendationStore()
 
-  if (selectedMovies.length === 0) return null
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="heading-section text-2xl">Your Selection</h2>
-        <button
-          onClick={clearMovies}
-          className="text-sm text-text-muted hover:text-error transition-colors flex items-center gap-2"
-        >
-          <Trash2 className="w-4 h-4" /> Clear All
-        </button>
+    <div className="mt-5 border border-line bg-ink/45 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <strong className="block text-sm text-paper">Your film strip</strong>
+          <span className="text-xs text-dim">
+            {selectedMovies.length}/5 selected
+          </span>
+        </div>
+        {selectedMovies.length > 0 && (
+          <button
+            type="button"
+            onClick={clearMovies}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-muted hover:text-paper"
+          >
+            <Trash2 className="h-4 w-4" /> Clear
+          </button>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        <LazyMotion features={domAnimation} strict>
-          <AnimatePresence>
-            {selectedMovies.map((movie, index) => (
-              <m.div
-                key={movie.tmdbId}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                layout
-              >
-                <MovieCard
-                  movie={{
-                    ...movie,
-                    movieId: movie.tmdbId,
-                    year: null,
-                    genres: [],
-                    posterUrl: movie.posterUrl ?? null,
-                  }}
-                  selected={true}
-                  index={index}
-                  onClick={() => removeMovie(movie.tmdbId)}
-                />
-              </m.div>
-            ))}
-          </AnimatePresence>
-        </LazyMotion>
+      <div className="mt-4 grid grid-cols-5 gap-2" aria-label="Selected movies">
+        {[...Array(5)].map((_, index) => {
+          const movie = selectedMovies[index]
+          return (
+            <div
+              className={`relative aspect-[2/3] overflow-hidden border ${movie ? "border-line bg-panel" : "border-dashed border-line bg-ink/30"}`}
+              key={index}
+            >
+              {movie ? (
+                <>
+                  {movie.posterUrl ? (
+                    <Image src={movie.posterUrl} alt="" fill sizes="112px" />
+                  ) : (
+                    <span className="grid h-full place-items-center text-lg font-bold text-crimson">
+                      {movie.title.slice(0, 1)}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeMovie(movie.tmdbId)}
+                    aria-label={`Remove ${movie.title}`}
+                    className="absolute right-1.5 top-1.5 grid size-7 place-items-center bg-ink/90 text-paper transition-colors hover:bg-crimson"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <span className="sr-only">{movie.title}</span>
+                </>
+              ) : (
+                <span className="grid h-full place-items-center text-sm font-bold text-dim">
+                  {index + 1}
+                </span>
+              )}
+            </div>
+          )
+        })}
       </div>
+      <p className="mt-3 text-xs leading-5 text-dim">
+        {selectedMovies.length === 0
+          ? "Select at least one movie. You can add up to five."
+          : selectedMovies.length < 5
+            ? "Your lineup is ready. Add another title if you want to refine it."
+            : "Five titles selected. Your film strip is ready."}
+      </p>
     </div>
   )
 }

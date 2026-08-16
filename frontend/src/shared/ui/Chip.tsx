@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/shared/lib/utils"
 
 const chipVariants = cva(
-  "flex items-center gap-2 rounded-pill bg-surface-strong px-chip py-tight text-caption text-muted-foreground border border-border"
+  "inline-flex items-center gap-2 border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-muted"
 )
 
 export interface ChipProps
@@ -22,7 +22,7 @@ const Chip = forwardRef<HTMLSpanElement, ChipProps>(
 Chip.displayName = "Chip"
 
 const chipCloseButtonVariants = cva(
-  "text-muted-foreground hover:text-foreground transition-colors"
+  "text-muted transition-colors hover:text-paper"
 )
 
 export interface ChipCloseButtonProps

@@ -125,7 +125,9 @@ def _packed_result(output_dir: Path, contract: FeatureContract) -> PackedRanking
         feature_names=contract.feature_names,
         row_count=int(manifest["row_count"]),
         query_count=int(manifest["query_count"]),
-        feature_dtype=str(manifest.get("storage_dtypes", {}).get("features", "float32")),
+        feature_dtype=str(
+            manifest.get("storage_dtypes", {}).get("features", "float32")
+        ),
         query_id_dtype=str(
             manifest.get("storage_dtypes", {}).get("query_ids", "int64")
         ),
@@ -230,7 +232,10 @@ def pack_ranking_features(
         output_dir / "labels.u8", dtype=np.uint8, mode=mode, shape=(row_count,)
     )
     query_ids = np.memmap(
-        output_dir / "query_ids.i32", dtype=query_id_dtype, mode=mode, shape=(row_count,)
+        output_dir / "query_ids.i32",
+        dtype=query_id_dtype,
+        mode=mode,
+        shape=(row_count,),
     )
     columns = ["query_index", "label", *contract.feature_names]
     for row_group in range(completed, source.metadata.num_row_groups):
@@ -248,9 +253,10 @@ def pack_ranking_features(
         feature_values = np.column_stack(
             [table[name].to_numpy() for name in contract.feature_names]
         ).astype(np.float32, copy=False)
-        if not np.isfinite(feature_values).all() or np.max(
-            np.abs(feature_values), initial=0.0
-        ) > np.finfo(feature_dtype).max:
+        if (
+            not np.isfinite(feature_values).all()
+            or np.max(np.abs(feature_values), initial=0.0) > np.finfo(feature_dtype).max
+        ):
             raise ValueError("Ranking features cannot be represented as float16")
         features[offset:stop] = feature_values.astype(feature_dtype)
         features.flush()

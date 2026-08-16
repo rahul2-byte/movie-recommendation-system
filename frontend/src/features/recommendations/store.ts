@@ -1,6 +1,9 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { RecommendedMovie } from "@/features/recommendations/types"
+import {
+  RecommendedMovie,
+  RecommendResponse,
+} from "@/features/recommendations/types"
 
 /* ---------- TYPES ---------- */
 
@@ -10,20 +13,15 @@ export type SelectedMovie = {
   posterUrl?: string | null
 }
 
-export type Genre = string
-
 type RecommendationState = {
-  /* selections */
-  selectedGenres: Genre[]
   selectedMovies: SelectedMovie[]
 
   /* results */
   recommendations: RecommendedMovie[]
+  recommendationSessionId: string | null
+  recommendationNextOffset: number | null
+  recommendationHasMore: boolean
   error: string | null
-
-  /* genre actions */
-  addGenre: (g: Genre) => void
-  removeGenre: (g: Genre) => void
 
   /* movie actions */
   addMovie: (m: SelectedMovie) => void
@@ -31,8 +29,21 @@ type RecommendationState = {
   clearMovies: () => void
 
   /* recommendation actions */
-  setRecommendations: (r: RecommendedMovie[]) => void
+  setRecommendationPage: (response: RecommendResponse) => void
+  appendRecommendationPage: (response: RecommendResponse) => void
   setError: (e: string | null) => void
+}
+
+export function migrateRecommendationStorage(persistedState: unknown) {
+  const saved =
+    persistedState && typeof persistedState === "object" ? persistedState : {}
+  return {
+    ...saved,
+    recommendationSessionId: null,
+    recommendationNextOffset: null,
+    recommendationHasMore: false,
+    error: null,
+  }
 }
 
 /* ---------- STORE ---------- */
@@ -40,26 +51,14 @@ type RecommendationState = {
 export const useRecommendationStore = create<RecommendationState>()(
   persist(
     (set) => ({
-      /* selections */
-      selectedGenres: [],
       selectedMovies: [],
 
       /* results */
       recommendations: [],
+      recommendationSessionId: null,
+      recommendationNextOffset: null,
+      recommendationHasMore: false,
       error: null,
-
-      /* genre actions */
-      addGenre: (genre) =>
-        set((state) =>
-          state.selectedGenres.includes(genre)
-            ? state
-            : { selectedGenres: [...state.selectedGenres, genre] }
-        ),
-
-      removeGenre: (genre) =>
-        set((state) => ({
-          selectedGenres: state.selectedGenres.filter((g) => g !== genre),
-        })),
 
       /* movie actions */
       addMovie: (movie) =>
@@ -81,8 +80,31 @@ export const useRecommendationStore = create<RecommendationState>()(
       clearMovies: () => set({ selectedMovies: [] }),
 
       /* recommendation actions */
-      setRecommendations: (recommendations) =>
-        set({ recommendations, error: null }),
+      setRecommendationPage: (response) =>
+        set({
+          recommendations: response.recommendations,
+          recommendationSessionId: response.sessionId,
+          recommendationNextOffset: response.nextOffset,
+          recommendationHasMore: response.hasMore,
+          error: null,
+        }),
+
+      appendRecommendationPage: (response) =>
+        set((state) => {
+          const knownIds = new Set(
+            state.recommendations.map((movie) => movie.tmdbId)
+          )
+          return {
+            recommendations: [
+              ...state.recommendations,
+              ...response.recommendations.filter(
+                (movie) => !knownIds.has(movie.tmdbId)
+              ),
+            ],
+            recommendationNextOffset: response.nextOffset,
+            recommendationHasMore: response.hasMore,
+          }
+        }),
 
       setError: (error) => set({ error }),
     }),
@@ -90,7 +112,8 @@ export const useRecommendationStore = create<RecommendationState>()(
       name: "recommendation-storage",
       // The previous persisted state can contain removed mood names. Discard
       // it rather than submitting an invalid request after the clean break.
-      version: 2,
+      version: 4,
+      migrate: migrateRecommendationStorage,
     }
   )
 )

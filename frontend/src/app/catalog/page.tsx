@@ -1,79 +1,154 @@
-import {
-  getTrendingMovies,
-  getPopularMovies,
-  getNewReleases,
-} from "@/features/movies/api"
-import { CatalogGrid } from "@/features/movies/components/CatalogGrid"
-import { PageTransition } from "@/shared/ui/motion/PageTransition"
 import Link from "next/link"
-import { ArrowLeft, WifiOff } from "lucide-react"
+import {
+  discoverMovies,
+  getGenres,
+  getNewReleases,
+  getPopularMovies,
+  getTrendingMovies,
+} from "@/features/movies/api"
+import { InfiniteCatalogGrid } from "@/features/movies/components/InfiniteCatalogGrid"
+import type { Genre, Movie } from "@/features/movies/types/movie"
+import { CatalogFilters } from "./CatalogFilters"
 
 type Props = {
-  searchParams: Promise<{ category?: string }>
+  searchParams: Promise<{
+    category?: string
+    genre?: string
+    sort?: "popularity" | "rating" | "newest"
+    rating?: string
+  }>
 }
 
 export default async function CatalogPage({ searchParams }: Props) {
   const params = await searchParams
-  const category = params.category || "trending"
-
-  let movies = null
-  let title = ""
+  const genreId = Number(params.genre) || undefined
+  const ratingMin = Number(params.rating) || undefined
+  const isDiscovering = Boolean(genreId || params.sort || ratingMin)
+  let title = "Trending this week"
+  let movies: Movie[] | null = null
+  let genres: Genre[] = []
 
   try {
-    switch (category) {
-      case "popular":
-        movies = await getPopularMovies(50)
-        title = "Popular Hits"
-        break
-      case "new":
-        movies = await getNewReleases(50)
-        title = "New Releases"
-        break
-      default:
-        movies = await getTrendingMovies(50)
-        title = "Trending This Week"
+    genres = await getGenres()
+    if (isDiscovering) {
+      movies = await discoverMovies({
+        genreId,
+        ratingMin,
+        sort: params.sort ?? "popularity",
+        limit: 24,
+      })
+      title = genreId
+        ? (genres.find((genre) => genre.id === genreId)?.name ??
+          "Discover movies")
+        : "Discover movies"
+    } else if (params.category === "popular") {
+      movies = await getPopularMovies(24)
+      title = "Popular movies"
+    } else if (params.category === "new") {
+      movies = await getNewReleases(24)
+      title = "New releases"
+    } else {
+      movies = await getTrendingMovies(24)
     }
   } catch {
     movies = null
   }
 
   return (
-    <PageTransition>
-      <div className="section pt-32 min-h-screen">
-        <div className="container">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-text-muted hover:text-accent transition-colors mb-8 text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to Home
-          </Link>
-
-          <div className="mb-12">
-            <span className="label-accent">Full Catalog</span>
-            <h1 className="heading-section">{title}</h1>
+    <div className="min-h-[80vh] py-16 sm:py-24">
+      <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10">
+        <header className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-[0.16em] text-crimson">
+              Browse the catalog
+            </span>
+            <h1 className="mt-3 font-display text-5xl leading-[0.88] tracking-[-0.055em] text-paper sm:text-7xl">
+              {title}
+            </h1>
           </div>
+          <nav
+            aria-label="Catalog categories"
+            className="flex gap-6 text-sm font-semibold text-muted"
+          >
+            <Link
+              href="/catalog"
+              className={`border-b-2 pb-2 ${!isDiscovering && !params.category ? "border-crimson text-paper" : "border-transparent hover:text-paper"}`}
+            >
+              Trending
+            </Link>
+            <Link
+              href="/catalog?category=popular"
+              className={`border-b-2 pb-2 ${!isDiscovering && params.category === "popular" ? "border-crimson text-paper" : "border-transparent hover:text-paper"}`}
+            >
+              Popular
+            </Link>
+            <Link
+              href="/catalog?category=new"
+              className={`border-b-2 pb-2 ${!isDiscovering && params.category === "new" ? "border-crimson text-paper" : "border-transparent hover:text-paper"}`}
+            >
+              New releases
+            </Link>
+          </nav>
+        </header>
 
-          {!movies || movies.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 text-center">
-              <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
-                <WifiOff className="w-10 h-10 text-text-muted" />
-              </div>
-              <h2 className="text-2xl font-serif text-white mb-2">
-                Connection snags.
+        <CatalogFilters
+          genres={genres}
+          genre={params.genre}
+          rating={params.rating}
+          sort={params.sort}
+          resultCount={movies?.length ?? 0}
+        />
+
+        {!movies ? (
+          <div className="mt-12 grid min-h-64 place-items-center border border-line bg-panel/45 p-8 text-center">
+            <div>
+              <h2 className="font-display text-3xl text-paper">
+                The catalog is unavailable.
               </h2>
-              <p className="text-text-muted max-w-md mx-auto mb-8">
-                We could not reach our cinematic archive. This usually means the
-                backend server is resting or having connection issues.
+              <p className="mt-3 text-muted">
+                Check the connection to the movie service and try again.
               </p>
-              <Link href="/" className="btn btn-primary">
-                Return to Home
+              <Link
+                href="/catalog"
+                className="mt-6 inline-flex min-h-11 items-center border border-line px-4 text-sm font-bold text-paper hover:border-muted"
+              >
+                Try again
               </Link>
             </div>
-          ) : (
-            <CatalogGrid movies={movies} />
-          )}
-        </div>
+          </div>
+        ) : movies.length === 0 ? (
+          <div className="mt-12 grid min-h-64 place-items-center border border-line bg-panel/45 p-8 text-center">
+            <div>
+              <h2 className="font-display text-3xl text-paper">
+                No movies match those filters.
+              </h2>
+              <p className="mt-3 text-muted">
+                Clear a filter to widen the catalog.
+              </p>
+              <Link
+                href="/catalog"
+                className="mt-6 inline-flex min-h-11 items-center border border-line px-4 text-sm font-bold text-paper hover:border-muted"
+              >
+                Clear filters
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <InfiniteCatalogGrid
+            initialMovies={movies}
+            source={
+              isDiscovering
+                ? "discover"
+                : params.category === "popular"
+                  ? "popular"
+                  : params.category === "new"
+                    ? "new"
+                    : "trending"
+            }
+            filters={{ genreId, ratingMin, sort: params.sort ?? "popularity" }}
+          />
+        )}
       </div>
-    </PageTransition>
+    </div>
   )
 }
