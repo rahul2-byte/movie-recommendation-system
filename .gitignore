@@ -83,3 +83,8 @@ dist/
 
 # Project Memory
 .gemini/
+
+# Local agent and tool state
+.superpowers/
+.ruff_cache/
+frontend/.swc/
