@@ -35,7 +35,7 @@ export default function RecommendationsPage() {
   if (!recommendations.length) return <RecommendationsEmpty />
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-6 py-12 sm:px-10 lg:py-20">
+    <div className="mx-auto w-full max-w-7xl px-6 py-12 sm:px-10 lg:py-20">
       <div>
         <Link
           href="/#build-lineup"
@@ -75,6 +75,6 @@ export default function RecommendationsPage() {
           hasMore={hasMore}
         />
       </div>
-    </main>
+    </div>
   )
 }

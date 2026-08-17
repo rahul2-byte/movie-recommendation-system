@@ -22,7 +22,7 @@ export function MovieCard({
   const content = (
     <>
       <div
-        className={`relative overflow-hidden rounded-2xl border border-line/70 bg-panel shadow-[0_10px_30px_rgba(25,25,28,0.06)] transition duration-300 group-hover:-translate-y-1 group-hover:border-muted group-hover:shadow-[0_22px_44px_rgba(25,25,28,0.14)] ${
+        className={`relative overflow-hidden rounded-2xl border border-line/70 bg-panel shadow-[0_10px_30px_rgba(25,25,28,0.06)] transition-[transform,border-color,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:border-muted group-hover:shadow-[0_22px_44px_rgba(25,25,28,0.14)] ${
           landscape ? "aspect-video" : "aspect-[2/3]"
         }`}
       >

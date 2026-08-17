@@ -5,7 +5,7 @@ export function RecommendationsError({ message }: { message: string }) {
   const connectionIssue =
     message.includes("fetch") || message.includes("connect")
   return (
-    <main className="mx-auto flex min-h-[65vh] w-full max-w-7xl flex-col justify-center px-6 py-16 sm:px-10">
+    <div className="mx-auto flex min-h-[65vh] w-full max-w-7xl flex-col justify-center px-6 py-16 sm:px-10">
       <AlertCircle className="size-10 text-danger" />
       <span className="mt-5 text-sm font-semibold text-crimson">
         Recommendation unavailable
@@ -24,6 +24,6 @@ export function RecommendationsError({ message }: { message: string }) {
       >
         Return to your film strip
       </Link>
-    </main>
+    </div>
   )
 }

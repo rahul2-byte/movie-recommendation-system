@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@plugin "tailwindcss-animate";
 
 @theme {
   --color-ink: #19191c;
@@ -9,7 +8,7 @@
   --color-accent-soft: #f1ded9;
   --color-paper: #19191c;
   --color-muted: #626269;
-  --color-dim: #85858b;
+  --color-dim: #6b6b71;
   --color-line: #d8d8d2;
   --color-crimson: #c9362b;
   --color-crimson-bright: #aa2b23;
@@ -17,4 +16,37 @@
   --color-danger: #b52d32;
   --font-sans: var(--font-manrope);
   --font-display: var(--font-newsreader);
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: page-enter 350ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid CanvasText !important;
+    outline-offset: 3px;
+  }
 }

@@ -50,3 +50,25 @@ test("continues autoplay when the hero is hovered", () => {
   expect(screen.getByText("The Next Feature")).toBeInTheDocument()
   jest.useRealTimers()
 })
+
+test("pauses and resumes autoplay from the visible control", () => {
+  jest.useFakeTimers()
+  render(<Hero movie={movies[0]} movies={movies} />)
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Pause featured movie rotation" })
+  )
+  act(() => {
+    jest.advanceTimersByTime(5000)
+  })
+  expect(screen.getByText("The First Feature")).toBeInTheDocument()
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Resume featured movie rotation" })
+  )
+  act(() => {
+    jest.advanceTimersByTime(5000)
+  })
+  expect(screen.getByText("The Next Feature")).toBeInTheDocument()
+  jest.useRealTimers()
+})

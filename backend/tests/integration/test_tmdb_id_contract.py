@@ -1,13 +1,6 @@
 import pytest
 from api.schemas.recommend import MovieOut, RecommendRequest
 from pydantic import ValidationError
-from retrieval.contracts import RetrievalCandidate
-
-
-def test_candidate_uses_tmdb_ids():
-    candidate = RetrievalCandidate(tmdb_id=680)
-
-    assert candidate.item_id == 680
 
 
 def test_movie_response_schema_declares_tmdb_id_once():

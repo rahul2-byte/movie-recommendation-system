@@ -28,7 +28,7 @@ const stages = [
 
 export default function AboutPage() {
   return (
-    <main className="mx-auto w-full max-w-7xl px-6 py-14 sm:px-10 lg:py-20">
+    <div className="mx-auto w-full max-w-7xl px-6 py-14 sm:px-10 lg:py-20">
       <section className="max-w-4xl">
         <span className="text-sm font-semibold text-crimson">
           About the engine
@@ -140,6 +140,6 @@ export default function AboutPage() {
           Start discovering <ArrowRight className="h-4 w-4" />
         </Link>
       </section>
-    </main>
+    </div>
   )
 }

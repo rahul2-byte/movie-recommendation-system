@@ -35,7 +35,7 @@ export default function GlobalError({
           className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-crimson px-5 text-sm font-bold text-white transition-colors hover:bg-crimson-bright"
         >
           <RotateCcw className="h-4 w-4" />
-          Try Again
+          Try again
         </button>
 
         <Link
@@ -43,7 +43,7 @@ export default function GlobalError({
           className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-line bg-panel px-5 text-sm font-bold text-paper transition-colors hover:border-muted"
         >
           <Home className="h-4 w-4" />
-          Back to Home
+          Back to home
         </Link>
       </div>
 

@@ -1,8 +1,4 @@
-import {
-  getTrendingMovies,
-  getPopularMovies,
-  getNewReleases,
-} from "@/features/movies/api"
+import { getTrendingMovies, getNewReleases } from "@/features/movies/api"
 import { MovieRow } from "./MovieRow"
 import type { Movie } from "../types/movie"
 
@@ -19,23 +15,6 @@ export async function TrendingMoviesRow() {
       subtitle="What people are watching"
       movies={movies || []}
       category="trending"
-    />
-  )
-}
-
-export async function PopularMoviesRow() {
-  let movies: Movie[] = []
-  try {
-    movies = await getPopularMovies(20)
-  } catch {
-    movies = []
-  }
-  return (
-    <MovieRow
-      title="Popular Hits"
-      subtitle="Audience favourites"
-      movies={movies || []}
-      category="popular"
     />
   )
 }

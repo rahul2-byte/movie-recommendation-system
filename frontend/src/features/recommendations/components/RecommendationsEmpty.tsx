@@ -2,7 +2,7 @@ import Link from "next/link"
 
 export function RecommendationsEmpty() {
   return (
-    <main className="mx-auto flex min-h-[65vh] w-full max-w-7xl flex-col justify-center px-6 py-16 sm:px-10">
+    <div className="mx-auto flex min-h-[65vh] w-full max-w-7xl flex-col justify-center px-6 py-16 sm:px-10">
       <span className="text-sm font-semibold text-crimson">No lineup yet</span>
       <h1 className="mt-3 font-display text-5xl text-paper sm:text-7xl">
         Your recommendations will appear here.
@@ -16,6 +16,6 @@ export function RecommendationsEmpty() {
       >
         Build a lineup
       </Link>
-    </main>
+    </div>
   )
 }

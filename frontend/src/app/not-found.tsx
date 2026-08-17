@@ -2,7 +2,7 @@ import Link from "next/link"
 
 export default function NotFound() {
   return (
-    <main className="mx-auto flex min-h-[70vh] w-full max-w-7xl flex-col justify-center px-6 py-20 sm:px-10">
+    <div className="mx-auto flex min-h-[70vh] w-full max-w-7xl flex-col justify-center px-6 py-20 sm:px-10">
       <span className="text-sm font-semibold text-crimson">
         404 / Scene missing
       </span>
@@ -18,6 +18,6 @@ export default function NotFound() {
       >
         Return to discover
       </Link>
-    </main>
+    </div>
   )
 }

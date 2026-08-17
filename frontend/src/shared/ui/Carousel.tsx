@@ -39,6 +39,17 @@ export function Carousel({ children }: { children: React.ReactNode }) {
     <div className="group relative">
       <div
         ref={rowRef}
+        onFocusCapture={(event) => {
+          const row = event.currentTarget
+          const target = event.target as HTMLElement
+          const rowRect = row.getBoundingClientRect()
+          const targetRect = target.getBoundingClientRect()
+          if (targetRect.left < rowRect.left) {
+            row.scrollLeft += targetRect.left - rowRect.left - 16
+          } else if (targetRect.right > rowRect.right) {
+            row.scrollLeft += targetRect.right - rowRect.right + 16
+          }
+        }}
         className="flex gap-4 overflow-x-auto scroll-smooth pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {children}

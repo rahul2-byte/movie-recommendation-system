@@ -26,7 +26,7 @@ export function RecommendationBuilder() {
       <div className="p-6 sm:p-9 lg:p-11">
         <MovieAutocomplete />
         <SelectedMovies />
-        <RecommendCTA onDone={() => undefined} />
+        <RecommendCTA />
       </div>
     </section>
   )

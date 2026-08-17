@@ -43,7 +43,7 @@ export default async function MovieDetailsPage({ params }: Props) {
   }
 
   return (
-    <main>
+    <div>
       <section className="relative isolate overflow-hidden border-b border-line bg-canvas">
         <MovieArtwork
           title={movie.title}
@@ -165,6 +165,6 @@ export default async function MovieDetailsPage({ params }: Props) {
           </div>
         </section>
       )}
-    </main>
+    </div>
   )
 }
