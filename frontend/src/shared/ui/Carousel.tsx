@@ -39,7 +39,7 @@ export function Carousel({ children }: { children: React.ReactNode }) {
     <div className="group relative">
       <div
         ref={rowRef}
-        className="no-scrollbar flex gap-4 overflow-x-auto scroll-smooth pb-3"
+        className="flex gap-4 overflow-x-auto scroll-smooth pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {children}
       </div>
@@ -50,7 +50,7 @@ export function Carousel({ children }: { children: React.ReactNode }) {
           size="icon"
           aria-label="Previous movies"
           onClick={() => scroll("left")}
-          className={`pointer-events-auto border border-line bg-ink/90 text-paper hover:bg-panel ${!showLeft ? "invisible" : ""}`}
+          className={`pointer-events-auto rounded-full border border-line bg-panel/95 text-paper shadow-lg shadow-ink/10 hover:bg-canvas ${!showLeft ? "invisible" : ""}`}
         >
           <ChevronLeft className="h-6 w-6" />
         </Button>
@@ -62,7 +62,7 @@ export function Carousel({ children }: { children: React.ReactNode }) {
           size="icon"
           aria-label="Next movies"
           onClick={() => scroll("right")}
-          className={`pointer-events-auto border border-line bg-ink/90 text-paper hover:bg-panel ${!showRight ? "invisible" : ""}`}
+          className={`pointer-events-auto rounded-full border border-line bg-panel/95 text-paper shadow-lg shadow-ink/10 hover:bg-canvas ${!showRight ? "invisible" : ""}`}
         >
           <ChevronRight className="h-6 w-6" />
         </Button>

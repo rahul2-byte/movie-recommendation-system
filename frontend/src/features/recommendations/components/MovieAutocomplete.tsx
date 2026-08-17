@@ -85,7 +85,7 @@ export function MovieAutocomplete() {
           }
           aria-autocomplete="list"
           autoComplete="off"
-          className="h-12 border-line bg-ink pl-12 pr-12 text-paper placeholder:text-dim focus-visible:ring-crimson"
+          className="h-12 bg-panel pl-12 pr-12"
         />
 
         {isLoading && (
@@ -97,7 +97,7 @@ export function MovieAutocomplete() {
         {!isLoading && query && (
           <button
             type="button"
-            className="absolute right-2 top-2 grid size-8 place-items-center text-dim hover:text-paper"
+            className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson absolute right-2 top-2 grid size-8 place-items-center text-dim hover:text-paper"
             onClick={() => setQuery("")}
             aria-label="Clear search"
           >
@@ -110,7 +110,7 @@ export function MovieAutocomplete() {
         <ul
           id="movie-search-results"
           role="listbox"
-          className="absolute z-30 mt-2 max-h-108 w-full overflow-y-auto border border-line bg-ink shadow-2xl"
+          className="absolute z-30 mt-2 max-h-108 w-full overflow-y-auto rounded-2xl border border-line bg-panel p-1 shadow-[0_24px_60px_rgba(25,25,28,0.14)]"
         >
           {filteredResults.map((movie, index) => {
             const selected = selectedMovies.some(
@@ -125,13 +125,19 @@ export function MovieAutocomplete() {
               >
                 <button
                   type="button"
-                  className={`flex w-full items-center gap-3 p-3 text-left transition-colors ${activeIndex === index ? "bg-panel" : "hover:bg-panel/70"}`}
+                  className={`focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${activeIndex === index ? "bg-surface-muted" : "hover:bg-surface-muted"}`}
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => toggleMovie(movie)}
                 >
                   <span className="relative grid size-12 shrink-0 place-items-center overflow-hidden bg-panel text-sm font-bold text-crimson">
                     {movie.posterUrl ? (
-                      <Image src={movie.posterUrl} alt="" fill sizes="48px" />
+                      <Image
+                        src={movie.posterUrl}
+                        alt=""
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                      />
                     ) : (
                       movie.title.slice(0, 1)
                     )}
@@ -143,7 +149,7 @@ export function MovieAutocomplete() {
                     <small className="block truncate text-xs text-dim">
                       {[movie.year, movie.genres[0]]
                         .filter(Boolean)
-                        .join(" · ")}
+                        .join(" / ")}
                     </small>
                   </span>
                   <span className="text-xs font-bold text-crimson">

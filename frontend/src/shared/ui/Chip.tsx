@@ -3,10 +3,11 @@
 import { forwardRef } from "react"
 import type { ComponentProps } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { X } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 
 const chipVariants = cva(
-  "inline-flex items-center gap-2 border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-muted"
+  "inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1.5 text-xs font-semibold text-muted"
 )
 
 export interface ChipProps
@@ -38,7 +39,7 @@ const ChipCloseButton = forwardRef<HTMLButtonElement, ChipCloseButtonProps>(
         ref={ref}
         {...props}
       >
-        ✕
+        <X className="size-3.5" aria-hidden="true" />
       </button>
     )
   }

@@ -6,7 +6,7 @@ import { cva } from "class-variance-authority"
 import { cn } from "@/shared/lib/utils"
 
 const cardVariants = cva(
-  "border border-line bg-panel text-paper shadow-lg shadow-black/10"
+  "rounded-2xl border border-line bg-panel text-paper shadow-[0_18px_50px_rgba(25,25,28,0.06)]"
 )
 
 const Card = forwardRef<HTMLDivElement, ComponentProps<"div">>(

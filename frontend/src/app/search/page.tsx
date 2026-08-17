@@ -16,13 +16,13 @@ export default async function SearchPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-[80vh] py-16 sm:py-24">
+    <div className="min-h-[80vh] py-12 sm:py-20">
       <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10">
         <header>
-          <span className="text-xs font-bold uppercase tracking-[0.16em] text-crimson">
+          <span className="text-sm font-semibold text-crimson">
             Search the catalog
           </span>
-          <h1 className="mt-3 font-display text-5xl leading-[0.88] tracking-[-0.055em] text-paper sm:text-7xl">
+          <h1 className="mt-2 font-display text-5xl leading-[0.92] tracking-[-0.055em] text-paper sm:text-7xl">
             Find a movie
           </h1>
           <form
@@ -40,13 +40,13 @@ export default async function SearchPage({ searchParams }: Props) {
               id="catalog-search"
               name="q"
               defaultValue={q}
-              className="h-12 flex-1 border border-line bg-panel pl-12 pr-4 text-paper outline-none placeholder:text-dim focus:border-crimson"
+              className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson h-12 flex-1 rounded-full border border-line bg-panel pl-12 pr-4 text-paper shadow-sm shadow-ink/5 placeholder:text-dim focus:border-crimson"
               placeholder="Search by title"
               minLength={2}
               required
             />
             <button
-              className="min-h-12 bg-crimson px-6 text-sm font-bold text-white hover:bg-crimson-bright"
+              className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson min-h-12 rounded-full bg-crimson px-7 text-sm font-bold text-white hover:bg-crimson-bright active:scale-[0.98]"
               type="submit"
             >
               Search
@@ -58,7 +58,7 @@ export default async function SearchPage({ searchParams }: Props) {
           <section aria-labelledby="search-results-title">
             <div className="mt-14 mb-6">
               <div>
-                <span className="text-xs font-bold uppercase tracking-[0.16em] text-crimson">
+                <span className="text-sm font-semibold text-crimson">
                   {movies.length} results
                 </span>
                 <h2
@@ -77,7 +77,7 @@ export default async function SearchPage({ searchParams }: Props) {
           </section>
         )}
         {q && movies?.length === 0 && (
-          <div className="mt-12 border border-line bg-panel/45 p-8">
+          <div className="mt-12 rounded-2xl border border-line bg-panel p-8">
             <h2 className="font-display text-3xl text-paper">
               We couldn&apos;t find that movie.
             </h2>
@@ -87,7 +87,7 @@ export default async function SearchPage({ searchParams }: Props) {
           </div>
         )}
         {q && movies === null && (
-          <div className="mt-12 border border-line bg-panel/45 p-8">
+          <div className="mt-12 rounded-2xl border border-line bg-panel p-8">
             <h2 className="font-display text-3xl text-paper">
               Search is unavailable.
             </h2>

@@ -16,8 +16,8 @@ export default function GlobalError({
   }, [error])
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-ink p-6 text-center">
-      <div className="mb-6 grid size-20 place-items-center rounded-full bg-danger/10 text-danger">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-canvas p-6 text-center">
+      <div className="mb-6 grid size-20 place-items-center rounded-2xl bg-danger/10 text-danger">
         <AlertCircle className="h-12 w-12" />
       </div>
 
@@ -32,7 +32,7 @@ export default function GlobalError({
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           onClick={() => reset()}
-          className="inline-flex min-h-11 items-center justify-center gap-2 bg-crimson px-4 text-sm font-bold text-white transition-colors hover:bg-crimson-bright"
+          className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-crimson px-5 text-sm font-bold text-white transition-colors hover:bg-crimson-bright"
         >
           <RotateCcw className="h-4 w-4" />
           Try Again
@@ -40,7 +40,7 @@ export default function GlobalError({
 
         <Link
           href="/"
-          className="inline-flex min-h-11 items-center justify-center gap-2 border border-line bg-panel px-4 text-sm font-bold text-paper transition-colors hover:border-muted"
+          className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-line bg-panel px-5 text-sm font-bold text-paper transition-colors hover:border-muted"
         >
           <Home className="h-4 w-4" />
           Back to Home

@@ -2,12 +2,12 @@ import Link from "next/link"
 
 export function Footer() {
   return (
-    <footer className="border-t border-line bg-ink py-12">
-      <div className="mx-auto grid w-full max-w-[1440px] gap-10 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_0.7fr_0.7fr] lg:px-10">
+    <footer className="mt-20 border-t border-line bg-panel py-12">
+      <div className="mx-auto grid w-full max-w-[1440px] gap-10 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.6fr_0.6fr_0.6fr] lg:px-10">
         <div>
           <Link
             href="/"
-            className="text-lg font-extrabold tracking-[-0.04em] text-paper"
+            className="text-xl font-extrabold tracking-[-0.06em] text-paper"
             aria-label="M99 home"
           >
             <span className="text-crimson">M</span>99
@@ -17,9 +17,7 @@ export function Footer() {
           </p>
         </div>
         <div className="flex flex-col gap-3 text-sm">
-          <strong className="text-xs font-bold uppercase tracking-[0.14em] text-paper">
-            Explore
-          </strong>
+          <strong className="text-sm font-bold text-paper">Explore</strong>
           <Link className="text-muted hover:text-paper" href="/">
             Discover
           </Link>
@@ -31,9 +29,7 @@ export function Footer() {
           </Link>
         </div>
         <div className="flex flex-col gap-3 text-sm">
-          <strong className="text-xs font-bold uppercase tracking-[0.14em] text-paper">
-            Project
-          </strong>
+          <strong className="text-sm font-bold text-paper">Project</strong>
           <a
             href="https://github.com/rahul2-byte/movie-recommendation-system"
             target="_blank"
@@ -54,7 +50,7 @@ export function Footer() {
       </div>
       <div className="mx-auto mt-10 flex w-full max-w-[1440px] flex-col gap-2 border-t border-line pt-5 text-xs text-dim sm:flex-row sm:justify-between sm:px-6 lg:px-10">
         <span>© {new Date().getFullYear()} M99</span>
-        <span>Movie data from TMDB · Training data from MovieLens</span>
+        <span>Movie data from TMDB. Training data from MovieLens.</span>
       </div>
     </footer>
   )

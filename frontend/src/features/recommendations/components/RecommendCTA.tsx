@@ -38,7 +38,7 @@ export function RecommendCTA({ onDone }: { onDone: () => void }) {
           role="status"
         >
           <AlertCircle className="h-5 w-5" />
-          <p>Select at least one movie to create your lineup.</p>
+          <p>Select at least one movie to create a lineup.</p>
         </div>
       )}
 

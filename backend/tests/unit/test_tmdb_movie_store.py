@@ -85,7 +85,7 @@ def test_movie_store_uses_tmdb_for_metadata_and_search():
             "title": "Example",
             "year": 2024,
             "genres": ["Drama"],
-            "posterUrl": "https://image.tmdb.org/t/p/w342/poster.jpg",
+            "posterUrl": "https://image.tmdb.org/t/p/w500/poster.jpg",
             "backdropUrl": None,
             "rating": 7.5,
             "overview": "A complete search result.",

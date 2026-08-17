@@ -44,7 +44,7 @@ export default async function MovieDetailsPage({ params }: Props) {
 
   return (
     <main>
-      <section className="relative isolate overflow-hidden border-b border-line bg-ink">
+      <section className="relative isolate overflow-hidden border-b border-line bg-canvas">
         <MovieArtwork
           title={movie.title}
           posterUrl={movie.posterUrl}
@@ -55,16 +55,16 @@ export default async function MovieDetailsPage({ params }: Props) {
           alt=""
           showFallbackLabel={false}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#11100f_0%,rgba(17,16,15,0.96)_34%,rgba(17,16,15,0.55)_66%,rgba(17,16,15,0.72)_100%)]" />
+        <div className="absolute inset-0 bg-canvas/90 backdrop-blur-2xl" />
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-10 sm:px-10 lg:py-16">
           <Link
             href="/catalog"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-paper"
+            className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson inline-flex items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-paper"
           >
             <ArrowLeft className="h-4 w-4" /> Back to browse
           </Link>
-          <div className="mt-10 grid gap-8 md:grid-cols-[minmax(180px,280px)_minmax(0,620px)] md:items-end lg:gap-12">
-            <div className="relative aspect-[2/3] max-w-[280px] overflow-hidden border border-line bg-panel shadow-2xl shadow-black/40">
+          <div className="mt-10 grid gap-8 md:grid-cols-[minmax(180px,280px)_minmax(0,1fr)] md:items-end lg:gap-12">
+            <div className="relative aspect-[2/3] max-w-[280px] overflow-hidden rounded-[1.5rem] border border-line bg-panel shadow-[0_28px_70px_rgba(25,25,28,0.18)]">
               <MovieArtwork
                 title={movie.title}
                 posterUrl={movie.posterUrl}
@@ -73,10 +73,10 @@ export default async function MovieDetailsPage({ params }: Props) {
               />
             </div>
             <div className="pb-2">
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-crimson">
+              <span className="text-sm font-semibold text-crimson">
                 Movie details
               </span>
-              <h1 className="mt-4 font-display text-5xl leading-[0.92] text-paper sm:text-7xl">
+              <h1 className="mt-4 max-w-5xl font-display text-4xl leading-[0.95] tracking-[-0.035em] text-paper sm:text-6xl lg:text-7xl">
                 {movie.title}
               </h1>
               {movie.tagline && (
@@ -98,7 +98,7 @@ export default async function MovieDetailsPage({ params }: Props) {
                 {movie.genres.map((genre) => (
                   <span
                     key={genre}
-                    className="border border-line px-3 py-1 text-xs font-semibold text-muted"
+                    className="rounded-full border border-line bg-panel/70 px-3 py-1 text-xs font-semibold text-muted"
                   >
                     {genre}
                   </span>
@@ -113,7 +113,7 @@ export default async function MovieDetailsPage({ params }: Props) {
                   href={movie.trailerUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-7 inline-flex min-h-11 items-center gap-2 bg-crimson px-5 text-sm font-bold text-white transition-colors hover:bg-crimson-bright"
+                  className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-full bg-crimson px-5 text-sm font-bold text-white transition-colors hover:bg-crimson-bright active:scale-[0.98]"
                 >
                   Watch trailer <ExternalLink className="h-4 w-4" />
                 </a>
@@ -127,7 +127,7 @@ export default async function MovieDetailsPage({ params }: Props) {
         <section className="mx-auto grid w-full max-w-7xl gap-8 border-b border-line px-6 py-10 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] sm:px-10">
           {movie.director && (
             <div>
-              <span className="block text-xs font-bold uppercase tracking-[0.16em] text-dim">
+              <span className="block text-sm font-semibold text-muted">
                 Director
               </span>
               <strong className="mt-2 block text-lg text-paper">
@@ -137,7 +137,7 @@ export default async function MovieDetailsPage({ params }: Props) {
           )}
           {movie.cast?.length ? (
             <div>
-              <span className="block text-xs font-bold uppercase tracking-[0.16em] text-dim">
+              <span className="block text-sm font-semibold text-muted">
                 Top cast
               </span>
               <strong className="mt-2 block text-lg font-normal leading-7 text-paper">
@@ -150,7 +150,7 @@ export default async function MovieDetailsPage({ params }: Props) {
 
       {similar.length > 0 && (
         <section className="mx-auto w-full max-w-7xl px-6 py-12 sm:px-10 lg:py-16">
-          <span className="text-xs font-bold uppercase tracking-[0.16em] text-crimson">
+          <span className="text-sm font-semibold text-crimson">
             Keep discovering
           </span>
           <h2 className="mt-3 font-display text-4xl tracking-[-0.04em] text-paper">

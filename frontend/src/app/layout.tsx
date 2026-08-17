@@ -1,14 +1,20 @@
 import "./globals.css"
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import { Manrope, Newsreader } from "next/font/google"
 import { Header } from "@/shared/ui/layout/Header"
 import { Footer } from "@/shared/ui/layout/Footer"
 import { Providers } from "@/shared/ui/Providers"
 import { PageTransition } from "@/shared/ui/motion/PageTransition"
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-manrope",
+  display: "swap",
+})
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-newsreader",
   display: "swap",
 })
 
@@ -32,10 +38,9 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#080808",
+  themeColor: "#f4f4ef",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 }
 
 export default function RootLayout({
@@ -44,14 +49,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth scheme-light bg-canvas">
       <body
-        className={`${inter.variable} font-sans selection:bg-accent selection:text-white`}
+        className={`${manrope.variable} ${newsreader.variable} min-w-[320px] bg-canvas font-sans text-paper antialiased selection:bg-crimson selection:text-white`}
       >
         <Providers>
           <div className="flex min-h-screen flex-col overflow-x-clip">
             <Header />
-            <main className="w-full flex-1">
+            <main id="main-content" className="w-full flex-1">
               <PageTransition>{children}</PageTransition>
             </main>
             <Footer />

@@ -32,14 +32,14 @@ export function MovieRow({
   }
 
   return (
-    <section className="py-12 first:pt-16 sm:py-16">
+    <section className="py-12 first:pt-10 sm:py-16">
       <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-[0.16em] text-crimson">
+            <span className="text-sm font-semibold text-crimson">
               {subtitle}
             </span>
-            <h2 className="mt-2 font-display text-3xl leading-none tracking-[-0.035em] text-paper sm:text-4xl">
+            <h2 className="mt-1 font-display text-3xl leading-none tracking-[-0.035em] text-paper sm:text-4xl">
               {title}
             </h2>
           </div>

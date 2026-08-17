@@ -20,7 +20,7 @@ export function ToggleGroupItem({
     <button
       onClick={onClick}
       className={cn(
-        "min-h-10 border px-4 text-sm font-semibold transition-colors",
+        "min-h-10 rounded-full border px-4 text-sm font-semibold transition-colors active:scale-[0.98]",
         active
           ? "border-crimson bg-crimson text-white"
           : "border-line bg-panel text-muted hover:text-paper"

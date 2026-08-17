@@ -49,7 +49,7 @@ const SheetOverlay = forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
 
 const sheetVariants = cva(
-  "fixed z-50 scale-100 gap-4 border border-line bg-panel p-5 text-paper opacity-100 shadow-xl shadow-black/30",
+  "fixed z-50 scale-100 gap-4 border border-line bg-panel p-5 text-paper opacity-100 shadow-xl shadow-ink/20",
   {
     variants: {
       position: {
@@ -105,7 +105,7 @@ const SheetContent = forwardRef<
       {...props}
     >
       {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 grid size-9 place-items-center text-muted transition-colors hover:bg-ink hover:text-paper focus:outline-none disabled:pointer-events-none">
+      <SheetPrimitive.Close className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson absolute right-4 top-4 grid size-9 place-items-center rounded-full text-muted transition-colors hover:bg-canvas hover:text-paper disabled:pointer-events-none">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </SheetPrimitive.Close>

@@ -8,16 +8,13 @@ export function RecommendationBuilder() {
   return (
     <section
       id="build-lineup"
-      className="my-12 grid scroll-mt-20 border border-line bg-panel/50 sm:my-16 lg:grid-cols-[0.85fr_1.15fr]"
+      className="my-14 grid scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-line bg-panel shadow-[0_24px_70px_rgba(25,25,28,0.07)] sm:my-20 lg:grid-cols-[0.78fr_1.22fr]"
       aria-labelledby="builder-title"
     >
-      <div className="border-b border-line p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-10">
-        <span className="text-xs font-bold uppercase tracking-[0.16em] text-crimson">
-          Start with what you know
-        </span>
+      <div className="border-b border-line bg-surface-muted p-6 sm:p-9 lg:border-b-0 lg:border-r lg:p-11">
         <h2
           id="builder-title"
-          className="mt-3 font-display text-4xl leading-[0.92] tracking-[-0.04em] text-paper sm:text-5xl"
+          className="font-display text-4xl leading-[0.94] tracking-[-0.04em] text-paper sm:text-5xl"
         >
           What did you love watching?
         </h2>
@@ -26,7 +23,7 @@ export function RecommendationBuilder() {
           around your selections.
         </p>
       </div>
-      <div className="p-6 sm:p-8 lg:p-10">
+      <div className="p-6 sm:p-9 lg:p-11">
         <MovieAutocomplete />
         <SelectedMovies />
         <RecommendCTA onDone={() => undefined} />
