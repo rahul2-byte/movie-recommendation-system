@@ -22,7 +22,7 @@ export function MovieCard({
   const content = (
     <>
       <div
-        className={`relative overflow-hidden border border-line/70 bg-panel transition duration-300 group-hover:border-muted group-hover:shadow-2xl ${
+        className={`relative overflow-hidden rounded-2xl border border-line/70 bg-panel shadow-[0_10px_30px_rgba(25,25,28,0.06)] transition-[transform,border-color,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:border-muted group-hover:shadow-[0_22px_44px_rgba(25,25,28,0.14)] ${
           landscape ? "aspect-video" : "aspect-[2/3]"
         }`}
       >
@@ -52,13 +52,13 @@ export function MovieCard({
         <h3
           title={movie.title}
           className={`truncate text-sm font-semibold ${
-            landscape ? "text-paper" : "text-paper"
+            landscape ? "text-white" : "text-paper"
           }`}
         >
           {movie.title}
         </h3>
         <div
-          className={`mt-1 flex items-center justify-between text-xs ${landscape ? "text-muted" : "text-dim"}`}
+          className={`mt-1 flex items-center justify-between text-xs ${landscape ? "text-white/75" : "text-dim"}`}
         >
           <span>{movie.year ?? "Year unknown"}</span>
           {movie.rating != null && (
@@ -76,7 +76,7 @@ export function MovieCard({
     return (
       <button
         type="button"
-        className={`group relative block w-full text-left ${selected ? "ring-2 ring-crimson ring-offset-2 ring-offset-ink" : ""}`}
+        className={`focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson group relative block w-full text-left ${selected ? "rounded-2xl ring-2 ring-crimson ring-offset-3 ring-offset-canvas" : ""}`}
         onClick={onClick}
         aria-pressed={selected || undefined}
         aria-label={`${selected ? "Remove" : "Select"} ${movie.title}`}
@@ -89,7 +89,7 @@ export function MovieCard({
   return (
     <Link
       href={`/movies/${movie.tmdbId}`}
-      className={`group relative block ${selected ? "ring-2 ring-crimson ring-offset-2 ring-offset-ink" : ""}`}
+      className={`focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson group relative block ${selected ? "rounded-2xl ring-2 ring-crimson ring-offset-3 ring-offset-canvas" : ""}`}
       aria-label={`View details for ${movie.title}`}
     >
       {content}

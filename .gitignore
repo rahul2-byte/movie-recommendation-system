@@ -88,3 +88,13 @@ dist/
 .superpowers/
 .ruff_cache/
 frontend/.swc/
+.agents/skills/*
+skills-lock.json
+
+# Browser automation artifacts
+.playwright-mcp/
+playwright-report/
+test-results/
+
+# Local logs
+*.log

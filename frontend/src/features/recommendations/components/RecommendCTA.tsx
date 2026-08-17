@@ -5,7 +5,7 @@ import { useRecommendations } from "@/features/recommendations/hooks/useRecommen
 import { Button } from "@/shared/ui/Button"
 import { ArrowRight, AlertCircle } from "lucide-react"
 
-export function RecommendCTA({ onDone }: { onDone: () => void }) {
+export function RecommendCTA() {
   const { selectedMovies } = useRecommendationStore()
   const { mutate, isPending, isError, error } = useRecommendations()
 
@@ -17,17 +17,10 @@ export function RecommendCTA({ onDone }: { onDone: () => void }) {
 
     const seedTmdbIds = selectedMovies.map((movie) => movie.tmdbId)
 
-    mutate(
-      {
-        seed_tmdb_ids: seedTmdbIds,
-        limit: 200,
-      },
-      {
-        onSuccess: () => {
-          onDone()
-        },
-      }
-    )
+    mutate({
+      seed_tmdb_ids: seedTmdbIds,
+      limit: 200,
+    })
   }
 
   return (
@@ -38,7 +31,7 @@ export function RecommendCTA({ onDone }: { onDone: () => void }) {
           role="status"
         >
           <AlertCircle className="h-5 w-5" />
-          <p>Select at least one movie to create your lineup.</p>
+          <p>Select at least one movie to create a lineup.</p>
         </div>
       )}
 

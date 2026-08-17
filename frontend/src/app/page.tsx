@@ -9,21 +9,32 @@ import { MovieRowSkeleton } from "@/features/movies/components/MovieRowSkeleton"
 import { Hero } from "@/features/movies/components/Hero"
 import { GenreExplorer } from "@/features/movies/components/GenreExplorer"
 import { RecommendationBuilder } from "@/features/recommendations/components/RecommendationBuilder"
-import { getFeaturedMovie } from "@/features/movies/api"
+import { getFeaturedMovie, getTrendingMovies } from "@/features/movies/api"
+import type { Movie } from "@/features/movies/types/movie"
 
 export const dynamic = "force-dynamic"
 
 export default async function HomePage() {
   let featured = null
+  let trending: Movie[] = []
   try {
-    featured = await getFeaturedMovie()
+    const [featuredMovie, trendingMovies] = await Promise.all([
+      getFeaturedMovie(),
+      getTrendingMovies(8),
+    ])
+    featured = featuredMovie
+    trending = trendingMovies
   } catch {
     featured = null
+    trending = []
   }
 
   return (
     <>
-      <Hero movie={featured} />
+      <Hero
+        movie={featured}
+        movies={trending.length ? trending : featured ? [featured] : []}
+      />
       <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10">
         <RecommendationBuilder />
       </div>
@@ -36,14 +47,11 @@ export default async function HomePage() {
       <Suspense fallback={null}>
         <GenreExplorer />
       </Suspense>
-      <section className="mt-12 border-y border-line bg-panel/45 py-14 sm:mt-16 sm:py-18">
-        <div className="mx-auto grid w-full max-w-[1440px] gap-10 px-4 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-10">
+      <section className="mt-12 py-14 sm:mt-16 sm:py-18">
+        <div className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:px-10">
           <div>
-            <span className="text-xs font-bold uppercase tracking-[0.16em] text-crimson">
-              The project behind the product
-            </span>
-            <h2 className="mt-3 max-w-xl font-display text-4xl leading-[0.95] tracking-[-0.04em] text-paper sm:text-5xl">
-              Retrieval, ranking, and live movie data—working together.
+            <h2 className="max-w-2xl font-display text-4xl leading-[0.95] tracking-[-0.04em] text-paper sm:text-5xl">
+              Retrieval, ranking, and live movie data working together.
             </h2>
           </div>
           <div>

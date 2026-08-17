@@ -84,7 +84,7 @@ export function RecommendationsGrid({
           <button
             type="button"
             onClick={loadMore}
-            className="min-h-11 border border-line px-4 text-sm font-bold text-paper hover:border-muted"
+            className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson min-h-11 rounded-full border border-line px-5 text-sm font-bold text-paper hover:border-muted"
           >
             Load more
           </button>

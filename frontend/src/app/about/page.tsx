@@ -28,9 +28,9 @@ const stages = [
 
 export default function AboutPage() {
   return (
-    <main className="mx-auto w-full max-w-7xl px-6 py-16 sm:px-10 lg:py-24">
-      <section className="max-w-4xl border-l-2 border-crimson pl-5 sm:pl-8">
-        <span className="text-xs font-bold uppercase tracking-[0.18em] text-crimson">
+    <div className="mx-auto w-full max-w-7xl px-6 py-14 sm:px-10 lg:py-20">
+      <section className="max-w-4xl">
+        <span className="text-sm font-semibold text-crimson">
           About the engine
         </span>
         <h1 className="mt-4 font-display text-5xl leading-[0.95] text-paper sm:text-7xl">
@@ -43,10 +43,10 @@ export default function AboutPage() {
         </p>
       </section>
 
-      <section className="mt-20 grid border-y border-line sm:grid-cols-2 lg:grid-cols-4">
-        <article className="border-b border-line p-6 last:border-b-0 sm:border-r sm:[&:nth-child(2)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2)]:border-r lg:[&:nth-child(4)]:border-r-0">
+      <section className="mt-20 grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
+        <article className="rounded-2xl bg-panel p-7 shadow-sm shadow-ink/5 lg:col-span-7">
           <Waypoints className="size-5 text-crimson" />
-          <span className="mt-12 block text-xs font-bold uppercase tracking-[0.16em] text-dim">
+          <span className="mt-16 block text-sm font-semibold text-muted">
             Candidate retrieval
           </span>
           <strong className="mt-3 block text-lg text-paper">
@@ -56,9 +56,9 @@ export default function AboutPage() {
             Collaborative, graph, neural, and content signals widen recall.
           </p>
         </article>
-        <article className="border-b border-line p-6 last:border-b-0 sm:border-r-0 lg:border-r lg:border-b-0">
+        <article className="rounded-2xl bg-surface-muted p-7 lg:col-span-5">
           <Layers3 className="size-5 text-crimson" />
-          <span className="mt-12 block text-xs font-bold uppercase tracking-[0.16em] text-dim">
+          <span className="mt-16 block text-sm font-semibold text-muted">
             Ordering
           </span>
           <strong className="mt-3 block text-lg text-paper">
@@ -68,9 +68,9 @@ export default function AboutPage() {
             Rank-derived features combine incompatible source score scales.
           </p>
         </article>
-        <article className="border-b border-line p-6 last:border-b-0 sm:border-r sm:[&:nth-child(4)]:border-r-0 lg:border-b-0">
+        <article className="rounded-2xl bg-accent-soft p-7 lg:col-span-5">
           <Database className="size-5 text-crimson" />
-          <span className="mt-12 block text-xs font-bold uppercase tracking-[0.16em] text-dim">
+          <span className="mt-16 block text-sm font-semibold text-muted">
             Data
           </span>
           <strong className="mt-3 block text-lg text-paper">
@@ -81,9 +81,9 @@ export default function AboutPage() {
             metadata.
           </p>
         </article>
-        <article className="p-6">
+        <article className="rounded-2xl bg-panel p-7 shadow-sm shadow-ink/5 lg:col-span-7">
           <MonitorPlay className="size-5 text-crimson" />
-          <span className="mt-12 block text-xs font-bold uppercase tracking-[0.16em] text-dim">
+          <span className="mt-16 block text-sm font-semibold text-muted">
             Experience
           </span>
           <strong className="mt-3 block text-lg text-paper">
@@ -98,40 +98,27 @@ export default function AboutPage() {
       <section className="mt-24 max-w-4xl">
         <div>
           <div>
-            <span className="text-xs font-bold uppercase tracking-[0.18em] text-crimson">
-              Request flow
-            </span>
-            <h2 className="mt-3 font-display text-4xl text-paper sm:text-5xl">
+            <h2 className="font-display text-4xl text-paper sm:text-5xl">
               How a lineup is created
             </h2>
           </div>
         </div>
         <ol className="mt-10 border-t border-line">
-          {stages.map(([number, title, description]) => (
+          {stages.map(([, title, description]) => (
             <li
-              key={number}
-              className="grid grid-cols-[4rem_1fr] gap-5 border-b border-line py-6 sm:grid-cols-[7rem_1fr]"
+              key={title}
+              className="grid gap-2 border-b border-line py-6 sm:grid-cols-[minmax(12rem,0.7fr)_1fr] sm:gap-8"
             >
-              <span className="font-display text-3xl text-crimson">
-                {number}
-              </span>
-              <div>
-                <strong className="text-lg text-paper">{title}</strong>
-                <p className="mt-2 text-sm leading-6 text-muted">
-                  {description}
-                </p>
-              </div>
+              <strong className="text-lg text-paper">{title}</strong>
+              <p className="text-sm leading-6 text-muted">{description}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      <section className="mt-24 grid gap-8 border-y border-line py-10 lg:grid-cols-[1fr_1.3fr]">
+      <section className="mt-24 grid gap-8 rounded-[1.75rem] bg-surface-muted p-8 lg:grid-cols-[1fr_1.3fr] lg:p-12">
         <div>
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-crimson">
-            Honest by design
-          </span>
-          <h2 className="mt-3 font-display text-4xl text-paper">
+          <h2 className="font-display text-4xl text-paper">
             What this project does not claim
           </h2>
         </div>
@@ -142,17 +129,17 @@ export default function AboutPage() {
         </p>
       </section>
 
-      <section className="mt-24 flex flex-col items-start justify-between gap-8 border-l-2 border-crimson bg-panel p-8 sm:flex-row sm:items-center sm:p-12">
-        <h2 className="max-w-xl font-display text-4xl text-paper sm:text-5xl">
+      <section className="mt-24 flex flex-col items-start justify-between gap-8 rounded-[1.75rem] bg-crimson p-8 sm:flex-row sm:items-center sm:p-12">
+        <h2 className="max-w-xl font-display text-4xl text-white sm:text-5xl">
           Build a lineup from movies you love.
         </h2>
         <Link
           href="/#build-lineup"
-          className="inline-flex min-h-11 shrink-0 items-center gap-2 bg-crimson px-5 text-sm font-bold text-white transition-colors hover:bg-crimson-bright"
+          className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-white px-5 text-sm font-bold text-ink transition-colors hover:bg-canvas active:scale-[0.98]"
         >
           Start discovering <ArrowRight className="h-4 w-4" />
         </Link>
       </section>
-    </main>
+    </div>
   )
 }

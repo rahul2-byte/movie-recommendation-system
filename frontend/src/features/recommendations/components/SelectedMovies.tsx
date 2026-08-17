@@ -8,7 +8,7 @@ export function SelectedMovies() {
   const { selectedMovies, removeMovie, clearMovies } = useRecommendationStore()
 
   return (
-    <div className="mt-5 border border-line bg-ink/45 p-4">
+    <div className="mt-5 rounded-2xl border border-line bg-canvas/60 p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <strong className="block text-sm text-paper">Your film strip</strong>
@@ -20,7 +20,7 @@ export function SelectedMovies() {
           <button
             type="button"
             onClick={clearMovies}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-muted hover:text-paper"
+            className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson inline-flex items-center gap-1.5 text-xs font-bold text-muted hover:text-paper"
           >
             <Trash2 className="h-4 w-4" /> Clear
           </button>
@@ -32,13 +32,19 @@ export function SelectedMovies() {
           const movie = selectedMovies[index]
           return (
             <div
-              className={`relative aspect-[2/3] overflow-hidden border ${movie ? "border-line bg-panel" : "border-dashed border-line bg-ink/30"}`}
+              className={`relative aspect-[2/3] overflow-hidden rounded-xl border ${movie ? "border-line bg-panel" : "border-dashed border-line bg-panel/60"}`}
               key={index}
             >
               {movie ? (
                 <>
                   {movie.posterUrl ? (
-                    <Image src={movie.posterUrl} alt="" fill sizes="112px" />
+                    <Image
+                      src={movie.posterUrl}
+                      alt=""
+                      fill
+                      sizes="112px"
+                      className="object-cover"
+                    />
                   ) : (
                     <span className="grid h-full place-items-center text-lg font-bold text-crimson">
                       {movie.title.slice(0, 1)}
@@ -48,7 +54,7 @@ export function SelectedMovies() {
                     type="button"
                     onClick={() => removeMovie(movie.tmdbId)}
                     aria-label={`Remove ${movie.title}`}
-                    className="absolute right-1.5 top-1.5 grid size-7 place-items-center bg-ink/90 text-paper transition-colors hover:bg-crimson"
+                    className="focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-crimson absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-ink/85 text-white transition-colors hover:bg-crimson"
                   >
                     <X className="h-4 w-4" />
                   </button>

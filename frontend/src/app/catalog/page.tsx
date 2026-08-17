@@ -55,14 +55,14 @@ export default async function CatalogPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-[80vh] py-16 sm:py-24">
+    <div className="min-h-[80vh] py-10 sm:py-14">
       <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10">
-        <header className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
+        <header className="flex flex-col justify-between gap-8 border-b border-line pb-8 lg:flex-row lg:items-end">
           <div>
-            <span className="text-xs font-bold uppercase tracking-[0.16em] text-crimson">
+            <span className="text-sm font-semibold text-crimson">
               Browse the catalog
             </span>
-            <h1 className="mt-3 font-display text-5xl leading-[0.88] tracking-[-0.055em] text-paper sm:text-7xl">
+            <h1 className="mt-2 font-display text-5xl leading-[0.92] tracking-[-0.055em] text-paper sm:text-7xl">
               {title}
             </h1>
           </div>
@@ -100,7 +100,7 @@ export default async function CatalogPage({ searchParams }: Props) {
         />
 
         {!movies ? (
-          <div className="mt-12 grid min-h-64 place-items-center border border-line bg-panel/45 p-8 text-center">
+          <div className="mt-12 grid min-h-64 place-items-center rounded-2xl border border-line bg-panel p-8 text-center">
             <div>
               <h2 className="font-display text-3xl text-paper">
                 The catalog is unavailable.
@@ -110,14 +110,14 @@ export default async function CatalogPage({ searchParams }: Props) {
               </p>
               <Link
                 href="/catalog"
-                className="mt-6 inline-flex min-h-11 items-center border border-line px-4 text-sm font-bold text-paper hover:border-muted"
+                className="mt-6 inline-flex min-h-11 items-center rounded-full border border-line px-5 text-sm font-bold text-paper hover:border-muted"
               >
                 Try again
               </Link>
             </div>
           </div>
         ) : movies.length === 0 ? (
-          <div className="mt-12 grid min-h-64 place-items-center border border-line bg-panel/45 p-8 text-center">
+          <div className="mt-12 grid min-h-64 place-items-center rounded-2xl border border-line bg-panel p-8 text-center">
             <div>
               <h2 className="font-display text-3xl text-paper">
                 No movies match those filters.
@@ -127,7 +127,7 @@ export default async function CatalogPage({ searchParams }: Props) {
               </p>
               <Link
                 href="/catalog"
-                className="mt-6 inline-flex min-h-11 items-center border border-line px-4 text-sm font-bold text-paper hover:border-muted"
+                className="mt-6 inline-flex min-h-11 items-center rounded-full border border-line px-5 text-sm font-bold text-paper hover:border-muted"
               >
                 Clear filters
               </Link>

@@ -19,7 +19,7 @@ test("enables recommendations after one seed movie", () => {
   const queryClient = new QueryClient()
   render(
     <QueryClientProvider client={queryClient}>
-      <RecommendCTA onDone={() => undefined} />
+      <RecommendCTA />
     </QueryClientProvider>
   )
 

@@ -12,6 +12,8 @@ type MovieArtworkProps = {
   sizes: string
   alt?: string
   showFallbackLabel?: boolean
+  fallbackToPoster?: boolean
+  highResolution?: boolean
 }
 
 export function MovieArtwork({
@@ -23,16 +25,25 @@ export function MovieArtwork({
   sizes,
   alt = title,
   showFallbackLabel = true,
+  fallbackToPoster = true,
+  highResolution = false,
 }: MovieArtworkProps) {
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
-  const src = variant === "backdrop" ? backdropUrl || posterUrl : posterUrl
+  const source =
+    variant === "backdrop"
+      ? backdropUrl || (fallbackToPoster ? posterUrl : null)
+      : posterUrl
+  const src =
+    highResolution && source?.includes("image.tmdb.org/t/p/")
+      ? source.replace(/\/t\/p\/[^/]+\//, "/t/p/original/")
+      : source
 
   return (
     <div
-      className={`absolute inset-0 overflow-hidden bg-panel ${
-        loaded ? "bg-ink" : "animate-pulse"
-      }`}
+      className={`absolute inset-0 overflow-hidden ${
+        showFallbackLabel ? "bg-panel" : "bg-crimson"
+      } ${loaded ? "" : "animate-pulse"}`}
     >
       {src && !failed ? (
         <Image
@@ -44,7 +55,7 @@ export function MovieArtwork({
           }`}
           sizes={sizes}
           priority={priority}
-          quality={variant === "backdrop" ? 70 : 75}
+          quality={75}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
         />

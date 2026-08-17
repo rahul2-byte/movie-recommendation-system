@@ -8,7 +8,11 @@ jest.mock("next/navigation", () => ({
 test("exposes the primary discovery navigation", () => {
   render(<Header />)
 
-  expect(screen.getByRole("banner")).toHaveClass("sticky")
+  expect(screen.getByRole("link", { name: "Skip to content" })).toHaveAttribute(
+    "href",
+    "#main-content"
+  )
+  expect(screen.getByRole("banner")).toHaveClass("absolute")
   expect(
     screen.getByRole("navigation", { name: "Primary" })
   ).toBeInTheDocument()

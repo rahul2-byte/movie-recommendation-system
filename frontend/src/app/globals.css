@@ -1,72 +1,52 @@
 @import "tailwindcss";
-@plugin "tailwindcss-animate";
 
 @theme {
-  --color-ink: #11100f;
-  --color-canvas: #191715;
-  --color-panel: #211f1c;
-  --color-paper: #f4f0e8;
-  --color-muted: #b9b2a8;
-  --color-dim: #817b73;
-  --color-line: #3b3732;
-  --color-crimson: #d3342b;
-  --color-crimson-bright: #ed463b;
-  --color-success: #64b48b;
-  --color-danger: #ef7670;
-  --font-sans: var(--font-inter);
-  --font-display: Georgia, Cambria, "Times New Roman", serif;
+  --color-ink: #19191c;
+  --color-canvas: #f4f4ef;
+  --color-panel: #fcfcf9;
+  --color-surface-muted: #ebece7;
+  --color-accent-soft: #f1ded9;
+  --color-paper: #19191c;
+  --color-muted: #626269;
+  --color-dim: #6b6b71;
+  --color-line: #d8d8d2;
+  --color-crimson: #c9362b;
+  --color-crimson-bright: #aa2b23;
+  --color-success: #247a50;
+  --color-danger: #b52d32;
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-newsreader);
 }
 
-:root {
-  color-scheme: dark;
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  background: var(--color-ink);
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  background: var(--color-ink);
-  color: var(--color-paper);
-  font-family: var(--font-inter), Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-img {
-  object-fit: cover;
-}
-
-:focus-visible {
-  outline: 2px solid var(--color-crimson-bright);
-  outline-offset: 3px;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+.page-transition {
+  animation: page-enter 350ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid CanvasText !important;
+    outline-offset: 3px;
   }
 }

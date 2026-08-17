@@ -129,5 +129,5 @@ FAILED_MOVIES_FILE = Path(f"{PROCESSED_DATA_PATH}/checkpoints/failed_movies.json
 FAISS_INDEX_PATH = f"{INDICES_PATH}/als/faiss.index"
 RANKER_MODEL_URI = f"{MODELS_PATH}/ranker"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p"
-TMDB_POSTER_SIZE = "w342"
+TMDB_POSTER_SIZE = "w500"
 SCHEMA_VERSIONS_FILE = PROJECT_ROOT / "configuration/schemas/schema_versions.yaml"
